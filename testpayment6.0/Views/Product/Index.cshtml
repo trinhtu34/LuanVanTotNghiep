@@ -1,0 +1,26 @@
+﻿@model List<testpayment6._0.Models.Product>
+@{
+    ViewData["Title"] = "Danh sách sản phẩm";
+}
+
+<h2 class="text-center">Danh sách sản phẩm</h2>
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@product.Name</h5>
+                    <p class="card-text">@product.Description</p>
+                    <p class="card-text text-danger fw-bold">@product.Price.ToString("N0") VNĐ</p>
+                    <a asp-controller="Product" asp-action="Order"
+                       asp-route-id="@product.Id"
+                       asp-route-name="@product.Name"
+                       asp-route-price="@product.Price"
+                       class="btn btn-success w-100">Đặt Mua</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
