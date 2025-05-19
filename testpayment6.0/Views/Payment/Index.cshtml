@@ -10,7 +10,7 @@
                 <h4>Tạo Giao Dịch Thanh Toán</h4>
             </div>
             <div class="card-body">
-                <form asp-action="CreatePayment" method="post">
+                <form asp-controller="Payment" asp-action="CreatePayment" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="form-group mb-3">
