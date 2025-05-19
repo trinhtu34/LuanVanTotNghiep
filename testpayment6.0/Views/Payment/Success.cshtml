@@ -1,0 +1,67 @@
+﻿@model testpayment6._0.Models.PaymentResultViewModel
+@{
+    ViewData["Title"] = "Thanh Toán Thành Công";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h4><i class="fas fa-check-circle"></i> Thanh Toán Thành Công</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                    <h4 class="mt-3">Giao dịch của bạn đã được xử lý thành công!</h4>
+                </div>
+
+                <div class="alert alert-success" role="alert">
+                    @Model.ResponseDescription @Model.TransactionStatusDescription
+                </div>
+
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th>Mã giao dịch:</th>
+                            <td>@Model.PaymentId</td>
+                        </tr>
+                        <tr>
+                            <th>Mã giao dịch VNPAY:</th>
+                            <td>@Model.VnpayTransactionId</td>
+                        </tr>
+                        <tr>
+                            <th>Số tiền:</th>
+                            <td>@Model.Description VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th>Phương thức thanh toán:</th>
+                            <td>@Model.PaymentMethod</td>
+                        </tr>
+                        <tr>
+                            <th>Ngân hàng:</th>
+                            <td>@Model.BankCode</td>
+                        </tr>
+                        <tr>
+                            <th>Mã giao dịch ngân hàng:</th>
+                            <td>@Model.BankTransactionId</td>
+                        </tr>
+                        <tr>
+                            <th>Thời gian:</th>
+                            <td>@Model.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="text-center">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Quay Về Trang Chủ
+                    </a>
+                    <a asp-controller="Payment" asp-action="Index" class="btn btn-outline-primary">
+                        <i class="fas fa-credit-card"></i> Tạo Giao Dịch Mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

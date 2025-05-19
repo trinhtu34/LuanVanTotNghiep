@@ -1,0 +1,86 @@
+﻿html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    background-color: #f8f9fa;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+/* Tùy chỉnh cho trang thanh toán */
+.card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.card-footer {
+    border-radius: 0 0 0.5rem 0.5rem !important;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #005bac;
+    border-color: #005bac;
+}
+
+    .btn-primary:hover, .btn-primary:focus {
+        background-color: #004a8c;
+        border-color: #004a8c;
+    }
+
+/* Success page */
+.border-success {
+    border: 2px solid #28a745 !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* Error page */
+.border-danger {
+    border: 2px solid #dc3545 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-md-6.offset-md-3 {
+        padding: 0 15px;
+    }
+}
