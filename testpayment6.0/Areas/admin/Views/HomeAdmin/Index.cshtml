@@ -1,0 +1,58 @@
+﻿@{
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<!-- Thêm các meta tags này vào đầu trang -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="-1">
+<meta http-equiv="Last-Modified" content="@DateTime.UtcNow.ToString("R")">
+
+<!-- Nội dung trang của bạn -->
+<h1>Admin Dashboard</h1>
+<p>Chào mừng, @ViewBag.UserId</p>
+
+
+
+
+
+@* <!-- Thêm JavaScript này vào cuối trang -->
+<script>
+    // Ngăn cache bằng JavaScript
+    window.addEventListener('beforeunload', function() {
+        // Force reload khi quay lại
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+    });
+
+    // Kiểm tra khi trang được load từ cache
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            // Trang được load từ cache (back button), kiểm tra session
+            fetch('/admin/homeadmin/checksession', {
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.isAuthenticated) {
+                    window.location.replace('/admin/homeadmin/indexadminlogin');
+                }
+            })
+            .catch(() => {
+                window.location.replace('/admin/homeadmin/indexadminlogin');
+            });
+        }
+    });
+
+    // Ngăn cache với History API
+    if (typeof(Storage) !== "undefined") {
+        if (!sessionStorage.getItem('adminAccessed')) {
+            sessionStorage.setItem('adminAccessed', 'true');
+        }
+    }
+</script> *@

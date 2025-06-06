@@ -252,6 +252,9 @@ public partial class DbluanvantotnghiepContext : DbContext
             entity.Property(e => e.UserId)
                 .HasMaxLength(20)
                 .HasColumnName("user_id");
+            entity.Property(e => e.isCancel)
+                .HasDefaultValueSql("'0'")
+                .HasColumnName("isCancel");
 
             entity.HasOne(d => d.User).WithMany(p => p.OrderTables)
                 .HasForeignKey(d => d.UserId)

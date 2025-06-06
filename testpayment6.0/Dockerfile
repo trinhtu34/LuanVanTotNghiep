@@ -29,11 +29,7 @@ ENTRYPOINT ["dotnet", "testpayment6.0.dll"]
 
 
 
-
-
-
-
-## Base image để chạy app
+## Base image để chạy mà không cần phải bật visual studio 
 #FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 #WORKDIR /app
 #EXPOSE 8080
@@ -58,7 +54,6 @@ ENTRYPOINT ["dotnet", "testpayment6.0.dll"]
 #ARG BUILD_CONFIGURATION=Release
 #RUN dotnet publish "testpayment6.0.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 #
-## Final image
 #FROM base AS final
 #WORKDIR /app
 #COPY --from=publish /app/publish .
