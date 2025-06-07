@@ -1,0 +1,22 @@
+﻿@model testpayment6._0.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Lỗi";
+}
+
+<div class="text-center">
+    <h1 class="text-danger">Lỗi</h1>
+    <h2 class="text-danger">Đã xảy ra lỗi khi xử lý yêu cầu của bạn.</h2>
+
+    @if (Model?.ShowRequestId ?? false)
+    {
+        <p>
+            <strong>Request ID:</strong> <code>@Model?.RequestId</code>
+        </p>
+    }
+
+    <div class="mt-4">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+            <i class="fas fa-home"></i> Quay về trang chủ
+        </a>
+    </div>
+</div>
