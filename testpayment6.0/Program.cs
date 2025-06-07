@@ -49,10 +49,11 @@ app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Product}/{action=Index}/{id?}");
-app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=HomeAdmin}/{action=indexAdminLogin}/{id?}");
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Product}/{action=Index}/{id?}");
 
 app.Run();
