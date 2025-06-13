@@ -1,0 +1,76 @@
+﻿@model testpayment6._0.ResponseModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<style>
+    .login-box {
+        max-width: 400px;
+        margin: 100px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .login-title {
+        text-align: center;
+        color: #ce1212;
+        margin-bottom: 30px;
+    }
+
+    .form-control {
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        padding: 12px;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+        .form-control:focus {
+            border-color: #ce1212;
+            outline: none;
+        }
+
+    .btn-login {
+        background: #ce1212;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 5px;
+        width: 100%;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+        .btn-login:hover {
+            background: #a61010;
+        }
+
+    .error-msg {
+        color: #ce1212;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="login-box">
+    <h2 class="login-title">Đăng nhập</h2>
+
+    @if (ViewBag.Error != null)
+    {
+        <div style="color: red; margin-bottom: 15px; text-align: center;">
+            @ViewBag.Error
+        </div>
+    }
+
+    <form asp-controller="Home" asp-action="Login" method="post">
+        <input asp-for="UserId" class="form-control" placeholder="User ID" />
+        <span asp-validation-for="UserId" class="error-msg"></span>
+
+        <input asp-for="UPassword" class="form-control" placeholder="Mật khẩu" type="password" />
+        <span asp-validation-for="UPassword" class="error-msg"></span>
+
+        <button type="submit" class="btn-login">Đăng nhập</button>
+    </form>
+</div>

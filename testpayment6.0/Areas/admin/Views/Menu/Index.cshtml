@@ -1,7 +1,6 @@
-﻿@model List<testpayment6._0.Models.Region>
-
+﻿@model List<testpayment6._0.Models.Menu>
 @{
-	ViewData["Title"] = "Quản lý khu vực";
+	ViewData["Title"] = "Quản lý thực đơn";
 	Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,12 +8,11 @@
 	<div class="row">
 		<div class="col-12">
 			<div class="d-flex justify-content-between align-items-center mb-3">
-				<h2>Quản lý khu vực</h2>
+				<h2>Quản lý thực đơn</h2>
 				<a href="@Url.Action("Create")" class="btn btn-primary">
-					<i class="fas fa-plus"></i> Thêm khu vực mới
+					<i class="fas fa-plus"></i> Thêm món ăn mới
 				</a>
 			</div>
-
 			@if (TempData["Success"] != null)
 			{
 				<div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -22,7 +20,6 @@
 					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 				</div>
 			}
-
 			@if (ViewBag.Error != null)
 			{
 				<div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -40,18 +37,22 @@
 								<thead class="table-dark">
 									<tr>
 										<th>ID</th>
-										<th>Tên khu vực</th>
+										<th>Tên món ăn</th>
+										<th>Giá</th>
+										<th>Loại món ăn</th>
 										<th style="width: 150px;">Thao tác</th>
 									</tr>
 								</thead>
 								<tbody>
-									@foreach (var region in Model)
+									@foreach (var menu in Model)
 									{
 										<tr>
-											<td>@region.RegionId</td>
-											<td>@region.RegionName</td>
+											<td>@menu.DishId</td>
+											<td>@menu.DishName</td>
+											<td>@menu.Price.ToString("C", System.Globalization.CultureInfo.CurrentCulture)</td>
+											<td>@menu.Category.CategoryName</td>
 											<td>
-												<a href="@Url.Action("Edit", new { id = region.RegionId })"
+												<a href="@Url.Action("Edit", new { id = menu.DishId })"
 												   class="btn btn-sm btn-outline-primary" title="Sửa">
 													<i class="fas fa-edit"></i>
 												</a>
@@ -66,8 +67,8 @@
 					{
 						<div class="text-center py-4">
 							<i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-							<p class="text-muted">Chưa có khu vực nào được tạo.</p>
-							<a href="@Url.Action("Create")" class="btn btn-primary">Thêm khu vực đầu tiên</a>
+							<p class="text-muted">Chưa có loại món ăn nào được tạo.</p>
+							<a href="@Url.Action("Create")" class="btn btn-primary">Thêm loại món ăn đầu tiên</a>
 						</div>
 					}
 				</div>
