@@ -31,49 +31,30 @@ namespace testpayment6._0.ResponseModels
 
 namespace testpayment6._0.ResponseModels
 {
-    public class DatBanViewModel
+    public class OrderTableResponse
     {
-        public int TableId { get; set; }
-        public string TableName { get; set; }
-        public int Capacity { get; set; }
-        public decimal Deposit { get; set; }
-        public string Description { get; set; }
-        public int RegionId { get; set; }
-        public string RegionName { get; set; }
+        public long OrderTableId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public DateTime StartingTime { get; set; }
-        public bool IsAvailable { get; set; }
+        public bool IsCancel { get; set; }
+        public decimal TotalPrice { get; set; }
+        public DateTime OrderDate { get; set; }
     }
 
+    public class OrderTableViewModel
+    {
+        public long OrderTableId { get; set; }
+        public string UserId { get; set; } = string.Empty;
+        public DateTime StartingTime { get; set; }
+        public bool IsCancel { get; set; }
+        public decimal TotalPrice { get; set; }
+        public DateTime OrderDate { get; set; }
+    }
+    // Thêm ViewModel
     public class OrderTableDetailViewModel
     {
         public int OrderTablesDetailsId { get; set; }
         public long OrderTableId { get; set; }
         public int TableId { get; set; }
-        public string TableName { get; set; }
-        public int Capacity { get; set; }
-        public decimal Deposit { get; set; }
-    }
-
-    public class CreateOrderRequest
-    {
-        public string UserId { get; set; }
-        public DateTime StartingTime { get; set; }
-        public bool IsCancel { get; set; } = false;
-        public decimal TotalPrice { get; set; } = 0;
-        public DateTime OrderDate { get; set; } = DateTime.Now;
-    }
-
-    public class CreateOrderDetailRequest
-    {
-        public string OrderTableId { get; set; }
-        public string TableId { get; set; }
-    }
-}
-namespace testpayment6._0.ResponseModels
-{
-    public class LoginRequest
-    {
-        public string UserId { get; set; } = string.Empty;
-        public string UPassword { get; set; } = string.Empty;
     }
 }

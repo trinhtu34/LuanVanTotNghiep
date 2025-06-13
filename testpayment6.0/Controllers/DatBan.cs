@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using testpayment6._0.Models;
+using testpayment6._0.ResponseModels;
 
 namespace testpayment6._0.Controllers
 {
@@ -35,7 +36,7 @@ namespace testpayment6._0.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
-                    var tables = JsonSerializer.Deserialize<List<TableViewModel>>(jsonContent, new JsonSerializerOptions
+                    var tables = JsonSerializer.Deserialize<List<TablesViewModel>>(jsonContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -51,7 +52,7 @@ namespace testpayment6._0.Controllers
                     }
                     else
                     {
-                        ViewBag.GroupedTables = new List<IGrouping<int, TableViewModel>>();
+                        ViewBag.GroupedTables = new List<IGrouping<int, TablesViewModel>>();
                         TempData["Info"] = "Hiện tại không có bàn nào khả dụng";
                     }
                 }
@@ -315,7 +316,7 @@ namespace testpayment6._0.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
-                    var tables = JsonSerializer.Deserialize<List<TableViewModel>>(jsonContent, new JsonSerializerOptions
+                    var tables = JsonSerializer.Deserialize<List<TablesViewModel>>(jsonContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -399,43 +400,5 @@ namespace testpayment6._0.Controllers
                 });
             }
         }
-
-    }
-
-    // ViewModels
-    public class TableViewModel
-    {
-        public int TableId { get; set; }
-        public int Capacity { get; set; }
-        public decimal Deposit { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public int RegionId { get; set; }
-    }
-
-    public class OrderTableResponse
-    {
-        public long OrderTableId { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public DateTime StartingTime { get; set; }
-        public bool IsCancel { get; set; }
-        public decimal TotalPrice { get; set; }
-        public DateTime OrderDate { get; set; }
-    }
-
-    public class OrderTableViewModel
-    {
-        public long OrderTableId { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public DateTime StartingTime { get; set; }
-        public bool IsCancel { get; set; }
-        public decimal TotalPrice { get; set; }
-        public DateTime OrderDate { get; set; }
-    }
-    // Thêm ViewModel
-    public class OrderTableDetailViewModel
-    {
-        public int OrderTablesDetailsId { get; set; }
-        public long OrderTableId { get; set; }
-        public int TableId { get; set; }
     }
 }

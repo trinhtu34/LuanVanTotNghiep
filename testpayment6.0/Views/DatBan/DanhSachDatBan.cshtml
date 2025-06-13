@@ -1,4 +1,4 @@
-﻿@model List<testpayment6._0.Controllers.OrderTableViewModel>
+﻿@model List<testpayment6._0.ResponseModels.OrderTableViewModel>
 @{
 	ViewData["Title"] = "Danh Sách Đặt Bàn";
 }
@@ -57,13 +57,6 @@
 									</span>
 								</p>
 							</div>
-
-							<div class="mt-3">
-								<button class="btn btn-info btn-sm w-100 btn-chi-tiet"
-										data-order-id="@order.OrderTableId">
-									<i class="fas fa-eye"></i> Xem Chi Tiết
-								</button>
-							</div>
 						</div>
 						<div class="card-footer text-muted text-center">
 							<small>
@@ -120,30 +113,6 @@
 	}
 </div>
 
-<!-- Modal Chi Tiết Đơn -->
-<div class="modal fade" id="chiTietModal" tabindex="-1" aria-labelledby="chiTietModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="chiTietModalLabel">Chi Tiết Đơn Đặt Bàn</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				<div id="chiTietContent">
-					<div class="text-center">
-						<div class="spinner-border text-primary" role="status">
-							<span class="visually-hidden">Đang tải...</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-			</div>
-		</div>
-	</div>
-</div>
-
 <style>
 	.order-card {
 		border-radius: 10px;
@@ -192,7 +161,6 @@
 		background: linear-gradient(45deg, #007bff, #0056b3);
 		color: white;
 	}
-
 	.card-footer {
 		background-color: #f8f9fa;
 	}
@@ -320,126 +288,4 @@
 		});
 	}
 
-	// Hàm hiển thị chi tiết đơn - SỬ DỤNG CONTROLLER
-	function showOrderDetails(orderTableId) {
-		// Hiển thị modal
-		const modal = new bootstrap.Modal(document.getElementById('chiTietModal'));
-		modal.show();
-
-		// Reset nội dung
-		document.getElementById('chiTietContent').innerHTML = `
-			<div class="text-center">
-				<div class="spinner-border text-primary" role="status">
-					<span class="visually-hidden">Đang tải...</span>
-				</div>
-				<p class="mt-2">Đang tải chi tiết...</p>
-			</div>
-		`;
-
-		// Gọi API thông qua Controller MVC
-		fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		})
-		.then(response => {
-			console.log('Detail response status:', response.status);
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			return response.json();
-		})
-		.then(result => {
-			console.log('Detail controller response:', result);
-			let content = '';
-
-			if (result.success && result.data && result.data.length > 0) {
-				const data = result.data;
-
-				// Thống kê tổng quan
-				const tableCount = data.length;
-				const tableIds = data.map(item => item.tableId).sort((a, b) => a - b);
-				const minTable = Math.min(...tableIds);
-				const maxTable = Math.max(...tableIds);
-
-				content += `
-					<div class="table-summary">
-						<h6 class="mb-3">
-							<i class="fas fa-info-circle text-primary"></i>
-							Tổng quan đơn đặt bàn #${orderTableId}
-						</h6>
-						<div class="row">
-							<div class="col-md-4">
-								<div class="text-center">
-									<div class="h4 text-primary mb-1">${tableCount}</div>
-									<small class="text-muted">Tổng số bàn</small>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="text-center">
-									<div class="h4 text-success mb-1">${minTable}</div>
-									<small class="text-muted">Bàn nhỏ nhất</small>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="text-center">
-									<div class="h4 text-warning mb-1">${maxTable}</div>
-									<small class="text-muted">Bàn lớn nhất</small>
-								</div>
-							</div>
-						</div>
-					</div>
-				`;
-
-				content += '<h6 class="mb-3">Danh sách bàn đã đặt:</h6>';
-				content += '<div class="table-grid">';
-
-				data.forEach(function(detail) {
-					content += `
-						<div class="table-detail-card">
-							<div class="h5 text-primary mb-2">
-								<i class="fas fa-utensils"></i> Bàn ${detail.tableId}
-							</div>
-							<div class="text-muted">
-								<small>ID: ${detail.orderTablesDetailsId}</small>
-							</div>
-						</div>
-					`;
-				});
-
-				content += '</div>';
-
-				// Thêm danh sách bàn dạng compact
-				content += `
-					<div class="mt-4">
-						<h6 class="mb-2">Danh sách bàn (compact):</h6>
-						<div class="d-flex flex-wrap gap-2">
-							${tableIds.map(id => `
-								<span class="badge bg-primary">Bàn ${id}</span>
-							`).join('')}
-						</div>
-					</div>
-				`;
-			} else {
-				content += `
-					<div class="alert alert-warning text-center">
-						<i class="fas fa-info-circle"></i>
-						${result.message || 'Không có thông tin chi tiết bàn cho đơn #' + orderTableId}
-					</div>
-				`;
-			}
-
-			document.getElementById('chiTietContent').innerHTML = content;
-		})
-		.catch(error => {
-			console.error('Error loading order details:', error);
-			document.getElementById('chiTietContent').innerHTML = `
-				<div class="alert alert-danger">
-					<i class="fas fa-exclamation-triangle"></i>
-					Có lỗi xảy ra khi tải chi tiết: ${error.message}
-				</div>
-			`;
-		});
-	}
 </script>
