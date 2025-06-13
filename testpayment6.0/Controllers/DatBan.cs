@@ -76,6 +76,101 @@ namespace testpayment6._0.Controllers
             return View();
         }
 
+        // Phương thức kiểm tra bàn có khả dụng trong khung thời gian không
+        private async Task<List<int>> CheckTableAvailabilityAsync(List<int> tableIds, DateTime startingTime)
+        {
+            var unavailableTables = new List<int>();
+
+            try
+            {
+                // Lấy tất cả đơn đặt bàn
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning($"Failed to get all orders. Status: {response.StatusCode}");
+                    return unavailableTables; // Trả về danh sách rỗng nếu không lấy được dữ liệu
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var allOrders = JsonSerializer.Deserialize<List<OrderTableResponse>>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (allOrders == null || !allOrders.Any())
+                {
+                    return unavailableTables; // Không có đơn nào, tất cả bàn đều khả dụng
+                }
+
+                // Lọc các đơn chưa hủy và trong khung thời gian xung đột (±2 giờ)
+                var conflictingOrders = allOrders.Where(order =>
+                    !order.IsCancel && // Đơn chưa bị hủy
+                    DateTime.TryParse(order.StartingTime, out DateTime orderStartTime) &&
+                    Math.Abs((orderStartTime - startingTime).TotalHours) <= 2 // Trong vòng 2 giờ
+                ).ToList();
+
+                if (!conflictingOrders.Any())
+                {
+                    return unavailableTables; // Không có đơn xung đột
+                }
+
+                _logger.LogInformation($"Found {conflictingOrders.Count} conflicting orders");
+
+                // Kiểm tra từng đơn xung đột để lấy danh sách bàn
+                foreach (var order in conflictingOrders)
+                {
+                    try
+                    {
+                        var detailResponse = await _httpClient.GetAsync($"{BASE_API_URL}/OrderTablesDetail/list/{order.OrderTableId}");
+
+                        if (detailResponse.IsSuccessStatusCode)
+                        {
+                            var detailJson = await detailResponse.Content.ReadAsStringAsync();
+                            var orderDetails = JsonSerializer.Deserialize<List<OrderTableDetailViewModel>>(detailJson, new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+
+                            if (orderDetails != null)
+                            {
+                                // Tìm các bàn trùng
+                                var conflictingTableIds = orderDetails
+                                    .Where(detail => tableIds.Contains(detail.TableId))
+                                    .Select(detail => detail.TableId)
+                                    .ToList();
+
+                                unavailableTables.AddRange(conflictingTableIds);
+
+                                if (conflictingTableIds.Any())
+                                {
+                                    _logger.LogInformation($"Order {order.OrderTableId} conflicts with tables: [{string.Join(", ", conflictingTableIds)}]");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error checking order details for order {order.OrderTableId}");
+                    }
+                }
+
+                // Loại bỏ duplicate
+                unavailableTables = unavailableTables.Distinct().ToList();
+
+                if (unavailableTables.Any())
+                {
+                    _logger.LogInformation($"Unavailable tables: [{string.Join(", ", unavailableTables)}]");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking table availability");
+            }
+
+            return unavailableTables;
+        }
 
         [HttpPost]
         public async Task<IActionResult> DatBanFunction(List<int> tableIds, string startingTime)
@@ -124,6 +219,23 @@ namespace testpayment6._0.Controllers
 
             try
             {
+                // BƯỚC MỚI: Kiểm tra tính khả dụng của bàn
+                _logger.LogInformation("Checking table availability...");
+                var unavailableTables = await CheckTableAvailabilityAsync(tableIds, parsedStartTime);
+
+                if (unavailableTables.Any())
+                {
+                    var unavailableTablesList = string.Join(", ", unavailableTables);
+                    _logger.LogWarning($"Tables not available: {unavailableTablesList}");
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Các bàn sau đây đã được đặt trong khung thời gian này: {unavailableTablesList}. Vui lòng chọn bàn khác hoặc thời gian khác."
+                    });
+                }
+
+                _logger.LogInformation("All tables are available, proceeding with booking...");
+
                 // Bước 1: Tạo OrderTable
                 var orderTableRequest = new
                 {
@@ -331,7 +443,6 @@ namespace testpayment6._0.Controllers
 
             return Json(new { success = false, message = "Không thể tải danh sách bàn" });
         }
-        // Cập nhật Controller DatBan - thay thế method GetOrderTableDetails hiện tại
 
         [HttpGet]
         public async Task<IActionResult> GetOrderTableDetails(long orderTableId)

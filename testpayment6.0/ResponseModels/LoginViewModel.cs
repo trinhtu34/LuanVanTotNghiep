@@ -1,5 +1,6 @@
 ﻿// Models/LoginViewModel.cs
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace testpayment6._0.ResponseModels
 {
@@ -18,14 +19,22 @@ namespace testpayment6._0.ResponseModels
 
 namespace testpayment6._0.ResponseModels
 {
-    public partial class TablesViewModel
+    public class TablesViewModel
     {
+        [JsonPropertyName("tableId")]
         public int TableId { get; set; }
-        public int Capacity { get; set; }
-        public decimal Deposit { get; set; }
-        public string? Description { get; set; }
+
+        [JsonPropertyName("regionId")]
         public int RegionId { get; set; }
 
+        [JsonPropertyName("capacity")]
+        public int Capacity { get; set; }
+
+        [JsonPropertyName("deposit")]
+        public decimal Deposit { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; } = string.Empty;
     }
 }
 
@@ -33,12 +42,23 @@ namespace testpayment6._0.ResponseModels
 {
     public class OrderTableResponse
     {
+        [JsonPropertyName("orderTableId")]
         public long OrderTableId { get; set; }
+
+        [JsonPropertyName("userId")]
         public string UserId { get; set; } = string.Empty;
-        public DateTime StartingTime { get; set; }
+
+        [JsonPropertyName("startingTime")]
+        public string StartingTime { get; set; } = string.Empty;
+
+        [JsonPropertyName("isCancel")]
         public bool IsCancel { get; set; }
+
+        [JsonPropertyName("totalPrice")]
         public decimal TotalPrice { get; set; }
-        public DateTime OrderDate { get; set; }
+
+        [JsonPropertyName("orderDate")]
+        public string OrderDate { get; set; } = string.Empty;
     }
 
     public class OrderTableViewModel
@@ -50,11 +70,36 @@ namespace testpayment6._0.ResponseModels
         public decimal TotalPrice { get; set; }
         public DateTime OrderDate { get; set; }
     }
+    //public class OrderTableViewModel
+    //{
+    //    [JsonPropertyName("orderTableId")]
+    //    public long OrderTableId { get; set; }
+
+    //    [JsonPropertyName("userId")]
+    //    public string UserId { get; set; } = string.Empty;
+
+    //    [JsonPropertyName("startingTime")]
+    //    public string StartingTime { get; set; } = string.Empty;
+
+    //    [JsonPropertyName("isCancel")]
+    //    public bool IsCancel { get; set; }
+
+    //    [JsonPropertyName("totalPrice")]
+    //    public decimal TotalPrice { get; set; }
+
+    //    [JsonPropertyName("orderDate")]
+    //    public string OrderDate { get; set; } = string.Empty;
+    //}
     // Thêm ViewModel
     public class OrderTableDetailViewModel
     {
-        public int OrderTablesDetailsId { get; set; }
+        [JsonPropertyName("orderTablesDetailsId")]
+        public long OrderTablesDetailsId { get; set; }
+
+        [JsonPropertyName("orderTableId")]
         public long OrderTableId { get; set; }
+
+        [JsonPropertyName("tableId")]
         public int TableId { get; set; }
     }
 }

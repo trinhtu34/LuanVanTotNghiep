@@ -259,7 +259,7 @@
 				tableItem.className = 'col-md-6 mb-2';
 				tableItem.innerHTML = `
 					<div class="selected-table-item">
-						<button class="remove-table-btn" onclick="removeTable(${tableId})">
+						<button class="remove-table-btn" onclick="removeTable('${tableId}')">
 							<i class="fas fa-times"></i>
 						</button>
 						<strong>Bàn ${tableId}</strong><br>
@@ -275,27 +275,50 @@
 			totalDeposit.textContent = total.toLocaleString('vi-VN') + ' VNĐ';
 		}
 
-		// Hàm thêm/xóa bàn
+		// Hàm thêm/xóa bàn - PHIÊN BẢN ĐÃ SỬA HOÀN TOÀN
 		window.removeTable = function(tableId) {
-			selectedTables.delete(tableId);
+			console.log('Attempting to remove table:', tableId, typeof tableId);
+			console.log('Current selected tables keys:', Array.from(selectedTables.keys()));
+
+			// Đảm bảo tableId là string để so sánh nhất quán
+			const tableIdStr = String(tableId);
+
+			// Kiểm tra xem bàn có tồn tại trong Map không
+			if (!selectedTables.has(tableIdStr)) {
+				console.log('Table not found in selectedTables Map');
+				return;
+			}
+
+			selectedTables.delete(tableIdStr);
+			console.log('Table removed from Map');
 
 			// Cập nhật UI của card bàn
-			const tableCard = document.querySelector(`[data-table-id="${tableId}"]`);
-			const button = tableCard.querySelector('.btn-chon-ban');
-			const indicator = tableCard.querySelector('.selected-indicator');
+			const tableCard = document.querySelector(`.table-card[data-table-id="${tableIdStr}"]`);
+			console.log('Found table card:', tableCard);
 
-			tableCard.classList.remove('selected');
-			button.classList.remove('selected');
-			button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
-			indicator.style.display = 'none';
+			if (tableCard) {
+				const button = tableCard.querySelector('.btn-chon-ban');
+				const indicator = tableCard.querySelector('.selected-indicator');
+
+				tableCard.classList.remove('selected');
+				if (button) {
+					button.classList.remove('selected');
+					button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
+				}
+				if (indicator) {
+					indicator.style.display = 'none';
+				}
+				console.log('Table card UI updated');
+			}
 
 			updateSelectedTablesUI();
+			console.log('UI updated, remaining tables:', selectedTables.size);
 		};
 
 		// Xử lý click chọn bàn
 		document.querySelectorAll('.btn-chon-ban').forEach(function(button) {
 			button.addEventListener('click', function() {
-				const tableId = this.getAttribute('data-table-id');
+				const tableId = String(this.getAttribute('data-table-id')); // Đảm bảo là string
 				const deposit = this.getAttribute('data-deposit');
 				const capacity = this.getAttribute('data-capacity');
 				const description = this.getAttribute('data-description');
@@ -330,7 +353,9 @@
 
 		// Xóa tất cả bàn đã chọn
 		document.getElementById('clearAllBtn').addEventListener('click', function() {
-			selectedTables.forEach((table, tableId) => {
+			// Tạo copy của keys để tránh lỗi iteration
+			const tableIds = Array.from(selectedTables.keys());
+			tableIds.forEach(tableId => {
 				removeTable(tableId);
 			});
 		});
@@ -444,9 +469,13 @@
 						card.classList.remove('selected');
 						const button = card.querySelector('.btn-chon-ban');
 						const indicator = card.querySelector('.selected-indicator');
-						button.classList.remove('selected');
-						button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
-						indicator.style.display = 'none';
+						if (button) {
+							button.classList.remove('selected');
+							button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
+						}
+						if (indicator) {
+							indicator.style.display = 'none';
+						}
 					});
 					updateSelectedTablesUI();
 
