@@ -1,0 +1,465 @@
+﻿@{
+	ViewData["Title"] = "Đặt Bàn";
+	var groupedTables = ViewBag.GroupedTables as IEnumerable<IGrouping<int, dynamic>>;
+}
+
+<div class="container mt-4">
+	<h2 class="text-center mb-4">Đặt Bàn Nhà Hàng</h2>
+
+	@if (TempData["Error"] != null)
+	{
+		<div class="alert alert-danger">
+			@TempData["Error"]
+		</div>
+	}
+
+	<!-- Giỏ bàn đã chọn -->
+	<div class="selected-tables-section mb-4" id="selectedTablesSection" style="display: none;">
+		<div class="card border-primary">
+			<div class="card-header bg-primary text-white">
+				<h5 class="mb-0">
+					<i class="fas fa-shopping-cart"></i> Bàn đã chọn
+					<span class="badge bg-light text-primary ms-2" id="selectedCount">0</span>
+				</h5>
+			</div>
+			<div class="card-body">
+				<div id="selectedTablesList" class="row"></div>
+				<hr>
+				<div class="d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Tổng tiền cọc: <span id="totalDeposit" class="text-primary">0 VNĐ</span></strong>
+					</div>
+					<div>
+						<button class="btn btn-warning btn-sm me-2" id="clearAllBtn">
+							<i class="fas fa-trash"></i> Xóa tất cả
+						</button>
+						<button class="btn btn-success" id="proceedBookingBtn">
+							<i class="fas fa-calendar-check"></i> Tiến hành đặt bàn
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	@if (groupedTables != null && groupedTables.Any())
+	{
+		@foreach (var regionGroup in groupedTables)
+		{
+			<div class="region-section mb-5">
+				<h4 class="region-title mb-3">Khu vực @regionGroup.Key</h4>
+				<div class="row">
+					@foreach (var table in regionGroup)
+					{
+						<div class="col-md-4 col-lg-3 mb-3">
+							<div class="card table-card" data-table-id="@table.TableId">
+								<div class="card-body text-center">
+									<div class="selected-indicator" style="display: none;">
+										<i class="fas fa-check-circle text-success"></i>
+									</div>
+									<h5 class="card-title">Bàn @table.TableId</h5>
+									<p class="card-text">
+										<i class="fas fa-users"></i> Sức chứa: @table.Capacity người<br>
+										<i class="fas fa-money-bill-wave"></i> Cọc: @string.Format("{0:N0}", table.Deposit) VNĐ<br>
+										<small class="text-muted">@table.Description</small>
+									</p>
+									<button class="btn btn-outline-primary btn-chon-ban"
+											data-table-id="@table.TableId"
+											data-deposit="@table.Deposit"
+											data-capacity="@table.Capacity"
+											data-description="@table.Description">
+										<i class="fas fa-plus"></i> Chọn bàn
+									</button>
+								</div>
+							</div>
+						</div>
+					}
+				</div>
+			</div>
+		}
+	}
+	else
+	{
+		<div class="alert alert-info text-center">
+			<i class="fas fa-info-circle"></i> Không có bàn nào khả dụng
+		</div>
+	}
+</div>
+
+<!-- Modal Đặt Bàn -->
+<div class="modal fade" id="datBanModal" tabindex="-1" aria-labelledby="datBanModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="datBanModalLabel">Xác nhận đặt bàn</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="datBanForm">
+					<div class="mb-3">
+						<label class="form-label"><strong>Danh sách bàn đã chọn:</strong></label>
+						<div id="modalTablesList" class="border rounded p-3 bg-light"></div>
+					</div>
+					<div class="mb-3">
+						<label for="startingTime" class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+						<input type="datetime-local" class="form-control" id="startingTime" name="startingTime" required>
+					</div>
+					<div class="mb-3">
+						<label class="form-label"><strong>Tổng tiền cọc:</strong></label>
+						<h4 class="text-primary" id="modalTotalDeposit">0 VNĐ</h4>
+					</div>
+					<div class="alert alert-warning">
+						<i class="fas fa-exclamation-triangle"></i>
+						<strong>Lưu ý:</strong> Bạn cần đặt cọc để xác nhận đặt bàn. Vui lòng đến nhà hàng đúng giờ đã đặt.
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+				<button type="button" class="btn btn-primary" id="confirmDatBan">
+					<i class="fas fa-check"></i> Xác nhận đặt bàn
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Loading -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-body text-center">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+				<p class="mt-2">Đang xử lý...</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	.table-card {
+		border: 2px solid #e0e0e0;
+		border-radius: 10px;
+		transition: all 0.3s ease;
+		position: relative;
+	}
+
+		.table-card:hover {
+			border-color: #007bff;
+			box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+			transform: translateY(-2px);
+		}
+
+		.table-card.selected {
+			border-color: #28a745;
+			background-color: #f8fff9;
+			box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+		}
+
+	.selected-indicator {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		font-size: 1.5rem;
+	}
+
+	.btn-chon-ban {
+		width: 100%;
+		padding: 10px;
+		font-weight: 500;
+		transition: all 0.3s ease;
+	}
+
+		.btn-chon-ban.selected {
+			background-color: #28a745;
+			border-color: #28a745;
+			color: white;
+		}
+
+	.region-title {
+		color: #495057;
+		border-bottom: 2px solid #007bff;
+		padding-bottom: 8px;
+	}
+
+	.region-section {
+		background: #f8f9fa;
+		padding: 20px;
+		border-radius: 10px;
+	}
+
+	.card-title {
+		color: #007bff;
+		font-weight: bold;
+	}
+
+	.fas {
+		margin-right: 5px;
+	}
+
+	.selected-table-item {
+		background: white;
+		border: 1px solid #dee2e6;
+		border-radius: 8px;
+		padding: 15px;
+		margin-bottom: 10px;
+		position: relative;
+	}
+
+	.remove-table-btn {
+		position: absolute;
+		top: 5px;
+		right: 5px;
+		background: #dc3545;
+		color: white;
+		border: none;
+		border-radius: 50%;
+		width: 25px;
+		height: 25px;
+		font-size: 12px;
+		cursor: pointer;
+	}
+
+	.selected-tables-section {
+		position: sticky;
+		top: 20px;
+		z-index: 100;
+	}
+</style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		let selectedTables = new Map(); // Map để lưu thông tin các bàn đã chọn
+
+		// Hàm cập nhật UI cho bàn đã chọn
+		function updateSelectedTablesUI() {
+			const selectedSection = document.getElementById('selectedTablesSection');
+			const selectedList = document.getElementById('selectedTablesList');
+			const selectedCount = document.getElementById('selectedCount');
+			const totalDeposit = document.getElementById('totalDeposit');
+
+			if (selectedTables.size === 0) {
+				selectedSection.style.display = 'none';
+				return;
+			}
+
+			selectedSection.style.display = 'block';
+			selectedCount.textContent = selectedTables.size;
+
+			// Tính tổng tiền cọc
+			let total = 0;
+			selectedList.innerHTML = '';
+
+			selectedTables.forEach((table, tableId) => {
+				total += parseInt(table.deposit);
+
+				const tableItem = document.createElement('div');
+				tableItem.className = 'col-md-6 mb-2';
+				tableItem.innerHTML = `
+					<div class="selected-table-item">
+						<button class="remove-table-btn" onclick="removeTable(${tableId})">
+							<i class="fas fa-times"></i>
+						</button>
+						<strong>Bàn ${tableId}</strong><br>
+						<small>
+							<i class="fas fa-users"></i> ${table.capacity} người |
+							<i class="fas fa-money-bill-wave"></i> ${parseInt(table.deposit).toLocaleString('vi-VN')} VNĐ
+						</small>
+					</div>
+				`;
+				selectedList.appendChild(tableItem);
+			});
+
+			totalDeposit.textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+		}
+
+		// Hàm thêm/xóa bàn
+		window.removeTable = function(tableId) {
+			selectedTables.delete(tableId);
+
+			// Cập nhật UI của card bàn
+			const tableCard = document.querySelector(`[data-table-id="${tableId}"]`);
+			const button = tableCard.querySelector('.btn-chon-ban');
+			const indicator = tableCard.querySelector('.selected-indicator');
+
+			tableCard.classList.remove('selected');
+			button.classList.remove('selected');
+			button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
+			indicator.style.display = 'none';
+
+			updateSelectedTablesUI();
+		};
+
+		// Xử lý click chọn bàn
+		document.querySelectorAll('.btn-chon-ban').forEach(function(button) {
+			button.addEventListener('click', function() {
+				const tableId = this.getAttribute('data-table-id');
+				const deposit = this.getAttribute('data-deposit');
+				const capacity = this.getAttribute('data-capacity');
+				const description = this.getAttribute('data-description');
+
+				const tableCard = this.closest('.table-card');
+				const indicator = tableCard.querySelector('.selected-indicator');
+
+				if (selectedTables.has(tableId)) {
+					// Bỏ chọn bàn
+					selectedTables.delete(tableId);
+					tableCard.classList.remove('selected');
+					this.classList.remove('selected');
+					this.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
+					indicator.style.display = 'none';
+				} else {
+					// Chọn bàn
+					selectedTables.set(tableId, {
+						tableId: tableId,
+						deposit: deposit,
+						capacity: capacity,
+						description: description
+					});
+					tableCard.classList.add('selected');
+					this.classList.add('selected');
+					this.innerHTML = '<i class="fas fa-check"></i> Đã chọn';
+					indicator.style.display = 'block';
+				}
+
+				updateSelectedTablesUI();
+			});
+		});
+
+		// Xóa tất cả bàn đã chọn
+		document.getElementById('clearAllBtn').addEventListener('click', function() {
+			selectedTables.forEach((table, tableId) => {
+				removeTable(tableId);
+			});
+		});
+
+		// Tiến hành đặt bàn
+		document.getElementById('proceedBookingBtn').addEventListener('click', function() {
+			if (selectedTables.size === 0) {
+				alert('Vui lòng chọn ít nhất một bàn');
+				return;
+			}
+
+			// Cập nhật modal với thông tin bàn đã chọn
+			const modalTablesList = document.getElementById('modalTablesList');
+			const modalTotalDeposit = document.getElementById('modalTotalDeposit');
+
+			let total = 0;
+			let tablesHtml = '';
+
+			selectedTables.forEach((table, tableId) => {
+				total += parseInt(table.deposit);
+				tablesHtml += `
+					<div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+						<div>
+							<strong>Bàn ${tableId}</strong> - ${table.capacity} người
+							<br><small class="text-muted">${table.description}</small>
+						</div>
+						<div class="text-end">
+							<strong>${parseInt(table.deposit).toLocaleString('vi-VN')} VNĐ</strong>
+						</div>
+					</div>
+				`;
+			});
+
+			modalTablesList.innerHTML = tablesHtml;
+			modalTotalDeposit.textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+
+			// Set thời gian mặc định
+			const now = new Date();
+			now.setHours(now.getHours() + 1);
+			const formatted = now.toISOString().slice(0, 16);
+			document.getElementById('startingTime').value = formatted;
+
+			// Hiển thị modal
+			const modal = new bootstrap.Modal(document.getElementById('datBanModal'));
+			modal.show();
+		});
+
+		// Xác nhận đặt bàn
+		document.getElementById('confirmDatBan').addEventListener('click', function() {
+			const startingTime = document.getElementById('startingTime').value;
+
+			if (!startingTime) {
+				alert('Vui lòng chọn thời gian bắt đầu');
+				return;
+			}
+
+			const selectedTime = new Date(startingTime);
+			const now = new Date();
+
+			if (selectedTime <= now) {
+				alert('Vui lòng chọn thời gian trong tương lai');
+				return;
+			}
+
+			if (selectedTables.size === 0) {
+				alert('Không có bàn nào được chọn');
+				return;
+			}
+
+			// Hiển thị loading
+			const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+			loadingModal.show();
+
+			// Tạo array các tableId
+			const tableIds = Array.from(selectedTables.keys());
+
+			// Gọi API đặt bàn với nhiều bàn
+			const formData = new FormData();
+			formData.append('startingTime', startingTime);
+
+			// Gửi danh sách tableIds
+			tableIds.forEach((tableId, index) => {
+				formData.append(`tableIds[${index}]`, tableId);
+			});
+
+			fetch('/DatBan/DatBanFunction', {
+				method: 'POST',
+				body: formData,
+				headers: {
+					'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+				}
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(data => {
+				loadingModal.hide();
+
+				if (data.success) {
+					const datBanModal = bootstrap.Modal.getInstance(document.getElementById('datBanModal'));
+					datBanModal.hide();
+
+					alert(`Đặt bàn thành công! Mã đơn: ${data.orderTableId}\nSố bàn đã đặt: ${selectedTables.size}`);
+
+					// Reset
+					selectedTables.clear();
+					document.querySelectorAll('.table-card').forEach(card => {
+						card.classList.remove('selected');
+						const button = card.querySelector('.btn-chon-ban');
+						const indicator = card.querySelector('.selected-indicator');
+						button.classList.remove('selected');
+						button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
+						indicator.style.display = 'none';
+					});
+					updateSelectedTablesUI();
+
+					window.location.reload();
+				} else {
+					alert('Lỗi: ' + (data.message || 'Không xác định'));
+				}
+			})
+			.catch(error => {
+				console.error('Fetch error:', error);
+				loadingModal.hide();
+				alert('Có lỗi xảy ra khi đặt bàn: ' + error.message);
+			});
+		});
+	});
+</script>

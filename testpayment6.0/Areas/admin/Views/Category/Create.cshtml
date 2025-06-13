@@ -1,0 +1,45 @@
+﻿@{
+	ViewData["Title"] = "Quản lý loại món ăn";
+	Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-12 col-md-6 offset-md-3">
+			<div class="card">
+				<div class="card-header">
+					<h4 class="mb-0">Thêm loại món ăn mới</h4>
+				</div>
+				<div class="card-body">
+					@if (ViewBag.Error != null)
+					{
+						<div class="alert alert-danger alert-dismissible fade show" role="alert">
+							@ViewBag.Error
+							<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+						</div>
+					}
+					<form method="post">
+						@Html.AntiForgeryToken()
+						<div class="mb-3">
+							<label for="categoryName" class="form-label">Tên loại món ăn <span class="text-danger">*</span></label>
+							<input type="text" class="form-control" id="categoryName" name="categoryName"
+								   placeholder="Nhập tên loại món ăn" required>
+						</div>
+
+						<div class="d-flex justify-content-between">
+							<a href="@Url.Action("Index")" class="btn btn-secondary">
+								<i class="fas fa-arrow-left"></i> Quay lại
+							</a>
+							<button type="submit" class="btn btn-primary">
+								<i class="fas fa-save"></i> Lưu
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	document.getElementById('categoryName').focus();
+</script>

@@ -1,0 +1,445 @@
+﻿@model List<testpayment6._0.Controllers.OrderTableViewModel>
+@{
+	ViewData["Title"] = "Danh Sách Đặt Bàn";
+}
+
+<div class="container mt-4">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h2>Danh Sách Đặt Bàn Của Tôi</h2>
+		<a href="@Url.Action("Index", "DatBan")" class="btn btn-success">
+			<i class="fas fa-plus"></i> Đặt Bàn Mới
+		</a>
+	</div>
+
+	@if (Model != null && Model.Any())
+	{
+		<div class="row">
+			@foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+			{
+				<div class="col-md-6 col-lg-4 mb-4">
+					<div class="card order-card @(order.IsCancel ? "cancelled" : "")">
+						<div class="card-header d-flex justify-content-between align-items-center">
+							<h6 class="mb-0">
+								<i class="fas fa-receipt"></i>
+								Mã đơn: #@order.OrderTableId
+							</h6>
+							<span class="badge @(order.IsCancel ? "bg-danger" : "bg-success")">
+								@(order.IsCancel ? "Đã hủy" : "Đang hoạt động")
+							</span>
+						</div>
+						<div class="card-body">
+							<div class="order-info">
+								<p class="info-item">
+									<i class="fas fa-calendar-alt text-primary"></i>
+									<strong>Ngày đặt:</strong><br>
+									<span class="ms-3">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+								</p>
+
+								<p class="info-item">
+									<i class="fas fa-clock text-warning"></i>
+									<strong>Thời gian bắt đầu:</strong><br>
+									<span class="ms-3">@order.StartingTime.ToString("dd/MM/yyyy HH:mm")</span>
+								</p>
+
+								<p class="info-item">
+									<i class="fas fa-money-bill-wave text-success"></i>
+									<strong>Tổng tiền:</strong><br>
+									<span class="ms-3">@string.Format("{0:N0}", order.TotalPrice) VNĐ</span>
+								</p>
+
+								<!-- Thông tin số bàn -->
+								<p class="info-item">
+									<i class="fas fa-utensils text-info"></i>
+									<strong>Số bàn đã đặt:</strong><br>
+									<span class="ms-3 table-count-placeholder" data-order-id="@order.OrderTableId">
+										<span class="spinner-border spinner-border-sm" role="status"></span>
+										Đang tải...
+									</span>
+								</p>
+							</div>
+
+							<div class="mt-3">
+								<button class="btn btn-info btn-sm w-100 btn-chi-tiet"
+										data-order-id="@order.OrderTableId">
+									<i class="fas fa-eye"></i> Xem Chi Tiết
+								</button>
+							</div>
+						</div>
+						<div class="card-footer text-muted text-center">
+							<small>
+								@{
+									var timeUntilStart = order.StartingTime - DateTime.Now;
+									if (timeUntilStart.TotalHours > 0 && !order.IsCancel)
+									{
+										<span class="text-info">
+											<i class="fas fa-hourglass-half"></i>
+											Còn @Math.Round(timeUntilStart.TotalHours, 1) giờ nữa
+										</span>
+									}
+									else if (!order.IsCancel && timeUntilStart.TotalHours <= 0 && timeUntilStart.TotalHours > -2)
+									{
+										<span class="text-warning">
+											<i class="fas fa-exclamation-triangle"></i>
+											Đã đến giờ
+										</span>
+									}
+									else if (!order.IsCancel)
+									{
+										<span class="text-secondary">
+											<i class="fas fa-check-circle"></i>
+											Đã qua
+										</span>
+									}
+									else
+									{
+										<span class="text-danger">
+											<i class="fas fa-times-circle"></i>
+											Đã hủy
+										</span>
+									}
+								}
+							</small>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	}
+	else
+	{
+		<div class="text-center py-5">
+			<div class="empty-state">
+				<i class="fas fa-calendar-times fa-5x text-muted mb-3"></i>
+				<h4 class="text-muted">Chưa có đơn đặt bàn nào</h4>
+				<p class="text-muted">Bạn chưa đặt bàn lần nào. Hãy đặt bàn ngay để trải nghiệm dịch vụ của chúng tôi!</p>
+				<a href="@Url.Action("Index", "DatBan")" class="btn btn-primary btn-lg">
+					<i class="fas fa-plus"></i> Đặt Bàn Ngay
+				</a>
+			</div>
+		</div>
+	}
+</div>
+
+<!-- Modal Chi Tiết Đơn -->
+<div class="modal fade" id="chiTietModal" tabindex="-1" aria-labelledby="chiTietModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="chiTietModalLabel">Chi Tiết Đơn Đặt Bàn</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div id="chiTietContent">
+					<div class="text-center">
+						<div class="spinner-border text-primary" role="status">
+							<span class="visually-hidden">Đang tải...</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	.order-card {
+		border-radius: 10px;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		transition: all 0.3s ease;
+	}
+
+		.order-card:hover {
+			box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+			transform: translateY(-2px);
+		}
+
+		.order-card.cancelled {
+			opacity: 0.7;
+			border-left: 4px solid #dc3545;
+		}
+
+	.info-item {
+		margin-bottom: 15px;
+		padding: 8px 0;
+		border-bottom: 1px solid #eee;
+	}
+
+		.info-item:last-child {
+			border-bottom: none;
+		}
+
+		.info-item i {
+			width: 20px;
+		}
+
+	.btn-chi-tiet {
+		transition: all 0.3s ease;
+	}
+
+		.btn-chi-tiet:hover {
+			transform: scale(1.02);
+		}
+
+	.empty-state {
+		max-width: 400px;
+		margin: 0 auto;
+	}
+
+	.card-header {
+		background: linear-gradient(45deg, #007bff, #0056b3);
+		color: white;
+	}
+
+	.card-footer {
+		background-color: #f8f9fa;
+	}
+
+	.table-count-placeholder {
+		font-size: 0.9rem;
+	}
+
+	.table-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 5px;
+	}
+
+	.table-badge {
+		background-color: #e3f2fd;
+		color: #1976d2;
+		padding: 4px 8px;
+		border-radius: 12px;
+		font-size: 0.8rem;
+		font-weight: 500;
+	}
+
+	.table-summary {
+		background-color: #f8f9fa;
+		padding: 15px;
+		border-radius: 8px;
+		margin-bottom: 20px;
+		border-left: 4px solid #007bff;
+	}
+
+	.table-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 15px;
+	}
+
+	.table-detail-card {
+		border: 1px solid #e0e0e0;
+		border-radius: 8px;
+		padding: 15px;
+		text-align: center;
+		background: #f8f9fa;
+		transition: all 0.3s ease;
+	}
+
+		.table-detail-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+		}
+
+	@@media (max-width: 768px) {
+		.order-card
+
+	{
+		margin-bottom: 20px;
+	}
+
+	.info-item {
+		padding: 5px 0;
+	}
+
+	.table-grid {
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	}
+
+	}
+</style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		// Tải số lượng bàn cho mỗi đơn
+		loadTableCounts();
+
+		// Xử lý click xem chi tiết
+		document.querySelectorAll('.btn-chi-tiet').forEach(function(button) {
+			button.addEventListener('click', function() {
+				const orderTableId = this.getAttribute('data-order-id');
+				showOrderDetails(orderTableId);
+			});
+		});
+	});
+
+	// Hàm tải số lượng bàn cho tất cả đơn - SỬ DỤNG CONTROLLER
+	function loadTableCounts() {
+		document.querySelectorAll('.table-count-placeholder').forEach(function(element) {
+			const orderTableId = element.getAttribute('data-order-id');
+
+			// Gọi API thông qua Controller MVC
+			fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			.then(response => {
+				console.log('Response status:', response.status);
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(result => {
+				console.log('Controller response:', result);
+
+				if (result.success && result.data && result.data.length > 0) {
+					const tableCount = result.data.length;
+					const tableIds = result.data.map(item => item.tableId).sort((a, b) => a - b);
+
+					// Hiển thị số lượng và danh sách bàn
+					element.innerHTML = `
+						<span class="fw-bold">${tableCount} bàn</span><br>
+						<div class="table-list mt-1">
+							${tableIds.map(id => `<span class="table-badge">Bàn ${id}</span>`).join('')}
+						</div>
+					`;
+				} else {
+					element.innerHTML = '<span class="text-muted">Không có bàn</span>';
+				}
+			})
+			.catch(error => {
+				console.error('Error loading table count:', error);
+				element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
+			});
+		});
+	}
+
+	// Hàm hiển thị chi tiết đơn - SỬ DỤNG CONTROLLER
+	function showOrderDetails(orderTableId) {
+		// Hiển thị modal
+		const modal = new bootstrap.Modal(document.getElementById('chiTietModal'));
+		modal.show();
+
+		// Reset nội dung
+		document.getElementById('chiTietContent').innerHTML = `
+			<div class="text-center">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Đang tải...</span>
+				</div>
+				<p class="mt-2">Đang tải chi tiết...</p>
+			</div>
+		`;
+
+		// Gọi API thông qua Controller MVC
+		fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		.then(response => {
+			console.log('Detail response status:', response.status);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(result => {
+			console.log('Detail controller response:', result);
+			let content = '';
+
+			if (result.success && result.data && result.data.length > 0) {
+				const data = result.data;
+
+				// Thống kê tổng quan
+				const tableCount = data.length;
+				const tableIds = data.map(item => item.tableId).sort((a, b) => a - b);
+				const minTable = Math.min(...tableIds);
+				const maxTable = Math.max(...tableIds);
+
+				content += `
+					<div class="table-summary">
+						<h6 class="mb-3">
+							<i class="fas fa-info-circle text-primary"></i>
+							Tổng quan đơn đặt bàn #${orderTableId}
+						</h6>
+						<div class="row">
+							<div class="col-md-4">
+								<div class="text-center">
+									<div class="h4 text-primary mb-1">${tableCount}</div>
+									<small class="text-muted">Tổng số bàn</small>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="text-center">
+									<div class="h4 text-success mb-1">${minTable}</div>
+									<small class="text-muted">Bàn nhỏ nhất</small>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="text-center">
+									<div class="h4 text-warning mb-1">${maxTable}</div>
+									<small class="text-muted">Bàn lớn nhất</small>
+								</div>
+							</div>
+						</div>
+					</div>
+				`;
+
+				content += '<h6 class="mb-3">Danh sách bàn đã đặt:</h6>';
+				content += '<div class="table-grid">';
+
+				data.forEach(function(detail) {
+					content += `
+						<div class="table-detail-card">
+							<div class="h5 text-primary mb-2">
+								<i class="fas fa-utensils"></i> Bàn ${detail.tableId}
+							</div>
+							<div class="text-muted">
+								<small>ID: ${detail.orderTablesDetailsId}</small>
+							</div>
+						</div>
+					`;
+				});
+
+				content += '</div>';
+
+				// Thêm danh sách bàn dạng compact
+				content += `
+					<div class="mt-4">
+						<h6 class="mb-2">Danh sách bàn (compact):</h6>
+						<div class="d-flex flex-wrap gap-2">
+							${tableIds.map(id => `
+								<span class="badge bg-primary">Bàn ${id}</span>
+							`).join('')}
+						</div>
+					</div>
+				`;
+			} else {
+				content += `
+					<div class="alert alert-warning text-center">
+						<i class="fas fa-info-circle"></i>
+						${result.message || 'Không có thông tin chi tiết bàn cho đơn #' + orderTableId}
+					</div>
+				`;
+			}
+
+			document.getElementById('chiTietContent').innerHTML = content;
+		})
+		.catch(error => {
+			console.error('Error loading order details:', error);
+			document.getElementById('chiTietContent').innerHTML = `
+				<div class="alert alert-danger">
+					<i class="fas fa-exclamation-triangle"></i>
+					Có lỗi xảy ra khi tải chi tiết: ${error.message}
+				</div>
+			`;
+		});
+	}
+</script>
