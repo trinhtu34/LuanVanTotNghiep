@@ -20,7 +20,7 @@ namespace testpayment6._0.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Kiểm tra đăng nhập
+            // kiểm tra đăng nhập , ý là bắt phải đăng nhập mới vào index của đặt bàn đc 
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
@@ -62,11 +62,6 @@ namespace testpayment6._0.Controllers
                     TempData["Error"] = "Không thể tải danh sách bàn. Vui lòng thử lại sau.";
                 }
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Network error when loading tables");
-                TempData["Error"] = "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet.";
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading tables");
@@ -76,7 +71,7 @@ namespace testpayment6._0.Controllers
             return View();
         }
 
-        // Phương thức kiểm tra bàn có khả dụng trong khung thời gian không
+        // kiểm tra bàn xem là có ai đặt trong vòng 2 tiếng hay chưa
         private async Task<List<int>> CheckTableAvailabilityAsync(List<int> tableIds, DateTime startingTime)
         {
             var unavailableTables = new List<int>();
@@ -103,11 +98,11 @@ namespace testpayment6._0.Controllers
                     return unavailableTables; // Không có đơn nào, tất cả bàn đều khả dụng
                 }
 
-                // Lọc các đơn chưa hủy và trong khung thời gian xung đột (±2 giờ)
+                // Lọc các đơn chưa hủy và trong khung thời gian xung đột ( khoảng 2 giờ)
                 var conflictingOrders = allOrders.Where(order =>
                     !order.IsCancel && // Đơn chưa bị hủy
                     DateTime.TryParse(order.StartingTime, out DateTime orderStartTime) &&
-                    Math.Abs((orderStartTime - startingTime).TotalHours) <= 2 // Trong vòng 2 giờ
+                    Math.Abs((orderStartTime - startingTime).TotalHours) <= 2
                 ).ToList();
 
                 if (!conflictingOrders.Any())
@@ -219,7 +214,7 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // BƯỚC MỚI: Kiểm tra tính khả dụng của bàn
+                // Kiểm tra xem bàn có khả dụng không 
                 _logger.LogInformation("Checking table availability...");
                 var unavailableTables = await CheckTableAvailabilityAsync(tableIds, parsedStartTime);
 
@@ -363,11 +358,6 @@ namespace testpayment6._0.Controllers
                 _logger.LogError(ex, "Request timeout");
                 return Json(new { success = false, message = "Yêu cầu bị timeout. Vui lòng thử lại." });
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Network error during table reservation");
-                return Json(new { success = false, message = $"Lỗi kết nối mạng: {ex.Message}" });
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error creating table reservation");
@@ -403,11 +393,6 @@ namespace testpayment6._0.Controllers
                     _logger.LogWarning($"Failed to load user orders. Status: {response.StatusCode}");
                     TempData["Error"] = "Không thể tải danh sách đặt bàn";
                 }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Network error when loading user orders");
-                TempData["Error"] = "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet.";
             }
             catch (Exception ex)
             {
@@ -482,15 +467,6 @@ namespace testpayment6._0.Controllers
                         message = $"Không thể tải dữ liệu từ API. Status: {response.StatusCode}"
                     });
                 }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, $"Network error loading order details for {orderTableId}");
-                return Json(new
-                {
-                    success = false,
-                    message = "Lỗi kết nối mạng. Vui lòng thử lại."
-                });
             }
             catch (JsonException ex)
             {
