@@ -230,265 +230,299 @@
 </style>
 
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-		let selectedTables = new Map(); // Map để lưu thông tin các bàn đã chọn
+	class TableBookingManager {
+		constructor() {
+			this.selectedTables = new Map();
+			this.elements = this.getElements();
+			this.init();
+		}
 
-		// Hàm cập nhật UI cho bàn đã chọn
-		function updateSelectedTablesUI() {
-			const selectedSection = document.getElementById('selectedTablesSection');
-			const selectedList = document.getElementById('selectedTablesList');
-			const selectedCount = document.getElementById('selectedCount');
-			const totalDeposit = document.getElementById('totalDeposit');
+		getElements() {
+			return {
+				selectedSection: document.getElementById('selectedTablesSection'),
+				selectedList: document.getElementById('selectedTablesList'),
+				selectedCount: document.getElementById('selectedCount'),
+				totalDeposit: document.getElementById('totalDeposit'),
+				modalTablesList: document.getElementById('modalTablesList'),
+				modalTotalDeposit: document.getElementById('modalTotalDeposit'),
+				startingTime: document.getElementById('startingTime'),
+				datBanModal: document.getElementById('datBanModal'),
+				loadingModal: document.getElementById('loadingModal')
+			};
+		}
 
-			if (selectedTables.size === 0) {
+		init() {
+			this.setupEventListeners();
+			this.setDefaultTime();
+		}
+		setDefaultTime() {
+			const now = new Date();
+			now.setHours(now.getHours() + 1);
+			this.elements.startingTime.value = now.toISOString().slice(0, 16);
+		}
+
+		setupEventListeners() {
+			// Event delegation - một listener cho tất cả buttons
+			document.addEventListener('click', this.handleClick.bind(this));
+		}
+
+		handleClick(e) {
+			const target = e.target.closest('button');
+			if (!target) return;
+
+			const actions = {
+				'btn-chon-ban': () => this.toggleTable(target),
+				'remove-table-btn': () => this.removeTable(target.dataset.tableId || target.onclick.toString().match(/'([^']+)'/)?.[1]),
+				'clearAllBtn': () => this.clearAllTables(),
+				'proceedBookingBtn': () => this.showBookingModal(),
+				'confirmDatBan': () => this.confirmBooking()
+			};
+
+			const action = Object.keys(actions).find(cls => target.classList.contains(cls) || target.id === cls);
+			if (action) {
+				e.preventDefault();
+				actions[action]();
+			}
+		}
+
+		toggleTable(button) {
+			const tableData = this.getTableData(button);
+			const { tableId } = tableData;
+			const tableCard = button.closest('.table-card');
+			const indicator = tableCard.querySelector('.selected-indicator');
+
+			if (this.selectedTables.has(tableId)) {
+				this.deselectTable(tableId, tableCard, button, indicator);
+			} else {
+				this.selectTable(tableData, tableCard, button, indicator);
+			}
+
+			this.updateUI();
+		}
+
+		getTableData(button) {
+			return {
+				tableId: String(button.dataset.tableId),
+				deposit: button.dataset.deposit,
+				capacity: button.dataset.capacity,
+				description: button.dataset.description
+			};
+		}
+
+		selectTable(tableData, card, button, indicator) {
+			this.selectedTables.set(tableData.tableId, tableData);
+			this.updateTableVisual(card, button, indicator, true);
+		}
+
+		deselectTable(tableId, card, button, indicator) {
+			this.selectedTables.delete(tableId);
+			this.updateTableVisual(card, button, indicator, false);
+		}
+
+		updateTableVisual(card, button, indicator, isSelected) {
+			const method = isSelected ? 'add' : 'remove';
+			card.classList[method]('selected');
+			button.classList[method]('selected');
+			button.innerHTML = isSelected
+				? '<i class="fas fa-check"></i> Đã chọn'
+				: '<i class="fas fa-plus"></i> Chọn bàn';
+			indicator.style.display = isSelected ? 'block' : 'none';
+		}
+
+		removeTable(tableId) {
+			if (!tableId || !this.selectedTables.has(String(tableId))) return;
+
+			const tableCard = document.querySelector(`.table-card[data-table-id="${tableId}"]`);
+			if (tableCard) {
+				const button = tableCard.querySelector('.btn-chon-ban');
+				const indicator = tableCard.querySelector('.selected-indicator');
+				this.deselectTable(String(tableId), tableCard, button, indicator);
+				this.updateUI();
+			}
+		}
+
+		clearAllTables() {
+			Array.from(this.selectedTables.keys()).forEach(tableId => this.removeTable(tableId));
+		}
+
+		updateUI() {
+			const { selectedSection, selectedList, selectedCount, totalDeposit } = this.elements;
+
+			if (this.selectedTables.size === 0) {
 				selectedSection.style.display = 'none';
 				return;
 			}
 
 			selectedSection.style.display = 'block';
-			selectedCount.textContent = selectedTables.size;
+			selectedCount.textContent = this.selectedTables.size;
 
-			// Tính tổng tiền cọc
-			let total = 0;
-			selectedList.innerHTML = '';
-
-			selectedTables.forEach((table, tableId) => {
-				total += parseInt(table.deposit);
-
-				const tableItem = document.createElement('div');
-				tableItem.className = 'col-md-6 mb-2';
-				tableItem.innerHTML = `
-					<div class="selected-table-item">
-						<button class="remove-table-btn" onclick="removeTable('${tableId}')">
-							<i class="fas fa-times"></i>
-						</button>
-						<strong>Bàn ${tableId}</strong><br>
-						<small>
-							<i class="fas fa-users"></i> ${table.capacity} người |
-							<i class="fas fa-money-bill-wave"></i> ${parseInt(table.deposit).toLocaleString('vi-VN')} VNĐ
-						</small>
-					</div>
-				`;
-				selectedList.appendChild(tableItem);
-			});
-
-			totalDeposit.textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+			const { html, total } = this.generateSelectedTablesHTML();
+			selectedList.innerHTML = html;
+			totalDeposit.textContent = this.formatCurrency(total);
 		}
 
-		// Hàm thêm/xóa bàn - PHIÊN BẢN ĐÃ SỬA HOÀN TOÀN
-		window.removeTable = function(tableId) {
-			console.log('Attempting to remove table:', tableId, typeof tableId);
-			console.log('Current selected tables keys:', Array.from(selectedTables.keys()));
+		generateSelectedTablesHTML() {
+			let html = '';
+			let total = 0;
 
-			// Đảm bảo tableId là string để so sánh nhất quán
-			const tableIdStr = String(tableId);
-
-			// Kiểm tra xem bàn có tồn tại trong Map không
-			if (!selectedTables.has(tableIdStr)) {
-				console.log('Table not found in selectedTables Map');
-				return;
-			}
-
-			selectedTables.delete(tableIdStr);
-			console.log('Table removed from Map');
-
-			// Cập nhật UI của card bàn
-			const tableCard = document.querySelector(`.table-card[data-table-id="${tableIdStr}"]`);
-			console.log('Found table card:', tableCard);
-
-			if (tableCard) {
-				const button = tableCard.querySelector('.btn-chon-ban');
-				const indicator = tableCard.querySelector('.selected-indicator');
-
-				tableCard.classList.remove('selected');
-				if (button) {
-					button.classList.remove('selected');
-					button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
-				}
-				if (indicator) {
-					indicator.style.display = 'none';
-				}
-				console.log('Table card UI updated');
-			}
-
-			updateSelectedTablesUI();
-			console.log('UI updated, remaining tables:', selectedTables.size);
-		};
-
-		// Xử lý click chọn bàn
-		document.querySelectorAll('.btn-chon-ban').forEach(function(button) {
-			button.addEventListener('click', function() {
-				const tableId = String(this.getAttribute('data-table-id')); // Đảm bảo là string
-				const deposit = this.getAttribute('data-deposit');
-				const capacity = this.getAttribute('data-capacity');
-				const description = this.getAttribute('data-description');
-
-				const tableCard = this.closest('.table-card');
-				const indicator = tableCard.querySelector('.selected-indicator');
-
-				if (selectedTables.has(tableId)) {
-					// Bỏ chọn bàn
-					selectedTables.delete(tableId);
-					tableCard.classList.remove('selected');
-					this.classList.remove('selected');
-					this.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
-					indicator.style.display = 'none';
-				} else {
-					// Chọn bàn
-					selectedTables.set(tableId, {
-						tableId: tableId,
-						deposit: deposit,
-						capacity: capacity,
-						description: description
-					});
-					tableCard.classList.add('selected');
-					this.classList.add('selected');
-					this.innerHTML = '<i class="fas fa-check"></i> Đã chọn';
-					indicator.style.display = 'block';
-				}
-
-				updateSelectedTablesUI();
+			this.selectedTables.forEach((table, tableId) => {
+				total += parseInt(table.deposit);
+				html += `
+					<div class="col-md-6 mb-2">
+						<div class="selected-table-item">
+							<button class="remove-table-btn" data-table-id="${tableId}">
+								<i class="fas fa-times"></i>
+							</button>
+							<strong>Bàn ${tableId}</strong><br>
+							<small>
+								<i class="fas fa-users"></i> ${table.capacity} người |
+								<i class="fas fa-money-bill-wave"></i> ${this.formatCurrency(parseInt(table.deposit))}
+							</small>
+						</div>
+					</div>
+				`;
 			});
-		});
 
-		// Xóa tất cả bàn đã chọn
-		document.getElementById('clearAllBtn').addEventListener('click', function() {
-			// Tạo copy của keys để tránh lỗi iteration
-			const tableIds = Array.from(selectedTables.keys());
-			tableIds.forEach(tableId => {
-				removeTable(tableId);
-			});
-		});
+			return { html, total };
+		}
 
-		// Tiến hành đặt bàn
-		document.getElementById('proceedBookingBtn').addEventListener('click', function() {
-			if (selectedTables.size === 0) {
+		showBookingModal() {
+			if (this.selectedTables.size === 0) {
 				alert('Vui lòng chọn ít nhất một bàn');
 				return;
 			}
 
-			// Cập nhật modal với thông tin bàn đã chọn
-			const modalTablesList = document.getElementById('modalTablesList');
-			const modalTotalDeposit = document.getElementById('modalTotalDeposit');
+			const { html, total } = this.generateModalTablesHTML();
+			this.elements.modalTablesList.innerHTML = html;
+			this.elements.modalTotalDeposit.textContent = this.formatCurrency(total);
 
+			new bootstrap.Modal(this.elements.datBanModal).show();
+		}
+
+		generateModalTablesHTML() {
+			let html = '';
 			let total = 0;
-			let tablesHtml = '';
 
-			selectedTables.forEach((table, tableId) => {
+			this.selectedTables.forEach((table, tableId) => {
 				total += parseInt(table.deposit);
-				tablesHtml += `
+				html += `
 					<div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
 						<div>
 							<strong>Bàn ${tableId}</strong> - ${table.capacity} người
 							<br><small class="text-muted">${table.description}</small>
 						</div>
 						<div class="text-end">
-							<strong>${parseInt(table.deposit).toLocaleString('vi-VN')} VNĐ</strong>
+							<strong>${this.formatCurrency(parseInt(table.deposit))}</strong>
 						</div>
 					</div>
 				`;
 			});
 
-			modalTablesList.innerHTML = tablesHtml;
-			modalTotalDeposit.textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+			return { html, total };
+		}
 
-			// Set thời gian mặc định
-			const now = new Date();
-			now.setHours(now.getHours() + 1);
-			const formatted = now.toISOString().slice(0, 16);
-			document.getElementById('startingTime').value = formatted;
+		async confirmBooking() {
+			const startingTime = this.elements.startingTime.value;
 
-			// Hiển thị modal
-			const modal = new bootstrap.Modal(document.getElementById('datBanModal'));
-			modal.show();
-		});
+			if (!this.validateBooking(startingTime)) return;
 
-		// Xác nhận đặt bàn
-		document.getElementById('confirmDatBan').addEventListener('click', function() {
-			const startingTime = document.getElementById('startingTime').value;
+			this.showLoading(true);
 
+			try {
+				const result = await this.submitBooking(startingTime);
+				this.handleBookingResult(result);
+			} catch (error) {
+				this.handleBookingError(error);
+			} finally {
+				this.showLoading(false);
+			}
+		}
+
+		validateBooking(startingTime) {
 			if (!startingTime) {
 				alert('Vui lòng chọn thời gian bắt đầu');
-				return;
+				return false;
 			}
 
-			const selectedTime = new Date(startingTime);
-			const now = new Date();
-
-			if (selectedTime <= now) {
+			if (new Date(startingTime) <= new Date()) {
 				alert('Vui lòng chọn thời gian trong tương lai');
-				return;
+				return false;
 			}
 
-			if (selectedTables.size === 0) {
+			if (this.selectedTables.size === 0) {
 				alert('Không có bàn nào được chọn');
-				return;
+				return false;
 			}
 
-			// Hiển thị loading
-			const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
-			loadingModal.show();
+			return true;
+		}
 
-			// Tạo array các tableId
-			const tableIds = Array.from(selectedTables.keys());
-
-			// Gọi API đặt bàn với nhiều bàn
+		async submitBooking(startingTime) {
 			const formData = new FormData();
 			formData.append('startingTime', startingTime);
 
-			// Gửi danh sách tableIds
-			tableIds.forEach((tableId, index) => {
+			Array.from(this.selectedTables.keys()).forEach((tableId, index) => {
 				formData.append(`tableIds[${index}]`, tableId);
 			});
 
-			fetch('/DatBan/DatBanFunction', {
+			const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+			if (token) formData.append('__RequestVerificationToken', token);
+
+			const response = await fetch('/DatBan/DatBanFunction', {
 				method: 'POST',
-				body: formData,
-				headers: {
-					'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-				}
-			})
-			.then(response => {
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				return response.json();
-			})
-			.then(data => {
-				loadingModal.hide();
-
-				if (data.success) {
-					const datBanModal = bootstrap.Modal.getInstance(document.getElementById('datBanModal'));
-					datBanModal.hide();
-
-					alert(`Đặt bàn thành công! Mã đơn: ${data.orderTableId}\nSố bàn đã đặt: ${selectedTables.size}`);
-
-					// Reset
-					selectedTables.clear();
-					document.querySelectorAll('.table-card').forEach(card => {
-						card.classList.remove('selected');
-						const button = card.querySelector('.btn-chon-ban');
-						const indicator = card.querySelector('.selected-indicator');
-						if (button) {
-							button.classList.remove('selected');
-							button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
-						}
-						if (indicator) {
-							indicator.style.display = 'none';
-						}
-					});
-					updateSelectedTablesUI();
-
-					window.location.reload();
-				} else {
-					alert('Lỗi: ' + (data.message || 'Không xác định'));
-				}
-			})
-			.catch(error => {
-				console.error('Fetch error:', error);
-				loadingModal.hide();
-				alert('Có lỗi xảy ra khi đặt bàn: ' + error.message);
+				body: formData
 			});
-		});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			return response.json();
+		}
+
+		handleBookingResult(data) {
+			if (data.success) {
+				bootstrap.Modal.getInstance(this.elements.datBanModal).hide();
+				alert(`Đặt bàn thành công! Mã đơn: ${data.orderTableId}\nSố bàn đã đặt: ${this.selectedTables.size}`);
+				this.resetBooking();
+				window.location.reload();
+			} else {
+				alert('Lỗi: ' + (data.message || 'Không xác định'));
+			}
+		}
+
+		handleBookingError(error) {
+			console.error('Booking error:', error);
+			alert('Có lỗi xảy ra khi đặt bàn: ' + error.message);
+		}
+
+		showLoading(show) {
+			const modal = bootstrap.Modal.getInstance(this.elements.loadingModal) ||
+						 new bootstrap.Modal(this.elements.loadingModal);
+			show ? modal.show() : modal.hide();
+		}
+
+		resetBooking() {
+			this.selectedTables.clear();
+			document.querySelectorAll('.table-card').forEach(card => {
+				const button = card.querySelector('.btn-chon-ban');
+				const indicator = card.querySelector('.selected-indicator');
+				this.updateTableVisual(card, button, indicator, false);
+			});
+			this.updateUI();
+		}
+		formatCurrency(amount) {
+			return amount.toLocaleString('vi-VN') + ' VNĐ';
+		}
+	}
+
+	// Global function for remove button (compatibility)
+	window.removeTable = function(tableId) {
+		window.bookingManager?.removeTable(tableId);
+	};
+
+	// Initialize when DOM is ready
+	document.addEventListener('DOMContentLoaded', () => {
+		window.bookingManager = new TableBookingManager();
 	});
 </script>
