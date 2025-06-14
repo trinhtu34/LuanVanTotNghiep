@@ -86,7 +86,6 @@
 	}
 </div>
 
-<!-- Modal Đặt Bàn -->
 <div class="modal fade" id="datBanModal" tabindex="-1" aria-labelledby="datBanModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
@@ -516,12 +515,11 @@
 		}
 	}
 
-	// Global function for remove button (compatibility)
+	// remove button
 	window.removeTable = function(tableId) {
 		window.bookingManager?.removeTable(tableId);
 	};
 
-	// Initialize when DOM is ready
 	document.addEventListener('DOMContentLoaded', () => {
 		window.bookingManager = new TableBookingManager();
 	});
