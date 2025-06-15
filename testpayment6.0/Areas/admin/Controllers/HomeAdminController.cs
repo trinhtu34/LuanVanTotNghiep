@@ -11,10 +11,13 @@ namespace testpayment6._0.Areas.admin.Controllers
     public class HomeAdminController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        //private readonly HttpClient _httpClient;
+        private readonly string BASE_API_URL;
 
-        public HomeAdminController(IHttpClientFactory httpClientFactory)
+        public HomeAdminController(IHttpClientFactory httpClientFactory , IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
+            BASE_API_URL = configuration["BaseAPI"];
         }
 
         public IActionResult Index()
@@ -47,7 +50,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 "application/json"
             );
 
-            var response = await client.PostAsync("https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api/user/login", content);
+            var response = await client.PostAsync($"{BASE_API_URL}/user/login", content);
 
             if (response.IsSuccessStatusCode)
             {

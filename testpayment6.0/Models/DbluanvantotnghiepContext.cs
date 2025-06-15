@@ -249,6 +249,9 @@ public partial class DbluanvantotnghiepContext : DbContext
             entity.Property(e => e.TotalPrice)
                 .HasPrecision(10, 2)
                 .HasColumnName("total_price");
+            entity.Property(e => e.TotalDeposit)
+                .HasPrecision(10, 2)
+                .HasColumnName("total_deposit");
             entity.Property(e => e.UserId)
                 .HasMaxLength(20)
                 .HasColumnName("user_id");

@@ -13,7 +13,7 @@ public partial class OrderTable
 
     public bool isCancel { get; set; }
     public decimal? TotalPrice { get; set; }
-
+    public decimal? TotalDeposit { get; set; }
     public DateTime OrderDate { get; set; }
 
     public virtual ICollection<OrderFoodDetail> OrderFoodDetails { get; set; } = new List<OrderFoodDetail>();

@@ -5,6 +5,7 @@ using VNPAY.NET;
 using testpayment6._0.Models;
 using VNPAY.NET.Enums;
 using VNPAY.NET.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace VnPayDemo.Controllers
 {
@@ -29,9 +30,24 @@ namespace VnPayDemo.Controllers
             );
         }
 
-        public IActionResult Index()
+        [HttpPost]
+        public IActionResult Index(PaymentViewModel model)
         {
-            return View();
+            // Log thông tin để debug
+            _logger.LogInformation($"Payment Index - Amount: {model.Amount}, Description: {model.Description}, OrderTableId: {model.OrderTableId}");
+
+            // Kiểm tra validation
+            if (!ModelState.IsValid)
+            {
+                // Log các lỗi validation
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _logger.LogWarning($"Validation error: {error.ErrorMessage}");
+                }
+                return View(model);
+            }
+
+            return View(model);
         }
 
         [HttpPost]
@@ -44,21 +60,34 @@ namespace VnPayDemo.Controllers
 
             try
             {
+                // Validate amount range
+                if (model.Amount < 10000 || model.Amount > 100000000)
+                {
+                    ModelState.AddModelError("Amount", "Số tiền phải từ 10.000đ đến 100.000.000đ");
+                    return View("Index", model);
+                }
+
                 // Lấy địa chỉ IP của thiết bị thực hiện giao dịch
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
                 // Tạo yêu cầu thanh toán
                 var request = new PaymentRequest
                 {
-                    PaymentId = DateTime.Now.Ticks, // Tạo ID giao dịch duy nhất
-                    Money = model.Amount,
+                    PaymentId = DateTime.Now.Ticks,
+                    Money = (long)model.Amount, // Convert decimal to long
                     Description = model.Description,
                     IpAddress = ipAddress,
-                    BankCode = BankCode.ANY, // Cho phép chọn mọi ngân hàng
+                    BankCode = BankCode.ANY,
                     CreatedDate = DateTime.Now,
                     Currency = Currency.VND,
                     Language = DisplayLanguage.Vietnamese
                 };
+
+                // Lưu OrderTableId vào session để sử dụng trong callback
+                if (model.OrderTableId > 0)
+                {
+                    HttpContext.Session.SetString("OrderTableId", model.OrderTableId.ToString());
+                }
 
                 // Lấy URL thanh toán
                 var paymentUrl = _vnpay.GetPaymentUrl(request);
@@ -96,7 +125,8 @@ namespace VnPayDemo.Controllers
                         BankCode = paymentResult.BankingInfor?.BankCode ?? string.Empty,
                         BankTransactionId = paymentResult.BankingInfor?.BankTransactionId ?? string.Empty,
                         ResponseDescription = paymentResult.PaymentResponse?.Description ?? string.Empty,
-                        TransactionStatusDescription = paymentResult.TransactionStatus?.Description ?? string.Empty
+                        TransactionStatusDescription = paymentResult.TransactionStatus?.Description ?? string.Empty,
+                        OrderTableId = long.TryParse(HttpContext.Session.GetString("OrderTableId"), out long orderId) ? orderId : 0
                     };
 
                     // Chuyển hướng đến trang thành công hoặc lỗi tùy thuộc vào kết quả
