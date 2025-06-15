@@ -10,6 +10,7 @@ builder.Services.AddHttpContextAccessor();
 // Đăng ký service cần thiết
 builder.Services.AddSingleton<IVnpay, Vnpay>();
 builder.Services.AddHttpClient();
+
 //builder.Services.AddSession();
 builder.Services.AddSession(options =>
 {

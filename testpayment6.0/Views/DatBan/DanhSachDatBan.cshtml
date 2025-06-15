@@ -47,11 +47,25 @@
 									<span class="ms-3">@string.Format("{0:N0}", order.TotalPrice) VNĐ</span>
 								</p>
 
+								<p class="info-item">
+									<i class="fas fa-coins text-warning"></i>
+									<strong>Tiền cọc:</strong><br>
+									<span class="ms-3">@string.Format("{0:N0}", order.TotalDeposit) VNĐ</span>
+								</p>
 								<!-- Thông tin số bàn -->
 								<p class="info-item">
 									<i class="fas fa-utensils text-info"></i>
 									<strong>Số bàn đã đặt:</strong><br>
 									<span class="ms-3 table-count-placeholder" data-order-id="@order.OrderTableId">
+										<span class="spinner-border spinner-border-sm" role="status"></span>
+										Đang tải...
+									</span>
+								</p>
+								<!-- Thông tin món ăn đã đặt -->
+								<p class="info-item">
+									<i class="fas fa-utensils text-success"></i>
+									<strong>Món ăn đã đặt:</strong><br>
+									<span class="ms-3 food-count-placeholder" data-order-id="@order.OrderTableId">
 										<span class="spinner-border spinner-border-sm" role="status"></span>
 										Đang tải...
 									</span>
@@ -114,6 +128,36 @@
 </div>
 
 <style>
+	.food-list {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+	}
+
+	.food-item {
+		background-color: #e8f5e8;
+		color: #2e7d32;
+		padding: 4px 8px;
+		border-radius: 12px;
+		font-size: 0.8rem;
+		font-weight: 500;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.food-quantity {
+		background-color: #2e7d32;
+		color: white;
+		border-radius: 50%;
+		width: 20px;
+		height: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.7rem;
+		margin-left: 5px;
+	}
 	.order-card {
 		border-radius: 10px;
 		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -246,10 +290,11 @@
 
 	// lấy số lượng bàn , lấy từ phương thức bên controller 
 	function loadTableCounts() {
-		document.querySelectorAll('.table-count-placeholder').forEach(function(element) {
+		document.querySelectorAll('.table-count-placeholder').forEach(function(element) 
+		{
 			const orderTableId = element.getAttribute('data-order-id');
 
-			// Gọi API thông qua Controller MVC
+			// Gọi API thông qua Controller , ko gọi từ frontend được vì là API Gateway không cho gọi
 			fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
 				method: 'GET',
 				headers: {
@@ -283,6 +328,48 @@
 			})
 			.catch(error => {
 				console.error('Error loading table count:', error);
+				element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
+			});
+		});
+			// Tải danh sách món ăn cho mỗi đơn
+		document.querySelectorAll('.food-count-placeholder').forEach(function(element) 
+		{
+			const orderTableId = element.getAttribute('data-order-id');
+
+			fetch(`@Url.Action("GetOrderFoodDetails", "DatBan")?orderTableId=${orderTableId}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(result => {
+				if (result.success && result.data && result.data.length > 0) {
+					const foodCount = result.data.length;
+
+					// Hiển thị số lượng và danh sách món ăn
+					element.innerHTML = `
+						<span class="fw-bold">${foodCount} món</span><br>
+						<div class="food-list mt-1">
+							${result.data.map(food => `
+								<div class="food-item">
+									<span>${food.dishName}</span>
+									<span class="food-quantity">${food.quantity}</span>
+								</div>
+							`).join('')}
+						</div>
+					`;
+				} else {
+					element.innerHTML = '<span class="text-muted">Chưa đặt món</span>';
+				}
+			})
+			.catch(error => {
+				console.error('Error loading food details:', error);
 				element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
 			});
 		});

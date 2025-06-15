@@ -10,12 +10,13 @@ namespace testpayment6._0.Controllers
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<DatBan> _logger;
-        private const string BASE_API_URL = "https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api";
+        private readonly string BASE_API_URL;
 
-        public DatBan(HttpClient httpClient, ILogger<DatBan> logger)
+        public DatBan(HttpClient httpClient, ILogger<DatBan> logger , IConfiguration configuration)
         {
             _httpClient = httpClient;
             _logger = logger;
+            BASE_API_URL = configuration["BaseAPI"];
         }
 
         public async Task<IActionResult> Index()
@@ -49,6 +50,10 @@ namespace testpayment6._0.Controllers
                                                  .ToList();
                         ViewBag.GroupedTables = groupedTables;
                         ViewBag.UserId = userId;
+
+                        // Lấy danh sách các region để load menu
+                        var regionIds = groupedTables.Select(g => g.Key).ToList();
+                        ViewBag.RegionIds = regionIds;
                     }
                     else
                     {
@@ -162,7 +167,7 @@ namespace testpayment6._0.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DatBanFunction(List<int> tableIds, string startingTime)
+        public async Task<IActionResult> DatBanFunction(List<int> tableIds, string startingTime, decimal totalDeposit, List<OrderFoodRequest> selectedFoods = null)
         {
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
@@ -210,7 +215,11 @@ namespace testpayment6._0.Controllers
                     });
                 }
 
-                _logger.LogInformation("All tables are available, proceeding with booking...");
+                decimal totalFoodPrice = 0;
+                if (selectedFoods != null && selectedFoods.Any())
+                {
+                    totalFoodPrice = selectedFoods.Sum(food => food.Price * food.Quantity);
+                }
 
                 // Bước 1: Tạo OrderTable
                 var orderTableRequest = new
@@ -218,7 +227,8 @@ namespace testpayment6._0.Controllers
                     userId = userId,
                     startingTime = parsedStartTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                     isCancel = false,
-                    totalPrice = 0,
+                    totalPrice = totalFoodPrice,
+                    totalDeposit = totalDeposit,
                     orderDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")
                 };
 
@@ -263,7 +273,6 @@ namespace testpayment6._0.Controllers
                                 if (detailResponse.IsSuccessStatusCode)
                                 {
                                     var detailResponseContent = await detailResponse.Content.ReadAsStringAsync();
-                                    _logger.LogInformation($"OrderTableDetail response for table {tableId}: {detailResponseContent}");
                                     successfulTables.Add(tableId);
                                 }
                                 else
@@ -278,6 +287,45 @@ namespace testpayment6._0.Controllers
                             }
                         }
 
+                        // Bước 3: Thêm món ăn nếu có
+                        var successfulFoods = new List<string>();
+                        var failedFoods = new List<string>();
+
+                        if (selectedFoods != null && selectedFoods.Any())
+                        {
+                            foreach (var food in selectedFoods)
+                            {
+                                try
+                                {
+                                    var orderFoodRequest = new
+                                    {
+                                        OrderTableId = orderTable.OrderTableId,
+                                        DishId = food.DishId,
+                                        Quantity = food.Quantity,
+                                        Price = food.Price
+                                    };
+
+                                    var foodJson = JsonSerializer.Serialize(orderFoodRequest);
+                                    var foodContent = new StringContent(foodJson, Encoding.UTF8, "application/json");
+                                    var foodResponse = await _httpClient.PostAsync($"{BASE_API_URL}/OrderFoodDetail", foodContent);
+
+                                    if (foodResponse.IsSuccessStatusCode)
+                                    {
+                                        successfulFoods.Add(food.DishId);
+                                    }
+                                    else
+                                    {
+                                        failedFoods.Add(food.DishId);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    failedFoods.Add(food.DishId);
+                                    _logger.LogError(ex, $"Error adding food {food.DishId}");
+                                }
+                            }
+                        }
+
                         // Kiểm tra kết quả
                         if (successfulTables.Any())
                         {
@@ -286,6 +334,14 @@ namespace testpayment6._0.Controllers
                             {
                                 message += $" Không thể đặt {failedTables.Count} bàn: [{string.Join(", ", failedTables)}]";
                             }
+                            if (successfulFoods.Any())
+                            {
+                                message += $" Đã thêm {successfulFoods.Count} món ăn.";
+                            }
+                            if (failedFoods.Any())
+                            {
+                                message += $" Không thể thêm {failedFoods.Count} món ăn.";
+                            }
 
                             return Json(new
                             {
@@ -293,7 +349,9 @@ namespace testpayment6._0.Controllers
                                 message = message,
                                 orderTableId = orderTable.OrderTableId,
                                 successfulTables = successfulTables,
-                                failedTables = failedTables
+                                failedTables = failedTables,
+                                successfulFoods = successfulFoods,
+                                failedFoods = failedFoods
                             });
                         }
                         else
@@ -380,6 +438,112 @@ namespace testpayment6._0.Controllers
             return Json(new { success = false, message = "Không thể tải danh sách bàn" });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetMenuByRegion(int regionId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu/region/{regionId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var menu = JsonSerializer.Deserialize<List<MenuViewModel>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return Json(new { success = true, data = menu });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error loading menu for region {regionId}");
+            }
+
+            return Json(new { success = false, message = "Không thể tải danh sách món ăn" });
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetOrderFoodDetails(long orderTableId)
+        {
+            try
+            {
+                // Lấy danh sách món ăn đã đặt
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/OrderFoodDetail/list/{orderTableId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var orderFoodDetails = JsonSerializer.Deserialize<List<dynamic>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    var foodList = new List<object>();
+
+                    if (orderFoodDetails != null && orderFoodDetails.Any())
+                    {
+                        foreach (var food in orderFoodDetails)
+                        {
+                            try
+                            {
+                                var dishId = food.GetProperty("dishId").GetString();
+                                var quantity = food.GetProperty("quantity").GetInt32();
+
+                                // Lấy thông tin chi tiết món ăn
+                                var menuResponse = await _httpClient.GetAsync($"{BASE_API_URL}/menu/{dishId}");
+
+                                if (menuResponse.IsSuccessStatusCode)
+                                {
+                                    var menuJson = await menuResponse.Content.ReadAsStringAsync();
+                                    var menuItem = JsonSerializer.Deserialize<dynamic>(menuJson, new JsonSerializerOptions
+                                    {
+                                        PropertyNameCaseInsensitive = true
+                                    });
+
+                                    var dishName = menuItem.GetProperty("dishName").GetString();
+
+                                    foodList.Add(new
+                                    {
+                                        dishId = dishId,
+                                        dishName = dishName,
+                                        quantity = quantity
+                                    });
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Error getting dish details for order {orderTableId}");
+                            }
+                        }
+                    }
+
+                    return Json(new
+                    {
+                        success = true,
+                        data = foodList,
+                        count = foodList.Count
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Không thể tải dữ liệu món ăn từ API"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting order food details for order {orderTableId}");
+                return Json(new
+                {
+                    success = false,
+                    message = "Có lỗi không mong muốn xảy ra"
+                });
+            }
+        }
         [HttpGet]
         public async Task<IActionResult> GetOrderTableDetails(long orderTableId)
         {

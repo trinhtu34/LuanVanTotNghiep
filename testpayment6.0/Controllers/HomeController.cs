@@ -12,11 +12,13 @@ namespace testpayment6._0.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly HttpClient _httpClient;
+        private readonly string BASE_API_URL;
 
-        public HomeController(ILogger<HomeController> logger, HttpClient httpClient)
+        public HomeController(ILogger<HomeController> logger, HttpClient httpClient , IConfiguration configuration)
         {
             _logger = logger;
             _httpClient = httpClient;
+            BASE_API_URL = configuration["BaseAPI"];
         }
 
         public IActionResult Index()
@@ -49,14 +51,13 @@ namespace testpayment6._0.Controllers
 
             try
             {
+
                 // Gọi API đăng nhập
                 var request = new { UserId = model.UserId, UPassword = model.UPassword };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync(
-                    "https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api/user/login",
-                    content);
+                var response = await _httpClient.PostAsync($"{BASE_API_URL}/user/login",content);
 
                 if (response.IsSuccessStatusCode)
                 {

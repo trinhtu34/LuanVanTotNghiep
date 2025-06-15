@@ -8,18 +8,20 @@ namespace testpayment6._0.Areas.admin.Controllers
     public class MenuController : Controller
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseApiUrl = "https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api/menu";
+        //private readonly string _baseApiUrl = "https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api/menu";
+        private readonly string BASE_API_URL;
 
-        public MenuController(HttpClient httpClient)
+        public MenuController(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
+            BASE_API_URL = configuration["BaseAPI"];
         }
 
         public async Task<IActionResult> Index()
         {
             try
             {
-                var response = await _httpClient.GetAsync(_baseApiUrl);
+                var response = await _httpClient.GetAsync(BASE_API_URL);
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -56,7 +58,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 var content = new StringContent(JsonSerializer.Serialize(menu), System.Text.Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(_baseApiUrl, content);
+                var response = await _httpClient.PostAsync(BASE_API_URL, content);
                 if (response.IsSuccessStatusCode)
                 {
                     return RedirectToAction("Index");
@@ -79,7 +81,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseApiUrl}/{id}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -110,7 +112,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 var content = new StringContent(JsonSerializer.Serialize(menu), System.Text.Encoding.UTF8, "application/json");
-                var response = await _httpClient.PutAsync($"{_baseApiUrl}/{menu.DishId}", content);
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/{menu.DishId}", content);
                 if (response.IsSuccessStatusCode)
                 {
                     return RedirectToAction("Index");
