@@ -396,11 +396,33 @@
 		this.setDefaultTime();
 	  }
 
-	  setDefaultTime() {
-		const now = new Date();
-		now.setHours(now.getHours() + 1);
-		this.elements.startingTime.value = now.toISOString().slice(0, 16);
-	  }
+	setDefaultTime() {
+	  // Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
+	  const now = new Date();
+	  const vietnamTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+
+	  // Thêm 1 giờ để đảm bảo có thời gian chuẩn bị
+	  vietnamTime.setHours(vietnamTime.getHours() + 1);
+
+	  // Format theo định dạng datetime-local (YYYY-MM-DDTHH:MM)
+	  const year = vietnamTime.getFullYear();
+	  const month = String(vietnamTime.getMonth() + 1).padStart(2, '0');
+	  const day = String(vietnamTime.getDate()).padStart(2, '0');
+	  const hours = String(vietnamTime.getHours()).padStart(2, '0');
+	  const minutes = String(vietnamTime.getMinutes()).padStart(2, '0');
+
+	  this.elements.startingTime.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+	  // Đặt giá trị tối thiểu là thời gian hiện tại của Việt Nam
+	  const minTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+	  const minYear = minTime.getFullYear();
+	  const minMonth = String(minTime.getMonth() + 1).padStart(2, '0');
+	  const minDay = String(minTime.getDate()).padStart(2, '0');
+	  const minHours = String(minTime.getHours()).padStart(2, '0');
+	  const minMinutes = String(minTime.getMinutes()).padStart(2, '0');
+
+	  this.elements.startingTime.min = `${minYear}-${minMonth}-${minDay}T${minHours}:${minMinutes}`;
+	}
 
 	  setupEventListeners() {
 		document.addEventListener("click", this.handleClick.bind(this));
@@ -852,24 +874,29 @@
 		}
 	  }
 
-	  validateBooking(startingTime) {
-		if (!startingTime) {
-		  alert("Vui lòng chọn thời gian bắt đầu");
-		  return false;
-		}
-
-		if (new Date(startingTime) <= new Date()) {
-		  alert("Vui lòng chọn thời gian trong tương lai");
-		  return false;
-		}
-
-		if (this.selectedTables.size === 0) {
-		  alert("Không có bàn nào được chọn");
-		  return false;
-		}
-
-		return true;
+	validateBooking(startingTime) {
+	  if (!startingTime) {
+		alert("Vui lòng chọn thời gian bắt đầu");
+		return false;
 	  }
+
+	  // Lấy thời gian hiện tại theo múi giờ Việt Nam
+	  const now = new Date();
+	  const vietnamNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+	  const selectedTime = new Date(startingTime);
+
+	  if (selectedTime <= vietnamNow) {
+		alert("Vui lòng chọn thời gian trong tương lai (theo giờ Việt Nam)");
+		return false;
+	  }
+
+	  if (this.selectedTables.size === 0) {
+		alert("Không có bàn nào được chọn");
+		return false;
+	  }
+
+	  return true;
+	}
 
 	  // Thay đổi trong method submitBooking
 	  async submitBooking(startingTime) {
@@ -912,7 +939,7 @@
 		return response.json();
 	  }
 
-	  handleBookingResult(data) 
+	  handleBookingResult(data)
 	  {
 		if (data.success) {
 		  bootstrap.Modal.getInstance(this.elements.datBanModal).hide();
@@ -1023,5 +1050,3 @@
 	  window.bookingManager = new RestaurantBookingManager();
 	});
 </script>
-@* Anti-forgery token for AJAX requests *@
-@Html.AntiForgeryToken()
