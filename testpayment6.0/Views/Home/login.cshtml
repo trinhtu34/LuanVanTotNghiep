@@ -65,6 +65,8 @@
     }
 
     <form asp-controller="Home" asp-action="Login" method="post">
+        @Html.AntiForgeryToken()
+
         <input asp-for="UserId" class="form-control" placeholder="User ID" />
         <span asp-validation-for="UserId" class="error-msg"></span>
 
@@ -74,3 +76,15 @@
         <button type="submit" class="btn-login">Đăng nhập</button>
     </form>
 </div>
+<!-- Debug Session Info (chỉ hiển thị trong development) -->
+@if (Context.Request.Query.ContainsKey("debug"))
+{
+    <div class="mt-3 p-2 bg-light border rounded">
+        <small>
+            <strong>Debug Info:</strong><br>
+            Session ID: @Context.Session.Id<br>
+            Current User: @Context.Session.GetString("UserId")<br>
+            Is Authenticated: @Context.Session.GetString("IsAuthenticated")
+        </small>
+    </div>
+}

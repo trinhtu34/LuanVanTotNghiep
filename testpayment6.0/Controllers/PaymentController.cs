@@ -6,6 +6,8 @@ using testpayment6._0.Models;
 using VNPAY.NET.Enums;
 using VNPAY.NET.Models;
 using Microsoft.AspNetCore.Http;
+using System.Text;
+using System.Text.Json;
 
 namespace VnPayDemo.Controllers
 {
@@ -14,14 +16,17 @@ namespace VnPayDemo.Controllers
         private readonly IVnpay _vnpay;
         private readonly IConfiguration _configuration;
         private readonly ILogger<PaymentController> _logger;
+        private readonly HttpClient _httpClient;
+        private readonly string BASE_API_URL;
 
-        public PaymentController(IVnpay vnpay, IConfiguration configuration, ILogger<PaymentController> logger)
+        public PaymentController(IVnpay vnpay, IConfiguration configuration, ILogger<PaymentController> logger, HttpClient httpClient)
         {
             _vnpay = vnpay;
             _configuration = configuration;
             _logger = logger;
+            _httpClient = httpClient;
+            BASE_API_URL = configuration["BaseAPI"];
 
-            // Khởi tạo VNPAY từ cấu hình
             _vnpay.Initialize(
                 _configuration["VnPay:TmnCode"],
                 _configuration["VnPay:HashSecret"],
@@ -33,13 +38,10 @@ namespace VnPayDemo.Controllers
         [HttpPost]
         public IActionResult Index(PaymentViewModel model)
         {
-            // Log thông tin để debug
             _logger.LogInformation($"Payment Index - Amount: {model.Amount}, Description: {model.Description}, OrderTableId: {model.OrderTableId}");
 
-            // Kiểm tra validation
             if (!ModelState.IsValid)
             {
-                // Log các lỗi validation
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                 {
                     _logger.LogWarning($"Validation error: {error.ErrorMessage}");
@@ -51,7 +53,7 @@ namespace VnPayDemo.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreatePayment(PaymentViewModel model)
+        public async Task<IActionResult> CreatePayment(PaymentViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -60,21 +62,23 @@ namespace VnPayDemo.Controllers
 
             try
             {
-                // Validate amount range
                 if (model.Amount < 10000 || model.Amount > 100000000)
                 {
                     ModelState.AddModelError("Amount", "Số tiền phải từ 10.000đ đến 100.000.000đ");
                     return View("Index", model);
                 }
 
-                // Lấy địa chỉ IP của thiết bị thực hiện giao dịch
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
-                // Tạo yêu cầu thanh toán
+                // ENCODE OrderTableId vào PaymentId
+                // Format: {timestamp}{orderTableId} (padding OrderTableId to 6 digits)
+                var timestamp = DateTime.Now.Ticks % 1000000000; // Lấy 9 số cuối để tránh quá dài
+                var paymentId = long.Parse($"{timestamp}{model.OrderTableId:D6}");
+
                 var request = new PaymentRequest
                 {
-                    PaymentId = DateTime.Now.Ticks,
-                    Money = (long)model.Amount, // Convert decimal to long
+                    PaymentId = paymentId,
+                    Money = (long)model.Amount,
                     Description = model.Description,
                     IpAddress = ipAddress,
                     BankCode = BankCode.ANY,
@@ -83,16 +87,20 @@ namespace VnPayDemo.Controllers
                     Language = DisplayLanguage.Vietnamese
                 };
 
-                // Lưu OrderTableId vào session để sử dụng trong callback
+                // Vẫn lưu vào session như backup
                 if (model.OrderTableId > 0)
                 {
                     HttpContext.Session.SetString("OrderTableId", model.OrderTableId.ToString());
+                    HttpContext.Session.SetString($"OrderTableId_{paymentId}", model.OrderTableId.ToString());
+                    await HttpContext.Session.CommitAsync();
                 }
 
-                // Lấy URL thanh toán
-                var paymentUrl = _vnpay.GetPaymentUrl(request);
+                // Log để debug
+                _logger.LogInformation($"Created PaymentId: {paymentId} for OrderTableId: {model.OrderTableId}");
 
-                // Chuyển hướng người dùng đến trang thanh toán của VNPAY
+                var paymentUrl = _vnpay.GetPaymentUrl(request);
+                _logger.LogInformation($"Payment URL: {paymentUrl}");
+
                 return Redirect(paymentUrl);
             }
             catch (Exception ex)
@@ -104,16 +112,50 @@ namespace VnPayDemo.Controllers
         }
 
         [HttpGet]
-        public IActionResult Callback()
+        public async Task<IActionResult> Callback()
         {
+            _logger.LogInformation($"Session ID: {HttpContext.Session.Id}");
+            _logger.LogInformation($"Available session keys: {string.Join(", ", HttpContext.Session.Keys)}");
+
             if (Request.QueryString.HasValue)
             {
                 try
                 {
-                    // Xử lý kết quả trả về từ VNPAY
                     var paymentResult = _vnpay.GetPaymentResult(Request.Query);
+                    long orderTableId = 0;
 
-                    // Tạo model để hiển thị kết quả
+                    // DECODE OrderTableId từ PaymentId
+                    var paymentIdStr = paymentResult.PaymentId.ToString();
+                    if (paymentIdStr.Length >= 6)
+                    {
+                        // Lấy 6 số cuối là OrderTableId
+                        var orderTableIdPart = paymentIdStr.Substring(paymentIdStr.Length - 6);
+                        if (long.TryParse(orderTableIdPart, out var decodedOrderTableId) && decodedOrderTableId > 0)
+                        {
+                            orderTableId = decodedOrderTableId;
+                            _logger.LogInformation($"Decoded OrderTableId from PaymentId: {orderTableId}");
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"Could not decode OrderTableId from PaymentId: {paymentIdStr}, extracted part: {orderTableIdPart}");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"PaymentId too short to contain OrderTableId: {paymentIdStr}");
+                    }
+
+                    // Fallback: Thử lấy từ session
+                    if (orderTableId == 0)
+                    {
+                        var orderTableIdStr = HttpContext.Session.GetString("OrderTableId");
+                        if (!string.IsNullOrEmpty(orderTableIdStr) && long.TryParse(orderTableIdStr, out var sessionOrderTableId))
+                        {
+                            orderTableId = sessionOrderTableId;
+                            _logger.LogInformation($"Retrieved OrderTableId from session: {orderTableId}");
+                        }
+                    }
+
                     var resultModel = new PaymentResultViewModel
                     {
                         PaymentId = paymentResult.PaymentId,
@@ -126,10 +168,18 @@ namespace VnPayDemo.Controllers
                         BankTransactionId = paymentResult.BankingInfor?.BankTransactionId ?? string.Empty,
                         ResponseDescription = paymentResult.PaymentResponse?.Description ?? string.Empty,
                         TransactionStatusDescription = paymentResult.TransactionStatus?.Description ?? string.Empty,
-                        OrderTableId = long.TryParse(HttpContext.Session.GetString("OrderTableId"), out long orderId) ? orderId : 0
+                        OrderTableId = orderTableId
                     };
 
-                    // Chuyển hướng đến trang thành công hoặc lỗi tùy thuộc vào kết quả
+                    _logger.LogInformation($"Payment Result - OrderTableId: {orderTableId}, IsSuccess: {paymentResult.IsSuccess}");
+
+                    var saveResult = await SavePaymentToDatabase(resultModel);
+
+                    if (!saveResult.IsSuccess)
+                    {
+                        _logger.LogWarning($"Không thể lưu dữ liệu thanh toán vào CSDL: {saveResult.ErrorMessage}");
+                    }
+
                     if (paymentResult.IsSuccess)
                     {
                         return View("Success", resultModel);
@@ -156,5 +206,80 @@ namespace VnPayDemo.Controllers
                 Description = "Không tìm thấy thông tin thanh toán"
             });
         }
+        private async Task<SavePaymentResult> SavePaymentToDatabase(PaymentResultViewModel paymentResult)
+        {
+            try
+            {
+                // Tạo payload để gửi đến API
+                var paymentData = new
+                {
+                    orderTableId = paymentResult.OrderTableId,
+                    paymentId = paymentResult.PaymentId,
+                    isSuccess = paymentResult.IsSuccess,
+                    description = paymentResult.Description,
+                    timestamp = paymentResult.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") ?? DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    vnpayTransactionId = paymentResult.VnpayTransactionId,
+                    paymentMethod = paymentResult.PaymentMethod ?? "VNPAY",
+                    bankCode = paymentResult.BankCode ?? string.Empty,
+                    bankTransactionId = paymentResult.BankTransactionId ?? string.Empty,
+                    responseDescription = paymentResult.ResponseDescription ?? string.Empty,
+                    transactionStatusDescription = paymentResult.TransactionStatusDescription ?? string.Empty
+                };
+
+                var jsonContent = JsonSerializer.Serialize(paymentData, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = false
+                });
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation($"Gửi dữ liệu thanh toán đến API: {jsonContent}");
+
+                var response = await _httpClient.PostAsync($"{BASE_API_URL}/payment", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"Lưu dữ liệu thanh toán thành công. Response: {responseContent}");
+
+                    return new SavePaymentResult
+                    {
+                        IsSuccess = true,
+                        ResponseContent = responseContent
+                    };
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    var errorMessage = $"API trả về lỗi: {response.StatusCode} - {errorContent}";
+                    _logger.LogError(errorMessage);
+
+                    return new SavePaymentResult
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = errorMessage
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = $"Lỗi không xác định khi lưu dữ liệu thanh toán: {ex.Message}";
+                _logger.LogError(ex, errorMessage);
+
+                return new SavePaymentResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = errorMessage
+                };
+            }
+        }
+    }
+
+    public class SavePaymentResult
+    {
+        public bool IsSuccess { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? ResponseContent { get; set; }
     }
 }

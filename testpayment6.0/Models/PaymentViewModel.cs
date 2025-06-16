@@ -33,3 +33,4 @@ namespace testpayment6._0.Models
         public string TransactionStatusDescription { get; set; } = string.Empty;
     }
 }
+
