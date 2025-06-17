@@ -52,6 +52,17 @@
 									<strong>Tiền cọc:</strong><br>
 									<span class="ms-3">@string.Format("{0:N0}", order.TotalDeposit) VNĐ</span>
 								</p>
+
+								<!-- Trạng thái thanh toán tiền cọc -->
+								<p class="info-item">
+									<i class="fas fa-credit-card text-info"></i>
+									<strong>Trạng thái thanh toán:</strong><br>
+									<span class="ms-3 payment-status-placeholder" data-order-id="@order.OrderTableId">
+										<span class="spinner-border spinner-border-sm" role="status"></span>
+										Đang kiểm tra...
+									</span>
+								</p>
+
 								<!-- Thông tin số bàn -->
 								<p class="info-item">
 									<i class="fas fa-utensils text-info"></i>
@@ -158,6 +169,36 @@
 		font-size: 0.7rem;
 		margin-left: 5px;
 	}
+
+	/* Styles cho trạng thái thanh toán */
+	.payment-status {
+		padding: 4px 8px;
+		border-radius: 12px;
+		font-size: 0.8rem;
+		font-weight: 500;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+		.payment-status.paid {
+			background-color: #d4edda;
+			color: #155724;
+			border: 1px solid #c3e6cb;
+		}
+
+		.payment-status.unpaid {
+			background-color: #f8d7da;
+			color: #721c24;
+			border: 1px solid #f5c6cb;
+		}
+
+		.payment-status.error {
+			background-color: #fff3cd;
+			color: #856404;
+			border: 1px solid #ffeaa7;
+		}
+
 	.order-card {
 		border-radius: 10px;
 		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -205,6 +246,7 @@
 		background: linear-gradient(45deg, #007bff, #0056b3);
 		color: white;
 	}
+
 	.card-footer {
 		background-color: #f8f9fa;
 	}
@@ -276,8 +318,9 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		// Tải số lượng bàn cho mỗi đơn
+		// Tải tất cả thông tin cho mỗi đơn
 		loadTableCounts();
+		loadPaymentStatus();
 
 		// Xử lý click xem chi tiết
 		document.querySelectorAll('.btn-chi-tiet').forEach(function(button) {
@@ -288,9 +331,79 @@
 		});
 	});
 
-	// lấy số lượng bàn , lấy từ phương thức bên controller 
+	// Hàm tải trạng thái thanh toán
+	function loadPaymentStatus() {
+		document.querySelectorAll('.payment-status-placeholder').forEach(function(element) {
+			const orderTableId = element.getAttribute('data-order-id');
+
+			fetch(`@Url.Action("GetPaymentStatus", "DatBan")?orderTableId=${orderTableId}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			.then(response => {
+				console.log(`Payment status response for order ${orderTableId}:`, response.status);
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(result => {
+				console.log(`Payment status result for order ${orderTableId}:`, result);
+
+				if (result.success && result.data) {
+					const isPaid = result.data.isPaid;
+					console.log(`Order ${orderTableId} - isPaid:`, isPaid);
+
+					if (isPaid === true) {
+						element.innerHTML = `
+							<span class="payment-status paid">
+								<i class="fas fa-check-circle"></i>
+								Đã thanh toán
+							</span>
+						`;
+					} else if (isPaid === false) {
+						element.innerHTML = `
+							<span class="payment-status unpaid">
+								<i class="fas fa-exclamation-circle"></i>
+								Chưa thanh toán
+							</span>
+						`;
+					} else {
+						console.log(`Order ${orderTableId} - isPaid is neither true nor false:`, isPaid, typeof isPaid);
+						element.innerHTML = `
+							<span class="payment-status error">
+								<i class="fas fa-question-circle"></i>
+								Không xác định (${isPaid})
+							</span>
+						`;
+					}
+				} else {
+					console.log(`Order ${orderTableId} - result.success:`, result.success, 'result.data:', result.data);
+					element.innerHTML = `
+						<span class="payment-status error">
+							<i class="fas fa-question-circle"></i>
+							Không xác định
+						</span>
+					`;
+				}
+			})
+			.catch(error => {
+				console.error('Error loading payment status for order', orderTableId, ':', error);
+				element.innerHTML = `
+					<span class="payment-status error">
+						<i class="fas fa-exclamation-triangle"></i>
+						Lỗi tải dữ liệu
+					</span>
+				`;
+			});
+		});
+	}
+
+	// lấy số lượng bàn , lấy từ phương thức bên controller
 	function loadTableCounts() {
-		document.querySelectorAll('.table-count-placeholder').forEach(function(element) 
+		document.querySelectorAll('.table-count-placeholder').forEach(function(element)
 		{
 			const orderTableId = element.getAttribute('data-order-id');
 
@@ -332,7 +445,7 @@
 			});
 		});
 			// Tải danh sách món ăn cho mỗi đơn
-		document.querySelectorAll('.food-count-placeholder').forEach(function(element) 
+		document.querySelectorAll('.food-count-placeholder').forEach(function(element)
 		{
 			const orderTableId = element.getAttribute('data-order-id');
 

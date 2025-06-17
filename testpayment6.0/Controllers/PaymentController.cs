@@ -71,9 +71,9 @@ namespace VnPayDemo.Controllers
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
                 // ENCODE OrderTableId vào PaymentId
-                // Format: {timestamp}{orderTableId} (padding OrderTableId to 6 digits)
+                // Format: {timestamp}{orderTableId} (padding OrderTableId to 9 digits)
                 var timestamp = DateTime.Now.Ticks % 1000000000; // Lấy 9 số cuối để tránh quá dài
-                var paymentId = long.Parse($"{timestamp}{model.OrderTableId:D6}");
+                var paymentId = long.Parse($"{timestamp}{model.OrderTableId:D9}");
 
                 var request = new PaymentRequest
                 {
@@ -126,10 +126,10 @@ namespace VnPayDemo.Controllers
 
                     // DECODE OrderTableId từ PaymentId
                     var paymentIdStr = paymentResult.PaymentId.ToString();
-                    if (paymentIdStr.Length >= 6)
+                    if (paymentIdStr.Length >= 9)
                     {
                         // Lấy 6 số cuối là OrderTableId
-                        var orderTableIdPart = paymentIdStr.Substring(paymentIdStr.Length - 6);
+                        var orderTableIdPart = paymentIdStr.Substring(paymentIdStr.Length - 9);
                         if (long.TryParse(orderTableIdPart, out var decodedOrderTableId) && decodedOrderTableId > 0)
                         {
                             orderTableId = decodedOrderTableId;

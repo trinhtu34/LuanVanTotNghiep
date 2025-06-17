@@ -587,5 +587,136 @@ namespace testpayment6._0.Controllers
                 });
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> GetPaymentStatus(long orderTableId)
+        {
+            try
+            {
+                // Gọi API kiểm tra trạng thái thanh toán
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/Payment/ordertable/status/{orderTableId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+
+                    // Log để debug
+                    _logger.LogInformation($"Payment API response for order {orderTableId}: {jsonContent}");
+
+                    // Kiểm tra nếu response rỗng hoặc là mảng rỗng
+                    if (string.IsNullOrWhiteSpace(jsonContent) || jsonContent.Trim() == "[]")
+                    {
+                        _logger.LogInformation($"Empty response for order {orderTableId} - assuming not paid");
+                        return Json(new
+                        {
+                            success = true,
+                            data = new
+                            {
+                                orderTableId = orderTableId,
+                                isSuccess = false,
+                                isPaid = false
+                            }
+                        });
+                    }
+
+                    try
+                    {
+                        var paymentStatus = JsonSerializer.Deserialize<List<dynamic>>(jsonContent, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        if (paymentStatus != null && paymentStatus.Any())
+                        {
+                            var firstPayment = paymentStatus.First();
+                            var isSuccess = firstPayment.GetProperty("isSuccess").GetBoolean();
+
+                            _logger.LogInformation($"Payment status for order {orderTableId}: isSuccess = {isSuccess}");
+
+                            return Json(new
+                            {
+                                success = true,
+                                data = new
+                                {
+                                    orderTableId = orderTableId,
+                                    isSuccess = isSuccess,
+                                    isPaid = isSuccess
+                                }
+                            });
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"No payment data found for order {orderTableId}");
+                            return Json(new
+                            {
+                                success = true,
+                                data = new
+                                {
+                                    orderTableId = orderTableId,
+                                    isSuccess = false,
+                                    isPaid = false
+                                }
+                            });
+                        }
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        _logger.LogError(jsonEx, $"JSON parsing error for order {orderTableId}. Raw response: {jsonContent}");
+
+                        // Thử parse như object đơn thay vì array
+                        try
+                        {
+                            var singlePayment = JsonSerializer.Deserialize<dynamic>(jsonContent, new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+
+                            var isSuccess = singlePayment.GetProperty("isSuccess").GetBoolean();
+
+                            return Json(new
+                            {
+                                success = true,
+                                data = new
+                                {
+                                    orderTableId = orderTableId,
+                                    isSuccess = isSuccess,
+                                    isPaid = isSuccess
+                                }
+                            });
+                        }
+                        catch
+                        {
+                            return Json(new
+                            {
+                                success = true,
+                                data = new
+                                {
+                                    orderTableId = orderTableId,
+                                    isSuccess = false,
+                                    isPaid = false
+                                }
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning($"API call failed for order {orderTableId}. Status: {response.StatusCode}");
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"API trả về status code: {response.StatusCode}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting payment status for order {orderTableId}");
+                return Json(new
+                {
+                    success = false,
+                    message = "Có lỗi không mong muốn xảy ra khi kiểm tra trạng thái thanh toán"
+                });
+            }
+        }
     }
 }
