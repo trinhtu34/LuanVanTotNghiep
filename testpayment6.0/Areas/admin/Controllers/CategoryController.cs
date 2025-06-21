@@ -8,7 +8,6 @@ namespace testpayment6._0.Areas.admin.Controllers
     public class CategoryController : Controller
     {
         private readonly HttpClient _httpClient;
-        //private readonly string _baseApiUrl = "https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api/category";
         private readonly string BASE_API_URL;
 
         public CategoryController(HttpClient httpClient , IConfiguration configuration)
@@ -21,7 +20,7 @@ namespace testpayment6._0.Areas.admin.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync(BASE_API_URL);
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/category");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -59,7 +58,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             {
                 var categoryData = new { CategoryName = categoryName };
                 var content = new StringContent(JsonSerializer.Serialize(categoryData), System.Text.Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(BASE_API_URL, content);
+                var response = await _httpClient.PostAsync($"{BASE_API_URL}/category", content);
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["Success"] = "Thêm loại món ăn thành công!";

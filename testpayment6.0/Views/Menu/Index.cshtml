@@ -1,0 +1,211 @@
+﻿@model testpayment6._0.ResponseModels.MenuViewModel_menu
+@{
+    ViewData["Title"] = "Thực đơn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Thực đơn nhà hàng</h2>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" action="@Url.Action("Index", "Menu")">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="categorySelect" class="form-label">Loại món ăn</label>
+                                <select class="form-select" id="categorySelect" name="categoryId">
+                                    <option value="">Tất cả loại món</option>
+                                    @foreach (var category in Model.Categories)
+                                    {
+                                        <option value="@category.CategoryId" selected="@(Model.SelectedCategoryId == category.CategoryId)">
+                                            @category.CategoryName
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="regionSelect" class="form-label">Khu vực</label>
+                                <select class="form-select" id="regionSelect" name="regionId">
+                                    <option value="">Tất cả khu vực</option>
+                                    @foreach (var region in Model.Regions)
+                                    {
+                                        <option value="@region.RegionId" selected="@(Model.SelectedRegionId == region.RegionId)">
+                                            @region.RegionName
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="searchInput" class="form-label">Tìm kiếm món ăn</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchInput" name="search"
+                                           value="@Model.SearchText" placeholder="Nhập tên món ăn...">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search"></i> Tìm kiếm
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <a href="@Url.Action("Index", "Menu")" class="btn btn-secondary">
+                                    <i class="fas fa-refresh"></i> Xóa bộ lọc
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách món ăn -->
+    <div class="row">
+        @if (Model.Dishes.Any())
+        {
+            @foreach (var dish in Model.Dishes)
+            {
+                var categoryName = Model.Categories.FirstOrDefault(c => c.CategoryId == dish.CategoryId)?.CategoryName ?? "Không xác định";
+                var regionName = Model.Regions.FirstOrDefault(r => r.RegionId == dish.RegionId)?.RegionName ?? "Không xác định";
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="@dish.Images" class="card-img-top" alt="@dish.DishName"
+                                 style="height: 250px; object-fit: cover;"
+                                 onerror="this.src='https://via.placeholder.com/300x250?text=No+Image'">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-primary">@categoryName</span>
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@dish.DishName</h5>
+                            <p class="card-text text-muted mb-2">
+                                <i class="fas fa-map-marker-alt"></i> @regionName
+                            </p>
+                            @if (!string.IsNullOrEmpty(dish.Descriptions))
+                            {
+                                <p class="card-text small">@dish.Descriptions</p>
+                            }
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 text-danger mb-0">@dish.Price.ToString("N0") VNĐ</span>
+                                    @if (ViewBag.IsLoggedIn == true)
+                                    {
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn"
+                                                data-dish-id="@dish.DishId" data-dish-name="@dish.DishName">
+                                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-secondary btn-sm"
+                                                onclick="alert('Vui lòng đăng nhập để đặt món')">
+                                            <i class="fas fa-lock"></i> Đặt món
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                    <h4>Không tìm thấy món ăn nào</h4>
+                    <p class="text-muted">Vui lòng thử lại với bộ lọc khác</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    // Xử lý thêm vào giỏ hàng
+    $(document).ready(function() {
+        $('.add-to-cart-btn').click(function() {
+            var button = $(this);
+            var dishId = button.data('dish-id');
+            var dishName = button.data('dish-name');
+
+            button.prop('disabled', true);
+            button.html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
+
+            $.ajax({
+                url: '@Url.Action("AddToCart", "Menu")',
+                type: 'POST',
+                data: { dishId: dishId },
+                success: function(response) {
+                    if (response.success) {
+                        // Hiển thị thông báo thành công
+                        showToast('success', response.message);
+
+                        // Reset button sau 2 giây
+                        setTimeout(function() {
+                            button.prop('disabled', false);
+                            button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
+                        }, 2000);
+                    } else {
+                        showToast('error', response.message);
+                        button.prop('disabled', false);
+                        button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
+                    }
+                },
+                error: function() {
+                    showToast('error', 'Có lỗi xảy ra. Vui lòng thử lại.');
+                    button.prop('disabled', false);
+                    button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
+                }
+            });
+        });
+    });
+
+    // Hàm hiển thị toast notification
+    function showToast(type, message) {
+        var toastClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        var toast = $('<div class="alert ' + toastClass + ' alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">' +
+                     message +
+                     '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                     '</div>');
+
+        $('body').append(toast);
+
+        // Tự động ẩn sau 3 giây
+        setTimeout(function() {
+            toast.alert('close');
+        }, 3000);
+    }
+</script>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+    .add-to-cart-btn:disabled {
+        opacity: 0.7;
+    }
+</style>

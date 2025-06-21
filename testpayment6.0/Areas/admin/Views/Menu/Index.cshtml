@@ -1,78 +1,124 @@
-﻿@model List<testpayment6._0.Models.Menu>
+﻿@model List<testpayment6._0.Areas.admin.Models.MenuAdmin>
+
 @{
-	ViewData["Title"] = "Quản lý thực đơn";
-	Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Quản lý thực đơn";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid">
-	<div class="row">
-		<div class="col-12">
-			<div class="d-flex justify-content-between align-items-center mb-3">
-				<h2>Quản lý thực đơn</h2>
-				<a href="@Url.Action("Create")" class="btn btn-primary">
-					<i class="fas fa-plus"></i> Thêm món ăn mới
-				</a>
-			</div>
-			@if (TempData["Success"] != null)
-			{
-				<div class="alert alert-success alert-dismissible fade show" role="alert">
-					@TempData["Success"]
-					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-				</div>
-			}
-			@if (ViewBag.Error != null)
-			{
-				<div class="alert alert-danger alert-dismissible fade show" role="alert">
-					@ViewBag.Error
-					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-				</div>
-			}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-primary">Quản lý thực đơn</h2>
+                <a href="@Url.Action("Create", "Menu")" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Thêm món ăn mới
+                </a>
+            </div>
 
-			<div class="card">
-				<div class="card-body">
-					@if (Model.Any())
-					{
-						<div class="table-responsive">
-							<table class="table table-striped table-hover">
-								<thead class="table-dark">
-									<tr>
-										<th>ID</th>
-										<th>Tên món ăn</th>
-										<th>Giá</th>
-										<th>Loại món ăn</th>
-										<th style="width: 150px;">Thao tác</th>
-									</tr>
-								</thead>
-								<tbody>
-									@foreach (var menu in Model)
-									{
-										<tr>
-											<td>@menu.DishId</td>
-											<td>@menu.DishName</td>
-											<td>@menu.Price.ToString("C", System.Globalization.CultureInfo.CurrentCulture)</td>
-											<td>@menu.Category.CategoryName</td>
-											<td>
-												<a href="@Url.Action("Edit", new { id = menu.DishId })"
-												   class="btn btn-sm btn-outline-primary" title="Sửa">
-													<i class="fas fa-edit"></i>
-												</a>
-											</td>
-										</tr>
-									}
-								</tbody>
-							</table>
-						</div>
-					}
-					else
-					{
-						<div class="text-center py-4">
-							<i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-							<p class="text-muted">Chưa có loại món ăn nào được tạo.</p>
-							<a href="@Url.Action("Create")" class="btn btn-primary">Thêm loại món ăn đầu tiên</a>
-						</div>
-					}
-				</div>
-			</div>
-		</div>
-	</div>
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @ViewBag.Error
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (Model != null && Model.Any())
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Mã món</th>
+                                        <th>Tên món ăn</th>
+                                        <th>Giá</th>
+                                        <th>Danh mục</th>
+                                        <th>Khu vực</th>
+                                        <th>Mô tả</th>
+                                        <th class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <code>@item.DishId</code>
+                                            </td>
+                                            <td>
+                                                <strong>@item.DishName</strong>
+                                            </td>
+                                            <td>
+                                                <span class="text-success fw-bold">
+                                                    @item.Price.ToString("N0") VNĐ
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@item.CategoryName</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">@item.RegionName</span>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.Descriptions))
+                                                {
+                                                    @(item.Descriptions.Length > 50 ? item.Descriptions.Substring(0, 50) + "..." : item.Descriptions)
+                                                }
+                                                else
+                                                {
+                                                    <em class="text-muted">Chưa có mô tả</em>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a href="@Url.Action("Edit", "Menu", new { id = item.DishId })"
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       title="Chỉnh sửa món ăn">
+                                                        <i class="fas fa-edit"></i> Sửa
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Chưa có món ăn nào</h4>
+                        <p class="text-muted">Hãy thêm món ăn đầu tiên vào thực đơn của bạn</p>
+                        <a href="@Url.Action("Create", "Menu")" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm món ăn
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
