@@ -9,7 +9,6 @@ namespace testpayment6._0.Controllers
     public class RegionController : Controller
     {
         private readonly HttpClient _httpClient;
-        //private readonly string _baseApiUrl = "https://9ennjx1tb5.execute-api.ap-southeast-1.amazonaws.com/Prod/api/region";
         private readonly string BASE_API_URL;
 
         public RegionController(HttpClient httpClient , IConfiguration configuration)
@@ -22,7 +21,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync(BASE_API_URL);
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/region");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -63,7 +62,7 @@ namespace testpayment6._0.Controllers
                 var json = JsonSerializer.Serialize(regionData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync(BASE_API_URL, content);
+                var response = await _httpClient.PostAsync($"{BASE_API_URL}/region", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -87,7 +86,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync(BASE_API_URL);
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/region");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -129,7 +128,7 @@ namespace testpayment6._0.Controllers
                 var json = JsonSerializer.Serialize(regionData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"{BASE_API_URL}/{id}", content);
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/region/{id}", content);
 
                 if (response.IsSuccessStatusCode)
                 {

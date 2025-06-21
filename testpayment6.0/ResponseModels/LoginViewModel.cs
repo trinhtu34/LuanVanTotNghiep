@@ -1,5 +1,4 @@
-﻿// Models/LoginViewModel.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace testpayment6._0.ResponseModels

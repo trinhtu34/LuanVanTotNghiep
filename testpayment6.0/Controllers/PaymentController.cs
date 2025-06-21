@@ -133,16 +133,7 @@ namespace VnPayDemo.Controllers
                         if (long.TryParse(orderTableIdPart, out var decodedOrderTableId) && decodedOrderTableId > 0)
                         {
                             orderTableId = decodedOrderTableId;
-                            _logger.LogInformation($"Decoded OrderTableId from PaymentId: {orderTableId}");
                         }
-                        else
-                        {
-                            _logger.LogWarning($"Could not decode OrderTableId from PaymentId: {paymentIdStr}, extracted part: {orderTableIdPart}");
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"PaymentId too short to contain OrderTableId: {paymentIdStr}");
                     }
 
                     // Fallback: Thử lấy từ session
@@ -171,15 +162,7 @@ namespace VnPayDemo.Controllers
                         OrderTableId = orderTableId
                     };
 
-                    _logger.LogInformation($"Payment Result - OrderTableId: {orderTableId}, IsSuccess: {paymentResult.IsSuccess}");
-
                     var saveResult = await SavePaymentToDatabase(resultModel);
-
-                    if (!saveResult.IsSuccess)
-                    {
-                        _logger.LogWarning($"Không thể lưu dữ liệu thanh toán vào CSDL: {saveResult.ErrorMessage}");
-                    }
-
                     if (paymentResult.IsSuccess)
                     {
                         return View("Success", resultModel);
