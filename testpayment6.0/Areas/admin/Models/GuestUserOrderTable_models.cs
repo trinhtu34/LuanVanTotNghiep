@@ -2,20 +2,55 @@
 
 namespace testpayment6._0.Areas.admin.Models
 {
-    // Đảm bảo BookingViewModel có các properties với tên chính xác
+    // Updated BookingViewModel
     public class BookingViewModel
     {
-        // Quan trọng: Tên properties phải khớp chính xác với name attributes trong form
         public string CustomerName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public int SelectedTableId { get; set; }
 
+        // Thay đổi từ int sang List<int> để chọn nhiều bàn
+        public List<int> SelectedTableIds { get; set; } = new List<int>();
         public List<TableModel>? Tables { get; set; }
         public List<DishModel>? Dishes { get; set; }
         public List<SelectedDish>? SelectedDishes { get; set; }
         public DateTime startingTime { get; set; }
     }
 
+    // Thêm model cho selected table
+    public class SelectedTable
+    {
+        public int TableId { get; set; }
+        public bool IsSelected { get; set; }
+        public string TableName { get; set; } = string.Empty;
+        public int Capacity { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+
+    // Model cho response từ API order table
+    //public class OrderTableApiResponse
+    //{
+    //    public int orderTableId { get; set; }
+    //    public string userId { get; set; } = string.Empty;
+    //    public DateTime startingTime { get; set; }
+    //    public bool isCancel { get; set; }
+    //    public decimal totalPrice { get; set; }
+    //    public decimal totalDeposit { get; set; }
+    //    public DateTime orderDate { get; set; }
+    //}
+
+    // Model cho table detail từ API
+    public class OrderTableDetailApiResponse
+    {
+        public int orderTablesDetailsId { get; set; }
+        public int orderTableId { get; set; }
+        public int tableId { get; set; }
+    }
+    public class TableModel
+    {
+        public int tableId { get; set; }
+        public int capacity { get; set; }
+        public string description { get; set; } = string.Empty;
+    }
     public class SelectedDish
     {
         public string DishId { get; set; }
@@ -33,13 +68,7 @@ namespace testpayment6._0.Areas.admin.Models
     }
 
 
-    // Các model khác cần có properties phù hợp
-    public class TableModel
-    {
-        public int tableId { get; set; }
-        public int capacity { get; set; }
-        public string description { get; set; } = string.Empty;
-    }
+
 
     public class DishModel
     {
@@ -92,8 +121,8 @@ namespace testpayment6._0.Areas.admin.Models
         public string userId { get; set; }
         public DateTime startingTime { get; set; }
         public bool isCancel { get; set; }
-        public decimal totalPrice { get; set; }
-        public decimal totalDeposit { get; set; }
+        public decimal? totalPrice { get; set; }
+        public decimal? totalDeposit { get; set; }
         public DateTime orderDate { get; set; }
     }
 }

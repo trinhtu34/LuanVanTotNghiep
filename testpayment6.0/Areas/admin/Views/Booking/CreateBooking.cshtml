@@ -29,7 +29,6 @@
         </div>
     }
 
-    <!-- THAY ĐỔI 1: Explicitly set form action -->
     <form action="@Url.Action("CreateBooking", "Booking", new { area = "admin" })" method="post" id="bookingForm">
         @Html.AntiForgeryToken()
         <div class="row">
@@ -55,7 +54,7 @@
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
-                            <label for="startingTime" class="form-label">Thời gian đăng ký </label>
+                            <label for="startingTime" class="form-label">Thời gian đăng ký</label>
                             <input name="startingTime" id="startingTime"
                                    value="@Model?.startingTime.ToString("yyyy-MM-ddTHH:mm")"
                                    class="form-control" type="datetime-local" required />
@@ -65,30 +64,49 @@
                 </div>
             </div>
 
-            <!-- Chọn bàn -->
+            <!-- Chọn bàn - THAY ĐỔI CHÍNH -->
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5>Chọn Bàn</h5>
+                        <h5>Chọn Bàn (Có thể chọn nhiều bàn)</h5>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <!-- THAY ĐỔI 4: Explicitly set name attribute -->
-                            <label for="SelectedTableId" class="form-label">Bàn</label>
-                            <select name="SelectedTableId" id="SelectedTableId" class="form-select" required>
-                                <option value="">-- Chọn bàn --</option>
+                            <label class="form-label">Danh sách bàn:</label>
+                            <div class="table-selection-container" style="max-height: 300px; overflow-y: auto;">
                                 @if (Model?.Tables != null)
                                 {
-                                    @foreach (var table in Model.Tables)
+                                    @for (int i = 0; i < Model.Tables.Count; i++)
                                     {
-                                        <option value="@table.tableId"
-                                                @(Model.SelectedTableId == table.tableId ? "selected" : "")>
-                                            Bàn @table.tableId - @table.capacity chỗ - @table.description
-                                        </option>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input table-checkbox"
+                                                   type="checkbox"
+                                                   name="SelectedTableIds"
+                                                   value="@Model.Tables[i].tableId"
+                                                   id="table_@Model.Tables[i].tableId"
+                                                   @(Model.SelectedTableIds != null && Model.SelectedTableIds.Contains(Model.Tables[i].tableId) ? "checked" : "") />
+                                            <label class="form-check-label" for="table_@Model.Tables[i].tableId">
+                                                <strong>Bàn @Model.Tables[i].tableId</strong> - @Model.Tables[i].capacity chỗ
+                                                <br><small class="text-muted">@Model.Tables[i].description</small>
+                                            </label>
+                                        </div>
                                     }
                                 }
-                            </select>
-                            <span asp-validation-for="SelectedTableId" class="text-danger"></span>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    Lưu ý: Chỉ có thể đặt bàn nếu trong vòng 2 tiếng trước và sau không có đơn đặt bàn khác.
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Hiển thị bàn đã chọn -->
+                        <div class="mt-3">
+                            <h6>Bàn đã chọn:</h6>
+                            <div id="selectedTablesDisplay" class="selected-tables-display">
+                                <span class="text-muted">Chưa chọn bàn nào</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -161,10 +179,9 @@
 
 <script>
     let selectedDishes = [];
+    let selectedTables = [];
     let totalPrice = 0;
-    
 
-    // Sử dụng event delegation để handle tất cả quantity inputs
     document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners to all quantity inputs
         document.querySelectorAll('.quantity-input').forEach(input => {
@@ -176,14 +193,22 @@
                 updateDishInfo(index, dishId, dishName, price);
             });
         });
+
+        // Add event listeners to table checkboxes
+        document.querySelectorAll('.table-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateSelectedTables();
+            });
+        });
+
+        // Initialize selected tables display
+        updateSelectedTables();
     });
 
     function updateDishInfo(index, dishId, dishName, price) {
-        // Sử dụng name attribute thay vì querySelector phức tạp
         const quantityInput = document.querySelector(`input[name="SelectedDishes[${index}].Quantity"]`);
         const quantity = parseInt(quantityInput.value) || 0;
 
-        // Cập nhật mảng selectedDishes
         const existingIndex = selectedDishes.findIndex(d => d.dishId === dishId);
 
         if (quantity > 0) {
@@ -207,6 +232,27 @@
         }
 
         updateOrderSummary();
+    }
+
+    function updateSelectedTables() {
+        const selectedTableIds = [];
+        const selectedTableNames = [];
+
+        document.querySelectorAll('.table-checkbox:checked').forEach(checkbox => {
+            const tableId = checkbox.value;
+            const tableLabel = checkbox.nextElementSibling.querySelector('strong').textContent;
+            selectedTableIds.push(tableId);
+            selectedTableNames.push(tableLabel);
+        });
+
+        const displayDiv = document.getElementById('selectedTablesDisplay');
+        if (selectedTableNames.length === 0) {
+            displayDiv.innerHTML = '<span class="text-muted">Chưa chọn bàn nào</span>';
+        } else {
+            displayDiv.innerHTML = selectedTableNames.map(name =>
+                `<span class="badge bg-primary me-1">${name}</span>`
+            ).join('');
+        }
     }
 
     function updateOrderSummary() {
@@ -239,5 +285,26 @@
 
         totalPriceSpan.textContent = totalPrice.toLocaleString() + ' VNĐ';
     }
-
 </script>
+
+<style>
+    .selected-tables-display .badge {
+        font-size: 0.9em;
+        margin-bottom: 5px;
+    }
+
+    .table-selection-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 10px;
+    }
+
+    .form-check {
+        padding: 8px;
+        border-radius: 5px;
+    }
+
+        .form-check:hover {
+            background-color: #f8f9fa;
+        }
+</style>
