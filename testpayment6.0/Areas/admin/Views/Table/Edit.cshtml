@@ -1,0 +1,100 @@
+﻿@model testpayment6._0.Areas.admin.Models.TableAdmin
+
+@{
+    ViewData["Title"] = "Chỉnh sửa món ăn";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @ViewBag.Error
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Hidden field for DishId -->
+                        <input asp-for="DishId" type="hidden" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">Mã món ăn</label>
+                            <input asp-for="TableId" name="TableId" value="@(Model?.TableId.ToString() ?? "")" class="form-control bg-light" readonly />
+                            <div class="form-text">Mã bàn không thể thay đổi</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Capacity" class="form-label fw-bold">
+                                        Sức chứa <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Capacity" name="Capacity" value="@Model?.Capacity" class="form-control" placeholder="Nhập tên món ăn" required />
+                                    <span asp-validation-for="Capacity" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Deposit" class="form-label fw-bold">
+                                        Tiền cọc (VNĐ) <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Deposit" name="Deposit" value="@Model?.Deposit" type="number" class="form-control" placeholder="Nhập giá tiền" required />
+                                    <span asp-validation-for="Deposit" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="RegionId" class="form-label fw-bold">
+                                        Khu vực <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="RegionId" name="RegionId" class="form-select" required>
+                                        <option value="">-- Chọn khu vực --</option>
+                                        @if (ViewBag.Regions != null)
+                                        {
+                                            @foreach (var region in (List<testpayment6._0.Areas.admin.Models.RegionAdmin>)ViewBag.Regions)
+                                            {
+                                                <option value="@region.RegionId"
+                                                        @(Model?.RegionId == region.RegionId ? "selected" : "")>
+                                                    @region.RegionName
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                    <span asp-validation-for="RegionId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">Mô tả món ăn</label>
+                            <textarea asp-for="Description" name="Description" class="form-control" rows="3"
+                                      placeholder="Nhập mô tả chi tiết về bàn (tùy chọn)">@Model?.Description</textarea>
+                            <span asp-validation-for="Descriptions" class="text-danger"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="@Url.Action("Index", "Table")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Cập nhật thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>

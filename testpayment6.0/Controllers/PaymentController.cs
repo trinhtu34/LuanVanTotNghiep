@@ -71,8 +71,7 @@ namespace VnPayDemo.Controllers
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
                 // ENCODE OrderTableId vào PaymentId
-                // Format: {timestamp}{orderTableId} (padding OrderTableId to 9 digits)
-                var timestamp = DateTime.Now.Ticks % 1000000000; // Lấy 9 số cuối để tránh quá dài
+                var timestamp = DateTime.Now.Ticks % 1000000000;
                 var paymentId = long.Parse($"{timestamp}{model.OrderTableId:D9}");
 
                 var request = new PaymentRequest
@@ -123,12 +122,22 @@ namespace VnPayDemo.Controllers
                 {
                     var paymentResult = _vnpay.GetPaymentResult(Request.Query);
                     long orderTableId = 0;
+                    decimal amount = 0;
+
+                    var vnp_AmountStr = Request.Query["vnp_Amount"];
+                    if (!string.IsNullOrEmpty(vnp_AmountStr))
+                    {
+                        if (long.TryParse(vnp_AmountStr, out var vnpAmount))
+                        {
+                            amount = vnpAmount / 100m;
+                        }
+                    }
 
                     // DECODE OrderTableId từ PaymentId
                     var paymentIdStr = paymentResult.PaymentId.ToString();
                     if (paymentIdStr.Length >= 9)
                     {
-                        // Lấy 6 số cuối là OrderTableId
+                        // Lấy 9 số cuối là OrderTableId
                         var orderTableIdPart = paymentIdStr.Substring(paymentIdStr.Length - 9);
                         if (long.TryParse(orderTableIdPart, out var decodedOrderTableId) && decodedOrderTableId > 0)
                         {
@@ -143,13 +152,13 @@ namespace VnPayDemo.Controllers
                         if (!string.IsNullOrEmpty(orderTableIdStr) && long.TryParse(orderTableIdStr, out var sessionOrderTableId))
                         {
                             orderTableId = sessionOrderTableId;
-                            _logger.LogInformation($"Retrieved OrderTableId from session: {orderTableId}");
                         }
                     }
 
                     var resultModel = new PaymentResultViewModel
                     {
                         PaymentId = paymentResult.PaymentId,
+                        Amount = amount,
                         IsSuccess = paymentResult.IsSuccess,
                         Description = paymentResult.Description,
                         Timestamp = paymentResult.Timestamp,
@@ -161,6 +170,8 @@ namespace VnPayDemo.Controllers
                         TransactionStatusDescription = paymentResult.TransactionStatus?.Description ?? string.Empty,
                         OrderTableId = orderTableId
                     };
+
+                    _logger.LogInformation($"Parsed amount: {amount} from vnp_Amount: {vnp_AmountStr}");
 
                     var saveResult = await SavePaymentToDatabase(resultModel);
                     if (paymentResult.IsSuccess)
@@ -197,6 +208,7 @@ namespace VnPayDemo.Controllers
                 var paymentData = new
                 {
                     orderTableId = paymentResult.OrderTableId,
+                    amount = paymentResult.Amount,
                     paymentId = paymentResult.PaymentId,
                     isSuccess = paymentResult.IsSuccess,
                     description = paymentResult.Description,

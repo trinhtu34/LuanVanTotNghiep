@@ -224,7 +224,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             ViewBag.Categories = await LoadCategories();
         }
 
-        private async Task<List<Region>> LoadRegions()
+        private async Task<List<RegionAdmin>> LoadRegions()
         {
             try
             {
@@ -232,20 +232,20 @@ namespace testpayment6._0.Areas.admin.Controllers
                 if (regionResponse.IsSuccessStatusCode)
                 {
                     var regionJson = await regionResponse.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<List<Region>>(regionJson, new JsonSerializerOptions
+                    return JsonSerializer.Deserialize<List<RegionAdmin>>(regionJson, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
-                    }) ?? new List<Region>();
+                    }) ?? new List<RegionAdmin>();
                 }
             }
             catch (Exception)
             {
                 // Log error if needed
             }
-            return new List<Region>();
+            return new List<RegionAdmin>();
         }
 
-        private async Task<List<Category>> LoadCategories()
+        private async Task<List<CategoryAdmin>> LoadCategories()
         {
             try
             {
@@ -253,17 +253,17 @@ namespace testpayment6._0.Areas.admin.Controllers
                 if (categoryResponse.IsSuccessStatusCode)
                 {
                     var categoryJson = await categoryResponse.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<List<Category>>(categoryJson, new JsonSerializerOptions
+                    return JsonSerializer.Deserialize<List<CategoryAdmin>>(categoryJson, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
-                    }) ?? new List<Category>();
+                    }) ?? new List<CategoryAdmin>();
                 }
             }
             catch (Exception)
             {
                 // Log error if needed
             }
-            return new List<Category>();
+            return new List<CategoryAdmin>();
         }
     }
 }

@@ -35,10 +35,7 @@ namespace testpayment6._0.ResponseModels
         [JsonPropertyName("description")]
         public string Description { get; set; } = string.Empty;
     }
-}
 
-namespace testpayment6._0.ResponseModels
-{
     public class OrderTableResponse
     {
         [JsonPropertyName("orderTableId")]
