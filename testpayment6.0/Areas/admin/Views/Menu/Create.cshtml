@@ -68,7 +68,7 @@
                                         <option value="">-- Chọn danh mục --</option>
                                         @if (ViewBag.Categories != null)
                                         {
-                                            @foreach (var category in (List<testpayment6._0.Models.Category>)ViewBag.Categories)
+                                            @foreach (var category in (List<testpayment6._0.Areas.admin.Models.CategoryAdmin>)ViewBag.Categories)
                                             {
                                                 <option value="@category.CategoryId">@category.CategoryName</option>
                                             }
@@ -87,7 +87,7 @@
                                         <option value="">-- Chọn khu vực --</option>
                                         @if (ViewBag.Regions != null)
                                         {
-                                            @foreach (var region in (List<testpayment6._0.Models.Region>)ViewBag.Regions)
+                                            @foreach (var region in (List<testpayment6._0.Areas.admin.Models.RegionAdmin>)ViewBag.Regions)
                                             {
                                                 <option value="@region.RegionId">@region.RegionName</option>
                                             }
@@ -117,7 +117,7 @@
                                 <i class="fas fa-arrow-left"></i> Quay lại
                             </a>
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Lưu món ăn
+                                <i class="fas fa-save"></i> Lưu thông tin
                             </button>
                         </div>
                     </form>

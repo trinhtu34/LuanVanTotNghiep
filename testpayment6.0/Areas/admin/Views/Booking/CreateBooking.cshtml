@@ -1,0 +1,320 @@
+﻿@using testpayment6._0.Areas.admin.Models
+@model BookingViewModel
+@{
+    ViewData["Title"] = "Đặt Bàn";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Đặt Bàn Cho Khách Hàng</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    <!-- THAY ĐỔI 1: Explicitly set form action -->
+    <form action="@Url.Action("CreateBooking", "Booking", new { area = "admin" })" method="post" id="bookingForm">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <!-- Thông tin khách hàng -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Thông Tin Khách Hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <!-- THAY ĐỔI 2: Explicitly set name attribute -->
+                            <label for="CustomerName" class="form-label">Tên Khách Hàng</label>
+                            <input name="CustomerName" id="CustomerName"
+                                   value="@Model?.CustomerName"
+                                   class="form-control" required />
+                            <span asp-validation-for="CustomerName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <!-- THAY ĐỔI 3: Explicitly set name attribute -->
+                            <label for="PhoneNumber" class="form-label">Số Điện Thoại</label>
+                            <input name="PhoneNumber" id="PhoneNumber"
+                                   value="@Model?.PhoneNumber"
+                                   class="form-control" type="tel" required />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chọn bàn -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Chọn Bàn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <!-- THAY ĐỔI 4: Explicitly set name attribute -->
+                            <label for="SelectedTableId" class="form-label">Bàn</label>
+                            <select name="SelectedTableId" id="SelectedTableId" class="form-select" required>
+                                <option value="">-- Chọn bàn --</option>
+                                @if (Model?.Tables != null)
+                                {
+                                    @foreach (var table in Model.Tables)
+                                    {
+                                        <option value="@table.tableId"
+                                                @(Model.SelectedTableId == table.tableId ? "selected" : "")>
+                                            Bàn @table.tableId - @table.capacity chỗ - @table.description
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="SelectedTableId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chọn món ăn -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Chọn Món Ăn</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @if (Model?.Dishes != null)
+                    {
+                        @for (int i = 0; i < Model.Dishes.Count; i++)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <img src="@Model.Dishes[i].images" class="card-img-top" alt="@Model.Dishes[i].dishName" style="height: 200px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@Model.Dishes[i].dishName</h6>
+                                        <p class="card-text">@Model.Dishes[i].descriptions</p>
+                                        <p class="text-danger fw-bold">@Model.Dishes[i].price.ToString("N0") VNĐ</p>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Số lượng:</label>
+                                            <input type="number"
+                                                   name="SelectedDishes[@i].Quantity"
+                                                   class="form-control quantity-input"
+                                                   min="0"
+                                                   value="@(Model.SelectedDishes != null && i < Model.SelectedDishes.Count ? Model.SelectedDishes[i].Quantity : 0)"
+                                                   data-index="@i"
+                                                   data-dish-id="@Model.Dishes[i].dishId"
+                                                   data-dish-name="@Model.Dishes[i].dishName"
+                                                   data-price="@Model.Dishes[i].price" />
+
+                                            <input type="hidden" name="SelectedDishes[@i].DishId" value="@Model.Dishes[i].dishId" />
+                                            <input type="hidden" name="SelectedDishes[@i].DishName" value="@Model.Dishes[i].dishName" />
+                                            <input type="hidden" name="SelectedDishes[@i].Price" value="@Model.Dishes[i].price" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tổng kết đơn hàng -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>Tổng Kết Đơn Hàng</h5>
+                <div id="orderSummary">
+                    <p>Chưa có món nào được chọn</p>
+                </div>
+                <div class="mt-3">
+                    <h6>Tổng tiền: <span id="totalPrice" class="text-danger">0 VNĐ</span></h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Xác Nhận Đặt Bàn</button>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary btn-lg">Hủy</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    let selectedDishes = [];
+    let totalPrice = 0;
+
+    // Sử dụng event delegation để handle tất cả quantity inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all quantity inputs
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const index = this.getAttribute('data-index');
+                const dishId = this.getAttribute('data-dish-id');
+                const dishName = this.getAttribute('data-dish-name');
+                const price = parseFloat(this.getAttribute('data-price'));
+                updateDishInfo(index, dishId, dishName, price);
+            });
+        });
+    });
+
+    function updateDishInfo(index, dishId, dishName, price) {
+        // Sử dụng name attribute thay vì querySelector phức tạp
+        const quantityInput = document.querySelector(`input[name="SelectedDishes[${index}].Quantity"]`);
+        const quantity = parseInt(quantityInput.value) || 0;
+
+        // Cập nhật mảng selectedDishes
+        const existingIndex = selectedDishes.findIndex(d => d.dishId === dishId);
+
+        if (quantity > 0) {
+            const dishInfo = {
+                dishId: dishId,
+                dishName: dishName,
+                quantity: quantity,
+                price: price,
+                totalPrice: quantity * price
+            };
+
+            if (existingIndex >= 0) {
+                selectedDishes[existingIndex] = dishInfo;
+            } else {
+                selectedDishes.push(dishInfo);
+            }
+        } else {
+            if (existingIndex >= 0) {
+                selectedDishes.splice(existingIndex, 1);
+            }
+        }
+
+        updateOrderSummary();
+    }
+
+    function updateOrderSummary() {
+        const summaryDiv = document.getElementById('orderSummary');
+        const totalPriceSpan = document.getElementById('totalPrice');
+
+        if (selectedDishes.length === 0) {
+            summaryDiv.innerHTML = '<p>Chưa có món nào được chọn</p>';
+            totalPrice = 0;
+        } else {
+            let summaryHtml = '<ul class="list-group">';
+            totalPrice = 0;
+
+            selectedDishes.forEach(dish => {
+                summaryHtml += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${dish.dishName}</strong><br>
+                            <small>Số lượng: ${dish.quantity} x ${dish.price.toLocaleString()} VNĐ</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${dish.totalPrice.toLocaleString()} VNĐ</span>
+                    </li>
+                `;
+                totalPrice += dish.totalPrice;
+            });
+
+            summaryHtml += '</ul>';
+            summaryDiv.innerHTML = summaryHtml;
+        }
+
+        totalPriceSpan.textContent = totalPrice.toLocaleString() + ' VNĐ';
+    }
+
+    // THAY ĐỔI 5: Enhanced form validation and debugging
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        console.log('=== FORM SUBMIT DEBUG ===');
+
+        // Get form values directly
+        const customerName = document.getElementById('CustomerName').value.trim();
+        const phoneNumber = document.getElementById('PhoneNumber').value.trim();
+        const selectedTableId = document.getElementById('SelectedTableId').value;
+
+        console.log('Customer Name:', customerName);
+        console.log('Phone Number:', phoneNumber);
+        console.log('Selected Table ID:', selectedTableId);
+
+        if (!customerName || !phoneNumber || !selectedTableId) {
+            e.preventDefault();
+            alert('Vui lòng điền đầy đủ thông tin khách hàng và chọn bàn!');
+            return false;
+        }
+
+        // Check if at least one dish is selected
+        const hasSelectedDishes = Array.from(document.querySelectorAll('.quantity-input'))
+            .some(input => parseInt(input.value) > 0);
+
+        console.log('Has selected dishes:', hasSelectedDishes);
+
+        if (!hasSelectedDishes) {
+            e.preventDefault();
+            alert('Vui lòng chọn ít nhất một món ăn!');
+            return false;
+        }
+
+        // Debug: Log all form data before submit
+        console.log('=== All Form Data ===');
+        const formData = new FormData(this);
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value);
+        }
+
+        return true;
+    });
+
+    // Enhanced debug function
+    function debugFormData() {
+        console.log('=== ENHANCED FORM DEBUG ===');
+
+        const form = document.getElementById('bookingForm');
+        console.log('Form action:', form.action);
+        console.log('Form method:', form.method);
+
+        // Test individual elements
+        const customerNameInput = document.getElementById('CustomerName');
+        const phoneNumberInput = document.getElementById('PhoneNumber');
+        const tableSelectInput = document.getElementById('SelectedTableId');
+
+        console.log('CustomerName element:', customerNameInput);
+        console.log('CustomerName value:', customerNameInput ? customerNameInput.value : 'NOT FOUND');
+        console.log('PhoneNumber element:', phoneNumberInput);
+        console.log('PhoneNumber value:', phoneNumberInput ? phoneNumberInput.value : 'NOT FOUND');
+        console.log('SelectedTableId element:', tableSelectInput);
+        console.log('SelectedTableId value:', tableSelectInput ? tableSelectInput.value : 'NOT FOUND');
+
+        // Check all form inputs
+        const allInputs = form.querySelectorAll('input, select');
+        console.log('Total form inputs found:', allInputs.length);
+
+        allInputs.forEach((input, index) => {
+            console.log(`Input ${index}: name="${input.name}", value="${input.value}", type="${input.type}"`);
+        });
+    }
+
+    // Add debug button
+    document.addEventListener('DOMContentLoaded', function() {
+        const debugButton = document.createElement('button');
+        debugButton.textContent = 'Debug Form';
+        debugButton.type = 'button';
+        debugButton.className = 'btn btn-warning me-2';
+        debugButton.onclick = debugFormData;
+
+        const submitButton = document.querySelector('button[type="submit"]');
+        if (submitButton && submitButton.parentNode) {
+            submitButton.parentNode.insertBefore(debugButton, submitButton);
+        }
+    });
+</script>

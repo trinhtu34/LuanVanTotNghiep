@@ -10,7 +10,6 @@
         public string? Descriptions { get; set; }
         public string? Images { get; set; }
 
-        // Properties để hiển thị tên thay vì ID
         public string? CategoryName { get; set; }
         public string? RegionName { get; set; }
     }

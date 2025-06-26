@@ -21,10 +21,21 @@
 
                 <table class="table table-striped">
                     <tbody>
-                        <tr>
-							<th>Mã đơn hàng:</th>
-                            <td>@Model.OrderTableId</td>
-                        </tr>
+                        @if (Model.OrderTableId != null)
+                        {
+                            <tr>
+                                <th>Mã đơn hàng:</th>
+                                <td>@Model.OrderTableId</td>
+                            </tr>
+                        }
+                        else
+                        {
+
+                            <tr>
+                                <th>Mã giỏ hàng :</th>
+                                <td>@Model.CartId</td>
+                            </tr>
+                        }
                         <tr>
                             <th>Mã giao dịch VNPAY:</th>
                             <td>@Model.VnpayTransactionId</td>
