@@ -14,17 +14,17 @@
 	@if (Model != null && Model.Any())
 	{
 		<div class="row">
-			@foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+			@foreach (var order in Model.OrderByDescending(o => o.orderDate))
 			{
 				<div class="col-md-6 col-lg-4 mb-4">
-					<div class="card order-card @(order.IsCancel ? "cancelled" : "")">
+					<div class="card order-card @(order.isCancel ? "cancelled" : "")">
 						<div class="card-header d-flex justify-content-between align-items-center">
 							<h6 class="mb-0">
 								<i class="fas fa-receipt"></i>
-								Mã đơn: #@order.OrderTableId
+								Mã đơn: #@order.orderTableId
 							</h6>
-							<span class="badge @(order.IsCancel ? "bg-danger" : "bg-success")">
-								@(order.IsCancel ? "Đã hủy" : "Đang hoạt động")
+							<span class="badge @(order.isCancel ? "bg-danger" : "bg-success")">
+								@(order.isCancel ? "Đã hủy" : "Đang hoạt động")
 							</span>
 						</div>
 						<div class="card-body">
@@ -32,42 +32,42 @@
 								<p class="info-item">
 									<i class="fas fa-calendar-alt text-primary"></i>
 									<strong>Ngày đặt:</strong><br>
-									<span class="ms-3">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+									<span class="ms-3">@order.orderDate.ToString("dd/MM/yyyy HH:mm")</span>
 								</p>
 
 								<p class="info-item">
 									<i class="fas fa-clock text-warning"></i>
 									<strong>Thời gian bắt đầu:</strong><br>
-									<span class="ms-3">@order.StartingTime.ToString("dd/MM/yyyy HH:mm")</span>
+									<span class="ms-3">@order.startingTime.ToString("dd/MM/yyyy HH:mm")</span>
 								</p>
 
 								<p class="info-item">
 									<i class="fas fa-money-bill-wave text-success"></i>
 									<strong>Tổng tiền:</strong><br>
-									<span class="ms-3">@string.Format("{0:N0}", order.TotalPrice) VNĐ</span>
+									<span class="ms-3">@string.Format("{0:N0}", order.totalPrice) VNĐ</span>
 								</p>
 
 								<p class="info-item">
 									<i class="fas fa-coins text-warning"></i>
 									<strong>Tiền cọc:</strong><br>
-									<span class="ms-3">@string.Format("{0:N0}", order.TotalDeposit) VNĐ</span>
+									<span class="ms-3">@string.Format("{0:N0}", order.totalDeposit) VNĐ</span>
 								</p>
 
 								<!-- Trạng thái thanh toán tiền cọc -->
 								<p class="info-item">
 									<i class="fas fa-credit-card text-info"></i>
 									<strong>Trạng thái thanh toán:</strong><br>
-									<span class="ms-3 payment-status-placeholder" data-order-id="@order.OrderTableId">
+									<span class="ms-3 payment-status-placeholder" data-order-id="@order.orderTableId">
 										<span class="spinner-border spinner-border-sm" role="status"></span>
 										Đang kiểm tra...
 									</span>
 								</p>
 
 								<!-- Button thanh toán - chỉ hiện khi chưa thanh toán -->
-								<div class="payment-button-container" data-order-id="@order.OrderTableId" style="display: none;">
+								<div class="payment-button-container" data-order-id="@order.orderTableId" style="display: none;">
 									<button type="button" class="btn btn-warning btn-sm w-100 payment-btn"
-											data-order-id="@order.OrderTableId"
-											data-deposit="@order.TotalDeposit">
+											data-order-id="@order.orderTableId"
+											data-deposit="@order.orderTableId">
 										<i class="fas fa-credit-card"></i> Thanh Toán Tiền Cọc
 									</button>
 								</div>
@@ -76,7 +76,7 @@
 								<p class="info-item">
 									<i class="fas fa-utensils text-info"></i>
 									<strong>Số bàn đã đặt:</strong><br>
-									<span class="ms-3 table-count-placeholder" data-order-id="@order.OrderTableId">
+									<span class="ms-3 table-count-placeholder" data-order-id="@order.orderTableId">
 										<span class="spinner-border spinner-border-sm" role="status"></span>
 										Đang tải...
 									</span>
@@ -85,7 +85,7 @@
 								<p class="info-item">
 									<i class="fas fa-utensils text-success"></i>
 									<strong>Món ăn đã đặt:</strong><br>
-									<span class="ms-3 food-count-placeholder" data-order-id="@order.OrderTableId">
+									<span class="ms-3 food-count-placeholder" data-order-id="@order.orderTableId">
 										<span class="spinner-border spinner-border-sm" role="status"></span>
 										Đang tải...
 									</span>
@@ -95,22 +95,22 @@
 						<div class="card-footer text-muted text-center">
 							<small>
 								@{
-									var timeUntilStart = order.StartingTime - DateTime.Now;
-									if (timeUntilStart.TotalHours > 0 && !order.IsCancel)
+									var timeUntilStart = order.startingTime - DateTime.Now;
+									if (timeUntilStart.TotalHours > 0 && !order.isCancel)
 									{
 										<span class="text-info">
 											<i class="fas fa-hourglass-half"></i>
 											Còn @Math.Round(timeUntilStart.TotalHours, 1) giờ nữa
 										</span>
 									}
-									else if (!order.IsCancel && timeUntilStart.TotalHours <= 0 && timeUntilStart.TotalHours > -2)
+									else if (!order.isCancel && timeUntilStart.TotalHours <= 0 && timeUntilStart.TotalHours > -2)
 									{
 										<span class="text-warning">
 											<i class="fas fa-exclamation-triangle"></i>
 											Đã đến giờ
 										</span>
 									}
-									else if (!order.IsCancel)
+									else if (!order.isCancel)
 									{
 										<span class="text-secondary">
 											<i class="fas fa-check-circle"></i>

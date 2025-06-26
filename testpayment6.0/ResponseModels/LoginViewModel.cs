@@ -61,13 +61,13 @@ namespace testpayment6._0.ResponseModels
 
     public class OrderTableViewModel
     {
-        public long OrderTableId { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public DateTime StartingTime { get; set; }
-        public bool IsCancel { get; set; }
-        public decimal TotalPrice { get; set; }
-        public decimal? TotalDeposit { get; set; }
-        public DateTime OrderDate { get; set; }
+        public long orderTableId { get; set; }
+        public string? userId { get; set; } = string.Empty;
+        public DateTime startingTime { get; set; }
+        public bool isCancel { get; set; }
+        public decimal? totalPrice { get; set; }
+        public decimal? totalDeposit { get; set; }
+        public DateTime orderDate { get; set; }
     }
     public class OrderTableDetailViewModel
     {

@@ -59,29 +59,9 @@ namespace testpayment6._0.Areas.admin.Controllers
         {
             // Filter selected dishes (only those with quantity > 0)
             var selectedDishes = model.SelectedDishes?.Where(d => d != null && d.Quantity > 0).ToList();
-            _logger.LogInformation("Filtered dishes with quantity > 0: {Count}", selectedDishes?.Count ?? 0);
-
-            if (selectedDishes == null || !selectedDishes.Any())
-            {
-                _logger.LogWarning("No dishes selected");
-                TempData["Error"] = "Vui lòng chọn ít nhất một món ăn!";
-                var reloadedModel = await LoadBookingData();
-                // Preserve form data
-                reloadedModel.CustomerName = model.CustomerName;
-                reloadedModel.PhoneNumber = model.PhoneNumber;
-                reloadedModel.SelectedTableId = model.SelectedTableId;
-                reloadedModel.SelectedDishes = model.SelectedDishes;
-                return View(reloadedModel);
-            }
-
             try
             {
-                _logger.LogInformation("Starting booking process...");
-
-                // 1. Tạo tài khoản cho khách hàng
-                //var userId = DateTime.Now.Ticks % 1000000000000000;
-                //var userIdString = userId.ToString("D15"); // Đảm bảo ID có độ dài 15 ký tự
-
+                //1. Tạo tài khoản
                 var userId = DateTime.Now.Ticks.ToString();
 
                 var signupRequest = new UserSignupRequest
@@ -96,17 +76,30 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var signupResponse = await _httpClient.PostAsync($"{BASE_API_URL}/user/signup/guest", signupContent);
 
                 var signupResponseContent = await signupResponse.Content.ReadAsStringAsync();
-                _logger.LogInformation("Signup response: {Response}", signupResponseContent);
+
+                // validate thời gian đăng ký , cho chọn luôn , không dùng datetime nữa , vì có thể khách đến trực tiếp đặt cho thời gian sau
+
+                // Lấy múi giờ Việt Nam
+                var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+                if (!DateTime.TryParse(model.startingTime.ToString(), out DateTime parsedStartTime))
+                {
+                    return Json(new { success = false, message = "Thời gian không hợp lệ" });
+                }
+                DateTime nowInVietnam = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
+                if (parsedStartTime <= nowInVietnam)
+                {
+                    return Json(new { success = false, message = "Thời gian phải trong tương lai" });
+                }
 
                 var userInfo = JsonSerializer.Deserialize<userResponse>(signupResponseContent);
                 string useridString = userInfo.userId;
                 // 2. Tạo đơn đặt bàn
-                var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
                 var orderRequest = new OrderTableRequest
                 {
                     userId = useridString,
                     isCancel = false,
-                    startingTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone)
+                    //startingTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone)
+                    startingTime = parsedStartTime
                 };
 
                 var orderJson = JsonSerializer.Serialize(orderRequest);
@@ -116,18 +109,8 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var orderResponseContent = await orderResponse.Content.ReadAsStringAsync();
                 _logger.LogInformation("Order table response: {Response}", orderResponseContent);
 
-                // đến đây là ok rồi , nhận thông tin đưa về chuẩn rồi , mà mấy cái giá tiền bị null , trong khi chọn món ăn rồi , chịu luôn
-
                 var orderTableResponse = JsonSerializer.Deserialize<OrderTableResponse>(orderResponseContent);
-                if (orderTableResponse == null)
-                {
-                    _logger.LogError("Failed to deserialize order table response");
-                    TempData["Error"] = "Không thể đọc dữ liệu từ đơn đặt bàn";
-                    return RedirectToAction("CreateBooking");
-                }
-
                 var orderTableId = orderTableResponse.orderTableId;
-                _logger.LogInformation("Order table created with ID: {OrderTableId}", orderTableId);
 
                 // 3. Thêm bàn vào đơn đặt bàn
                 _logger.LogInformation("Adding table {TableId} to order...", model.SelectedTableId);
@@ -140,13 +123,6 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var tableDetailJson = JsonSerializer.Serialize(tableDetailRequest);
                 var tableDetailContent = new StringContent(tableDetailJson, Encoding.UTF8, "application/json");
                 var tableDetailResponse = await _httpClient.PostAsync($"{BASE_API_URL}/OrderTablesDetail", tableDetailContent);
-
-                if (!tableDetailResponse.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to add table to order. Status: {Status}", tableDetailResponse.StatusCode);
-                    TempData["Error"] = "Không thể thêm bàn vào đơn đặt bàn";
-                    return RedirectToAction("CreateBooking");
-                }
 
                 // 4. Thêm món ăn vào đơn đặt bàn
                 _logger.LogInformation("Adding {Count} dishes to order...", selectedDishes.Count);
@@ -166,16 +142,6 @@ namespace testpayment6._0.Areas.admin.Controllers
                     var foodDetailJson = JsonSerializer.Serialize(foodDetailRequest);
                     var foodDetailContent = new StringContent(foodDetailJson, Encoding.UTF8, "application/json");
                     var foodResponse = await _httpClient.PostAsync($"{BASE_API_URL}/OrderFoodDetail", foodDetailContent);
-
-                    if (!foodResponse.IsSuccessStatusCode)
-                    {
-                        _logger.LogWarning("Failed to add dish {DishId} to order. Status: {Status}",
-                            dish.DishId, foodResponse.StatusCode);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Successfully added dish {DishId}", dish.DishId);
-                    }
                 }
 
                 TempData["Success"] = $"Đặt bàn thành công cho khách hàng {model.CustomerName}!";

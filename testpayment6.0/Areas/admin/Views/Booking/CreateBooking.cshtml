@@ -41,7 +41,6 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group mb-3">
-                            <!-- THAY ĐỔI 2: Explicitly set name attribute -->
                             <label for="CustomerName" class="form-label">Tên Khách Hàng</label>
                             <input name="CustomerName" id="CustomerName"
                                    value="@Model?.CustomerName"
@@ -49,12 +48,18 @@
                             <span asp-validation-for="CustomerName" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
-                            <!-- THAY ĐỔI 3: Explicitly set name attribute -->
                             <label for="PhoneNumber" class="form-label">Số Điện Thoại</label>
                             <input name="PhoneNumber" id="PhoneNumber"
                                    value="@Model?.PhoneNumber"
                                    class="form-control" type="tel" required />
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="startingTime" class="form-label">Thời gian đăng ký </label>
+                            <input name="startingTime" id="startingTime"
+                                   value="@Model?.startingTime.ToString("yyyy-MM-ddTHH:mm")"
+                                   class="form-control" type="datetime-local" required />
+                            <span asp-validation-for="startingTime" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
@@ -157,6 +162,7 @@
 <script>
     let selectedDishes = [];
     let totalPrice = 0;
+    
 
     // Sử dụng event delegation để handle tất cả quantity inputs
     document.addEventListener('DOMContentLoaded', function() {
@@ -234,87 +240,4 @@
         totalPriceSpan.textContent = totalPrice.toLocaleString() + ' VNĐ';
     }
 
-    // THAY ĐỔI 5: Enhanced form validation and debugging
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
-        console.log('=== FORM SUBMIT DEBUG ===');
-
-        // Get form values directly
-        const customerName = document.getElementById('CustomerName').value.trim();
-        const phoneNumber = document.getElementById('PhoneNumber').value.trim();
-        const selectedTableId = document.getElementById('SelectedTableId').value;
-
-        console.log('Customer Name:', customerName);
-        console.log('Phone Number:', phoneNumber);
-        console.log('Selected Table ID:', selectedTableId);
-
-        if (!customerName || !phoneNumber || !selectedTableId) {
-            e.preventDefault();
-            alert('Vui lòng điền đầy đủ thông tin khách hàng và chọn bàn!');
-            return false;
-        }
-
-        // Check if at least one dish is selected
-        const hasSelectedDishes = Array.from(document.querySelectorAll('.quantity-input'))
-            .some(input => parseInt(input.value) > 0);
-
-        console.log('Has selected dishes:', hasSelectedDishes);
-
-        if (!hasSelectedDishes) {
-            e.preventDefault();
-            alert('Vui lòng chọn ít nhất một món ăn!');
-            return false;
-        }
-
-        // Debug: Log all form data before submit
-        console.log('=== All Form Data ===');
-        const formData = new FormData(this);
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ': ' + value);
-        }
-
-        return true;
-    });
-
-    // Enhanced debug function
-    function debugFormData() {
-        console.log('=== ENHANCED FORM DEBUG ===');
-
-        const form = document.getElementById('bookingForm');
-        console.log('Form action:', form.action);
-        console.log('Form method:', form.method);
-
-        // Test individual elements
-        const customerNameInput = document.getElementById('CustomerName');
-        const phoneNumberInput = document.getElementById('PhoneNumber');
-        const tableSelectInput = document.getElementById('SelectedTableId');
-
-        console.log('CustomerName element:', customerNameInput);
-        console.log('CustomerName value:', customerNameInput ? customerNameInput.value : 'NOT FOUND');
-        console.log('PhoneNumber element:', phoneNumberInput);
-        console.log('PhoneNumber value:', phoneNumberInput ? phoneNumberInput.value : 'NOT FOUND');
-        console.log('SelectedTableId element:', tableSelectInput);
-        console.log('SelectedTableId value:', tableSelectInput ? tableSelectInput.value : 'NOT FOUND');
-
-        // Check all form inputs
-        const allInputs = form.querySelectorAll('input, select');
-        console.log('Total form inputs found:', allInputs.length);
-
-        allInputs.forEach((input, index) => {
-            console.log(`Input ${index}: name="${input.name}", value="${input.value}", type="${input.type}"`);
-        });
-    }
-
-    // Add debug button
-    document.addEventListener('DOMContentLoaded', function() {
-        const debugButton = document.createElement('button');
-        debugButton.textContent = 'Debug Form';
-        debugButton.type = 'button';
-        debugButton.className = 'btn btn-warning me-2';
-        debugButton.onclick = debugFormData;
-
-        const submitButton = document.querySelector('button[type="submit"]');
-        if (submitButton && submitButton.parentNode) {
-            submitButton.parentNode.insertBefore(debugButton, submitButton);
-        }
-    });
 </script>
