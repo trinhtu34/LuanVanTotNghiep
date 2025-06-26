@@ -57,42 +57,6 @@ namespace testpayment6._0.Areas.admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBooking(BookingViewModel model)
         {
-            // Tạm thời bỏ qua ModelState validation để debug
-            if (false) // Đổi thành false để bỏ qua validation
-            {
-                _logger.LogWarning("ModelState is not valid");
-                foreach (var error in ModelState)
-                {
-                    _logger.LogWarning("Key: {Key}, Errors: {Errors}",
-                        error.Key, string.Join(", ", error.Value.Errors.Select(e => e.ErrorMessage)));
-                }
-
-                // Reload dữ liệu nếu model không hợp lệ
-                var reloadedModel = await LoadBookingData();
-                // Copy dữ liệu từ model cũ
-                reloadedModel.CustomerName = model.CustomerName;
-                reloadedModel.PhoneNumber = model.PhoneNumber;
-                reloadedModel.SelectedTableId = model.SelectedTableId;
-                reloadedModel.SelectedDishes = model.SelectedDishes;
-
-                return View(reloadedModel);
-            }
-
-            // Validate dữ liệu cơ bản
-            if (string.IsNullOrEmpty(model?.CustomerName) ||
-                string.IsNullOrEmpty(model?.PhoneNumber) ||
-                model?.SelectedTableId == 0)
-            {
-                _logger.LogWarning("Basic validation failed");
-                TempData["Error"] = "Vui lòng điền đầy đủ thông tin khách hàng và chọn bàn!";
-                var reloadedModel = await LoadBookingData();
-                // Preserve form data
-                reloadedModel.CustomerName = model?.CustomerName;
-                reloadedModel.PhoneNumber = model?.PhoneNumber;
-                reloadedModel.SelectedTableId = model?.SelectedTableId ?? 0;
-                return View(reloadedModel);
-            }
-
             // Filter selected dishes (only those with quantity > 0)
             var selectedDishes = model.SelectedDishes?.Where(d => d != null && d.Quantity > 0).ToList();
             _logger.LogInformation("Filtered dishes with quantity > 0: {Count}", selectedDishes?.Count ?? 0);
