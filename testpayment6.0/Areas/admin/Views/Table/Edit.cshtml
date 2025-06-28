@@ -25,7 +25,7 @@
                         <input asp-for="DishId" type="hidden" />
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold text-muted">Mã món ăn</label>
+                            <label class="form-label fw-bold text-muted">Mã bàn</label>
                             <input asp-for="TableId" name="TableId" value="@(Model?.TableId.ToString() ?? "")" class="form-control bg-light" readonly />
                             <div class="form-text">Mã bàn không thể thay đổi</div>
                         </div>
@@ -36,7 +36,7 @@
                                     <label asp-for="Capacity" class="form-label fw-bold">
                                         Sức chứa <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Capacity" name="Capacity" value="@Model?.Capacity" class="form-control" placeholder="Nhập tên món ăn" required />
+                                    <input asp-for="Capacity" name="Capacity" value="@Model?.Capacity" class="form-control" placeholder="Nhập sức chứa của bàn" required />
                                     <span asp-validation-for="Capacity" class="text-danger"></span>
                                 </div>
                             </div>
@@ -77,7 +77,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Description" class="form-label fw-bold">Mô tả món ăn</label>
+                            <label asp-for="Description" class="form-label fw-bold">Mô tả về bàn</label>
                             <textarea asp-for="Description" name="Description" class="form-control" rows="3"
                                       placeholder="Nhập mô tả chi tiết về bàn (tùy chọn)">@Model?.Description</textarea>
                             <span asp-validation-for="Descriptions" class="text-danger"></span>

@@ -61,8 +61,6 @@ namespace testpayment6._0.Controllers
                 ViewBag.IsLoggedIn = !string.IsNullOrEmpty(HttpContext.Session.GetString("UserId"));
                 ViewBag.UserId = HttpContext.Session.GetString("UserId");
 
-                // Lấy số lượng món trong giỏ hàng để hiển thị
-                ViewBag.CartCount = GetCartCount();
 
                 return View(viewModel);
             }
@@ -72,7 +70,7 @@ namespace testpayment6._0.Controllers
                 TempData["Error"] = "Không thể tải dữ liệu menu. Vui lòng thử lại.";
                 return View(new MenuViewModel_menu());
             }
-        }
+        }    
 
         // API helper methods
         private async Task<List<DishModels_Menu>> GetDishesAsync()
@@ -141,33 +139,5 @@ namespace testpayment6._0.Controllers
             return new List<RegionModels_Menu>();
         }
 
-        // Action để thêm món vào giỏ hàng - Redirect đến CartController
-        [HttpPost]
-        public IActionResult AddToCart(string dishId, int quantity = 1)
-        {
-            // Redirect đến CartController để xử lý
-            return RedirectToAction("AddToCart", "Cart", new { dishId = dishId, quantity = quantity });
-        }
-
-        // Helper method để lấy số lượng món trong giỏ hàng
-        private int GetCartCount()
-        {
-            try
-            {
-                const string CART_SESSION_KEY = "ShoppingCart";
-                var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
-                if (string.IsNullOrEmpty(cartJson))
-                {
-                    return 0;
-                }
-
-                var cart = JsonSerializer.Deserialize<ShoppingCart>(cartJson);
-                return cart?.TotalQuantity ?? 0;
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
-        }
     }
 }

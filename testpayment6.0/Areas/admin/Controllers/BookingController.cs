@@ -192,7 +192,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 // Lấy danh sách tất cả đơn đặt bàn
-                var ordersResponse = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable");
+                var ordersResponse = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
                 if (!ordersResponse.IsSuccessStatusCode)
                 {
                     return (false, "Không thể kiểm tra tình trạng bàn");

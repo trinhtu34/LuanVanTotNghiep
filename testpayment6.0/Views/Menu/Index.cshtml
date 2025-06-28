@@ -140,60 +140,8 @@
 </div>
 
 <script>
-    // Xử lý thêm vào giỏ hàng
-    $(document).ready(function() {
-        $('.add-to-cart-btn').click(function() {
-            var button = $(this);
-            var dishId = button.data('dish-id');
-            var dishName = button.data('dish-name');
 
-            button.prop('disabled', true);
-            button.html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
 
-            $.ajax({
-                url: '@Url.Action("AddToCart", "Menu")',
-                type: 'POST',
-                data: { dishId: dishId },
-                success: function(response) {
-                    if (response.success) {
-                        // Hiển thị thông báo thành công
-                        showToast('success', response.message);
-
-                        // Reset button sau 2 giây
-                        setTimeout(function() {
-                            button.prop('disabled', false);
-                            button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
-                        }, 2000);
-                    } else {
-                        showToast('error', response.message);
-                        button.prop('disabled', false);
-                        button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
-                    }
-                },
-                error: function() {
-                    showToast('error', 'Có lỗi xảy ra. Vui lòng thử lại.');
-                    button.prop('disabled', false);
-                    button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
-                }
-            });
-        });
-    });
-
-    // Hàm hiển thị toast notification
-    function showToast(type, message) {
-        var toastClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        var toast = $('<div class="alert ' + toastClass + ' alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">' +
-                     message +
-                     '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                     '</div>');
-
-        $('body').append(toast);
-
-        // Tự động ẩn sau 3 giây
-        setTimeout(function() {
-            toast.alert('close');
-        }, 3000);
-    }
 </script>
 
 <style>
