@@ -275,7 +275,6 @@ namespace testpayment6._0.Areas.admin.Controllers
                 return (false, "Có lỗi khi kiểm tra tình trạng bàn: " + ex.Message);
             }
         }
-
         private async Task<BookingViewModel> LoadBookingData()
         {
             var model = new BookingViewModel();
