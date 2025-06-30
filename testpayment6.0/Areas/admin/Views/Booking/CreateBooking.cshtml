@@ -1,310 +1,260 @@
 ﻿@using testpayment6._0.Areas.admin.Models
 @model BookingViewModel
 @{
-    ViewData["Title"] = "Đặt Bàn";
+    ViewData["Title"] = "Đặt bàn cho khách hàng ";
     Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <h2>Đặt Bàn Cho Khách Hàng</h2>
+	@* @if (TempData["Error"] != null)
+	{
+		<div class="alert alert-danger">
+			@TempData["Error"]
+		</div>
+	} *@
+<form asp-action="CreateBooking" method="post" id="bookingForm">
+    @Html.AntiForgeryToken()
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
+    <!-- Thông tin khách hàng -->
+    <div class="form-group">
+        <label for="CustomerName">Tên khách hàng:</label>
+        <input name="CustomerName" id="CustomerName"
+               value="@Model?.CustomerName"
+               class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label for="PhoneNumber">Số điện thoại:</label>
+        <input name="PhoneNumber" id="PhoneNumber"
+               value="@Model?.PhoneNumber"
+               class="form-control" type="tel" required />
+    </div>
+
+    <div class="form-group">
+        <label for="startingTime">Thời gian đặt bàn:</label>
+        <input id="startingTime" name="startingTime" type="datetime-local" class="form-control" required />
+    </div>
+
+    <!-- Chọn khu vực -->
+    <div class="form-group">
+        <label for="regionSelect">Chọn khu vực:</label>
+        <select id="regionSelect" class="form-control">
+            <option value="">-- Chọn khu vực --</option>
+            @if (Model.Regions != null)
+            {
+                @foreach (var region in Model.Regions)
+                {
+                    <option value="@region.regionId">@region.regionName</option>
+                }
+            }
+        </select>
+    </div>
+
+    <!-- Container để hiển thị bàn theo khu vực -->
+    <div class="form-group">
+        <label>Chọn bàn:</label>
+        <div id="tablesContainer">
+            <!-- Bàn sẽ được load bằng AJAX -->
         </div>
-    }
+    </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
+    <!-- Container để hiển thị món ăn theo khu vực -->
+    <div class="form-group">
+        <label>Chọn món ăn:</label>
+        <div id="menuContainer">
+            <!-- Món ăn sẽ được load bằng AJAX -->
         </div>
-    }
+    </div>
 
-    @if (ViewBag.Error != null)
-    {
-        <div class="alert alert-danger">
-            @ViewBag.Error
-        </div>
-    }
+    <!-- Hidden container để chứa các input hidden cho SelectedDishes -->
+    <div id="selectedDishesContainer" style="display: none;">
+        <!-- Các input hidden sẽ được tạo động ở đây -->
+    </div>
 
-    <form action="@Url.Action("CreateBooking", "Booking", new { area = "admin" })" method="post" id="bookingForm">
-        @Html.AntiForgeryToken()
-        <div class="row">
-            <!-- Thông tin khách hàng -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Thông Tin Khách Hàng</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group mb-3">
-                            <label for="CustomerName" class="form-label">Tên Khách Hàng</label>
-                            <input name="CustomerName" id="CustomerName"
-                                   value="@Model?.CustomerName"
-                                   class="form-control" required />
-                            <span asp-validation-for="CustomerName" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="PhoneNumber" class="form-label">Số Điện Thoại</label>
-                            <input name="PhoneNumber" id="PhoneNumber"
-                                   value="@Model?.PhoneNumber"
-                                   class="form-control" type="tel" required />
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="startingTime" class="form-label">Thời gian đăng ký</label>
-                            <input name="startingTime" id="startingTime"
-                                   value="@Model?.startingTime.ToString("yyyy-MM-ddTHH:mm")"
-                                   class="form-control" type="datetime-local" required />
-                            <span asp-validation-for="startingTime" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <button type="submit" class="btn btn-primary">Đặt bàn</button>
+</form>
 
-            <!-- Chọn bàn - THAY ĐỔI CHÍNH -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Chọn Bàn (Có thể chọn nhiều bàn)</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label class="form-label">Danh sách bàn:</label>
-                            <div class="table-selection-container" style="max-height: 300px; overflow-y: auto;">
-                                @if (Model?.Tables != null)
-                                {
-                                    @for (int i = 0; i < Model.Tables.Count; i++)
-                                    {
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input table-checkbox"
-                                                   type="checkbox"
-                                                   name="SelectedTableIds"
-                                                   value="@Model.Tables[i].tableId"
-                                                   id="table_@Model.Tables[i].tableId"
-                                                   @(Model.SelectedTableIds != null && Model.SelectedTableIds.Contains(Model.Tables[i].tableId) ? "checked" : "") />
-                                            <label class="form-check-label" for="table_@Model.Tables[i].tableId">
-                                                <strong>Bàn @Model.Tables[i].tableId</strong> - @Model.Tables[i].capacity chỗ
-                                                <br><small class="text-muted">@Model.Tables[i].description</small>
-                                            </label>
-                                        </div>
-                                    }
-                                }
-                            </div>
-                            <div class="mt-2">
-                                <small class="text-info">
-                                    <i class="fas fa-info-circle"></i>
-                                    Lưu ý: Chỉ có thể đặt bàn nếu trong vòng 2 tiếng trước và sau không có đơn đặt bàn khác.
-                                </small>
-                            </div>
-                        </div>
-
-                        <!-- Hiển thị bàn đã chọn -->
-                        <div class="mt-3">
-                            <h6>Bàn đã chọn:</h6>
-                            <div id="selectedTablesDisplay" class="selected-tables-display">
-                                <span class="text-muted">Chưa chọn bàn nào</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chọn món ăn -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5>Chọn Món Ăn</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    @if (Model?.Dishes != null)
-                    {
-                        @for (int i = 0; i < Model.Dishes.Count; i++)
-                        {
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100">
-                                    <img src="@Model.Dishes[i].images" class="card-img-top" alt="@Model.Dishes[i].dishName" style="height: 200px; object-fit: cover;">
-                                    <div class="card-body">
-                                        <h6 class="card-title">@Model.Dishes[i].dishName</h6>
-                                        <p class="card-text">@Model.Dishes[i].descriptions</p>
-                                        <p class="text-danger fw-bold">@Model.Dishes[i].price.ToString("N0") VNĐ</p>
-
-                                        <div class="form-group">
-                                            <label class="form-label">Số lượng:</label>
-                                            <input type="number"
-                                                   name="SelectedDishes[@i].Quantity"
-                                                   class="form-control quantity-input"
-                                                   min="0"
-                                                   value="@(Model.SelectedDishes != null && i < Model.SelectedDishes.Count ? Model.SelectedDishes[i].Quantity : 0)"
-                                                   data-index="@i"
-                                                   data-dish-id="@Model.Dishes[i].dishId"
-                                                   data-dish-name="@Model.Dishes[i].dishName"
-                                                   data-price="@Model.Dishes[i].price" />
-
-                                            <input type="hidden" name="SelectedDishes[@i].DishId" value="@Model.Dishes[i].dishId" />
-                                            <input type="hidden" name="SelectedDishes[@i].DishName" value="@Model.Dishes[i].dishName" />
-                                            <input type="hidden" name="SelectedDishes[@i].Price" value="@Model.Dishes[i].price" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- Tổng kết đơn hàng -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5>Tổng Kết Đơn Hàng</h5>
-                <div id="orderSummary">
-                    <p>Chưa có món nào được chọn</p>
-                </div>
-                <div class="mt-3">
-                    <h6>Tổng tiền: <span id="totalPrice" class="text-danger">0 VNĐ</span></h6>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-4 text-center">
-            <button type="submit" class="btn btn-primary btn-lg">Xác Nhận Đặt Bàn</button>
-            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary btn-lg">Hủy</a>
-        </div>
-    </form>
-</div>
-
+<!-- Thêm jQuery và script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    let selectedDishes = [];
-    let selectedTables = [];
-    let totalPrice = 0;
+    var currentDishes = []; // Lưu trữ danh sách món ăn hiện tại
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add event listeners to all quantity inputs
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', function() {
-                const index = this.getAttribute('data-index');
-                const dishId = this.getAttribute('data-dish-id');
-                const dishName = this.getAttribute('data-dish-name');
-                const price = parseFloat(this.getAttribute('data-price'));
-                updateDishInfo(index, dishId, dishName, price);
-            });
+    $(document).ready(function() {
+        // Khi chọn khu vực
+        $('#regionSelect').change(function() {
+            var regionId = $(this).val();
+
+            if (regionId) {
+                // Load bàn theo khu vực
+                loadTablesByRegion(regionId);
+                // Load món ăn theo khu vực
+                loadMenuByRegion(regionId);
+            } else {
+                // Clear bàn và món ăn nếu không chọn khu vực
+                $('#tablesContainer').empty();
+                $('#menuContainer').empty();
+                $('#selectedDishesContainer').empty();
+                currentDishes = [];
+            }
         });
 
-        // Add event listeners to table checkboxes
-        document.querySelectorAll('.table-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateSelectedTables();
-            });
-        });
+        // Xử lý submit form
+        $('#bookingForm').submit(function(e) {
+            // Cập nhật selectedDishesContainer trước khi submit
+            updateSelectedDishesContainer();
 
-        // Initialize selected tables display
-        updateSelectedTables();
+            // Kiểm tra xem có bàn nào được chọn không
+            var selectedTables = $('input[name="SelectedTableIds"]:checked');
+            if (selectedTables.length === 0) {
+                alert('Vui lòng chọn ít nhất một bàn!');
+                e.preventDefault();
+                return false;
+            }
+
+            console.log('Form is being submitted...');
+            return true;
+        });
     });
 
-    function updateDishInfo(index, dishId, dishName, price) {
-        const quantityInput = document.querySelector(`input[name="SelectedDishes[${index}].Quantity"]`);
-        const quantity = parseInt(quantityInput.value) || 0;
+    function loadTablesByRegion(regionId) {
+        $.ajax({
+            url: '/admin/Booking/GetTablesByRegion',
+            type: 'GET',
+            data: { regionId: regionId },
+            success: function(response) {
+                console.log('Tables response:', response);
 
-        const existingIndex = selectedDishes.findIndex(d => d.dishId === dishId);
-
-        if (quantity > 0) {
-            const dishInfo = {
-                dishId: dishId,
-                dishName: dishName,
-                quantity: quantity,
-                price: price,
-                totalPrice: quantity * price
-            };
-
-            if (existingIndex >= 0) {
-                selectedDishes[existingIndex] = dishInfo;
-            } else {
-                selectedDishes.push(dishInfo);
+                if (response.success && response.data) {
+                    var tablesHtml = '';
+                    $.each(response.data, function(index, table) {
+                        tablesHtml += `
+                            <div class="table-item" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <input type="checkbox" name="SelectedTableIds" value="${table.tableId}" id="table_${table.tableId}" />
+                                <label for="table_${table.tableId}" style="margin-left: 10px; font-weight: bold;">
+                                    Bàn ${table.tableId} (${table.capacity} chỗ)
+                                </label>
+                            </div>
+                        `;
+                    });
+                    $('#tablesContainer').html(tablesHtml);
+                } else {
+                    $('#tablesContainer').html('<p>Không có bàn nào trong khu vực này</p>');
+                    console.error('Error:', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error loading tables:', error);
+                $('#tablesContainer').html('<p>Lỗi khi tải danh sách bàn</p>');
             }
-        } else {
-            if (existingIndex >= 0) {
-                selectedDishes.splice(existingIndex, 1);
-            }
-        }
-
-        updateOrderSummary();
+        });
     }
 
-    function updateSelectedTables() {
-        const selectedTableIds = [];
-        const selectedTableNames = [];
+    function loadMenuByRegion(regionId) {
+        $.ajax({
+            url: '/admin/Booking/GetMenuByRegion',
+            type: 'GET',
+            data: { regionId: regionId },
+            success: function(response) {
+                console.log('Menu response:', response);
 
-        document.querySelectorAll('.table-checkbox:checked').forEach(checkbox => {
-            const tableId = checkbox.value;
-            const tableLabel = checkbox.nextElementSibling.querySelector('strong').textContent;
-            selectedTableIds.push(tableId);
-            selectedTableNames.push(tableLabel);
+                if (response.success && response.data) {
+                    currentDishes = response.data; // Lưu trữ danh sách món ăn
+                    var menuHtml = '';
+                    $.each(response.data, function(index, dish) {
+                        menuHtml += `
+                            <div class="dish-item" style="margin: 10px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+                                <div class="dish-info">
+                                    <div class="dish-name" style="font-weight: bold; font-size: 16px;">${dish.dishName}</div>
+                                    <div class="dish-price" style="color: #e74c3c; font-weight: bold;">${dish.price.toLocaleString('vi-VN')} VNĐ</div>
+                                </div>
+                                <div class="quantity-control" style="display: flex; align-items: center;">
+                                    <button type="button" class="btn-decrease" onclick="decreaseQuantity(${index})" style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; margin-right: 10px;">-</button>
+                                    <input type="number" id="quantity_${index}" value="0" min="0" max="99"
+                                           class="quantity-input" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                           onchange="validateQuantity(${index})" />
+                                    <button type="button" class="btn-increase" onclick="increaseQuantity(${index})" style="background: #28a745; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; margin-left: 10px;">+</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#menuContainer').html(menuHtml);
+                } else {
+                    $('#menuContainer').html('<p>Không có món ăn nào trong khu vực này</p>');
+                    console.error('Error:', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error loading menu:', error);
+                $('#menuContainer').html('<p>Lỗi khi tải danh sách món ăn</p>');
+            }
+        });
+    }
+
+    // Hàm tăng số lượng
+    function increaseQuantity(index) {
+        var input = document.getElementById('quantity_' + index);
+        var currentValue = parseInt(input.value) || 0;
+        if (currentValue < 99) {
+            input.value = currentValue + 1;
+        }
+    }
+
+    // Hàm giảm số lượng
+    function decreaseQuantity(index) {
+        var input = document.getElementById('quantity_' + index);
+        var currentValue = parseInt(input.value) || 0;
+        if (currentValue > 0) {
+            input.value = currentValue - 1;
+        }
+    }
+
+    // Hàm validate số lượng
+    function validateQuantity(index) {
+        var input = document.getElementById('quantity_' + index);
+        var value = parseInt(input.value) || 0;
+        if (value < 0) {
+            input.value = 0;
+        } else if (value > 99) {
+            input.value = 99;
+        }
+    }
+
+    // Hàm cập nhật selectedDishesContainer trước khi submit
+    function updateSelectedDishesContainer() {
+        var container = $('#selectedDishesContainer');
+        container.empty();
+
+        $.each(currentDishes, function(index, dish) {
+            var quantity = parseInt($('#quantity_' + index).val()) || 0;
+
+            // Tạo các input hidden cho mỗi món ăn (kể cả quantity = 0)
+            container.append(`
+                <input type="hidden" name="SelectedDishes[${index}].DishId" value="${dish.dishId}" />
+                <input type="hidden" name="SelectedDishes[${index}].DishName" value="${dish.dishName}" />
+                <input type="hidden" name="SelectedDishes[${index}].Price" value="${dish.price}" />
+                <input type="hidden" name="SelectedDishes[${index}].Quantity" value="${quantity}" />
+            `);
         });
 
-        const displayDiv = document.getElementById('selectedTablesDisplay');
-        if (selectedTableNames.length === 0) {
-            displayDiv.innerHTML = '<span class="text-muted">Chưa chọn bàn nào</span>';
-        } else {
-            displayDiv.innerHTML = selectedTableNames.map(name =>
-                `<span class="badge bg-primary me-1">${name}</span>`
-            ).join('');
-        }
-    }
-
-    function updateOrderSummary() {
-        const summaryDiv = document.getElementById('orderSummary');
-        const totalPriceSpan = document.getElementById('totalPrice');
-
-        if (selectedDishes.length === 0) {
-            summaryDiv.innerHTML = '<p>Chưa có món nào được chọn</p>';
-            totalPrice = 0;
-        } else {
-            let summaryHtml = '<ul class="list-group">';
-            totalPrice = 0;
-
-            selectedDishes.forEach(dish => {
-                summaryHtml += `
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>${dish.dishName}</strong><br>
-                            <small>Số lượng: ${dish.quantity} x ${dish.price.toLocaleString()} VNĐ</small>
-                        </div>
-                        <span class="badge bg-primary rounded-pill">${dish.totalPrice.toLocaleString()} VNĐ</span>
-                    </li>
-                `;
-                totalPrice += dish.totalPrice;
-            });
-
-            summaryHtml += '</ul>';
-            summaryDiv.innerHTML = summaryHtml;
-        }
-
-        totalPriceSpan.textContent = totalPrice.toLocaleString() + ' VNĐ';
+        console.log('Updated selectedDishesContainer with', currentDishes.length, 'dishes');
     }
 </script>
 
 <style>
-    .selected-tables-display .badge {
-        font-size: 0.9em;
-        margin-bottom: 5px;
+    .table-item:hover {
+        background-color: #f8f9fa;
     }
 
-    .table-selection-container {
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        padding: 10px;
+    .dish-item:hover {
+        background-color: #f8f9fa;
     }
 
-    .form-check {
-        padding: 8px;
-        border-radius: 5px;
+    .btn-decrease:hover, .btn-increase:hover {
+        opacity: 0.8;
     }
 
-        .form-check:hover {
-            background-color: #f8f9fa;
-        }
+    .quantity-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0,123,255,0.3);
+    }
 </style>

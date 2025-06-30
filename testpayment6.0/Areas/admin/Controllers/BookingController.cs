@@ -32,23 +32,10 @@ namespace testpayment6._0.Areas.admin.Controllers
 
             var model = await LoadBookingData();
 
-            // Khởi tạo SelectedDishes
-            if (model.Dishes != null && model.Dishes.Any())
-            {
-                model.SelectedDishes = new List<SelectedDish>();
-                foreach (var dish in model.Dishes)
-                {
-                    model.SelectedDishes.Add(new SelectedDish
-                    {
-                        DishId = dish.dishId,
-                        DishName = dish.dishName,
-                        Price = dish.price,
-                        Quantity = 0
-                    });
-                }
-            }
+            // Khởi tạo SelectedDishes rỗng - sẽ được populate bởi AJAX
+            model.SelectedDishes = new List<SelectedDish>();
 
-            _logger.LogInformation("Initialized SelectedDishes with {Count} items", model.SelectedDishes?.Count ?? 0);
+            _logger.LogInformation("Initialized empty SelectedDishes list");
 
             return View(model);
         }
@@ -57,6 +44,29 @@ namespace testpayment6._0.Areas.admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBooking(BookingViewModel model)
         {
+            _logger.LogInformation("POST CreateBooking called");
+            _logger.LogInformation("CustomerName: {CustomerName}", model.CustomerName);
+            _logger.LogInformation("PhoneNumber: {PhoneNumber}", model.PhoneNumber);
+            _logger.LogInformation("StartingTime: {StartingTime}", model.startingTime);
+            _logger.LogInformation("SelectedTableIds count: {Count}", model.SelectedTableIds?.Count ?? 0);
+            _logger.LogInformation("SelectedDishes count: {Count}", model.SelectedDishes?.Count ?? 0);
+
+            // Log chi tiết các bàn được chọn
+            if (model.SelectedTableIds != null && model.SelectedTableIds.Any())
+            {
+                _logger.LogInformation("Selected tables: {Tables}", string.Join(", ", model.SelectedTableIds));
+            }
+
+            // Log chi tiết các món ăn được chọn
+            if (model.SelectedDishes != null && model.SelectedDishes.Any())
+            {
+                foreach (var dish in model.SelectedDishes.Where(d => d != null && d.Quantity > 0))
+                {
+                    _logger.LogInformation("Selected dish: {DishName} (ID: {DishId}) - Quantity: {Quantity}, Price: {Price}",
+                        dish.DishName, dish.DishId, dish.Quantity, dish.Price);
+                }
+            }
+
             // Kiểm tra có bàn nào được chọn không
             if (model.SelectedTableIds == null || !model.SelectedTableIds.Any())
             {
@@ -73,8 +83,31 @@ namespace testpayment6._0.Areas.admin.Controllers
 
             try
             {
+                // Validate thời gian đăng ký
+                var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+                if (!DateTime.TryParse(model.startingTime.ToString(), out DateTime parsedStartTime))
+                {
+                    TempData["Error"] = "Thời gian không hợp lệ";
+                    var reloadModel = await LoadBookingData();
+                    reloadModel.CustomerName = model.CustomerName;
+                    reloadModel.PhoneNumber = model.PhoneNumber;
+                    reloadModel.startingTime = model.startingTime;
+                    return View(reloadModel);
+                }
+
+                DateTime nowInVietnam = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
+                if (parsedStartTime <= nowInVietnam)
+                {
+                    TempData["Error"] = "Thời gian phải trong tương lai";
+                    var reloadModel = await LoadBookingData();
+                    reloadModel.CustomerName = model.CustomerName;
+                    reloadModel.PhoneNumber = model.PhoneNumber;
+                    reloadModel.startingTime = model.startingTime;
+                    return View(reloadModel);
+                }
+
                 // Kiểm tra thời gian và bàn trống
-                var conflictResult = await CheckTableAvailability(model.SelectedTableIds, model.startingTime);
+                var conflictResult = await CheckTableAvailability(model.SelectedTableIds, parsedStartTime);
                 if (!conflictResult.IsAvailable)
                 {
                     TempData["Error"] = conflictResult.ErrorMessage;
@@ -101,33 +134,47 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var signupResponse = await _httpClient.PostAsync($"{BASE_API_URL}/user/signup/guest", signupContent);
 
                 var signupResponseContent = await signupResponse.Content.ReadAsStringAsync();
+                _logger.LogInformation("Signup response: {Response}", signupResponseContent);
 
-                // Validate thời gian đăng ký
-                var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-                if (!DateTime.TryParse(model.startingTime.ToString(), out DateTime parsedStartTime))
+                if (!signupResponse.IsSuccessStatusCode)
                 {
-                    return Json(new { success = false, message = "Thời gian không hợp lệ" });
-                }
-                DateTime nowInVietnam = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
-                if (parsedStartTime <= nowInVietnam)
-                {
-                    return Json(new { success = false, message = "Thời gian phải trong tương lai" });
+                    TempData["Error"] = "Không thể tạo tài khoản khách hàng";
+                    return RedirectToAction("CreateBooking");
                 }
 
                 var userInfo = JsonSerializer.Deserialize<userResponse>(signupResponseContent);
                 string useridString = userInfo.userId;
 
+                decimal totalPrice = 0;
+                if (selectedDishes != null && selectedDishes.Any())
+                {
+                    foreach (var dish in selectedDishes)
+                    {
+                        decimal dishTotal = dish.Price * dish.Quantity;
+                        totalPrice += dishTotal;
+
+                        _logger.LogInformation("Selected dish: {DishName} (ID: {DishId}) - Quantity: {Quantity}, Price: {Price:N0} VNĐ, Subtotal: {Subtotal:N0} VNĐ",
+                            dish.DishName, dish.DishId, dish.Quantity, dish.Price, dishTotal);
+                    }
+                }
                 // 2. Tạo đơn đặt bàn
                 var orderRequest = new OrderTableRequest
                 {
                     userId = useridString,
                     isCancel = false,
+                    totalPrice = totalPrice,
                     startingTime = parsedStartTime
                 };
 
                 var orderJson = JsonSerializer.Serialize(orderRequest);
                 var orderContent = new StringContent(orderJson, Encoding.UTF8, "application/json");
                 var orderResponse = await _httpClient.PostAsync($"{BASE_API_URL}/OrderTable", orderContent);
+
+                if (!orderResponse.IsSuccessStatusCode)
+                {
+                    TempData["Error"] = "Không thể tạo đơn đặt bàn";
+                    return RedirectToAction("CreateBooking");
+                }
 
                 var orderResponseContent = await orderResponse.Content.ReadAsStringAsync();
                 _logger.LogInformation("Order table response: {Response}", orderResponseContent);
@@ -149,6 +196,11 @@ namespace testpayment6._0.Areas.admin.Controllers
                     var tableDetailJson = JsonSerializer.Serialize(tableDetailRequest);
                     var tableDetailContent = new StringContent(tableDetailJson, Encoding.UTF8, "application/json");
                     var tableDetailResponse = await _httpClient.PostAsync($"{BASE_API_URL}/OrderTablesDetail", tableDetailContent);
+
+                    if (!tableDetailResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogWarning("Failed to add table {TableId} to order", tableId);
+                    }
                 }
 
                 // 4. Thêm món ăn vào đơn đặt bàn
@@ -171,11 +223,20 @@ namespace testpayment6._0.Areas.admin.Controllers
                         var foodDetailJson = JsonSerializer.Serialize(foodDetailRequest);
                         var foodDetailContent = new StringContent(foodDetailJson, Encoding.UTF8, "application/json");
                         var foodResponse = await _httpClient.PostAsync($"{BASE_API_URL}/OrderFoodDetail", foodDetailContent);
+
+                        if (!foodResponse.IsSuccessStatusCode)
+                        {
+                            _logger.LogWarning("Failed to add dish {DishId} to order", dish.DishId);
+                        }
                     }
                 }
 
                 var tableNames = string.Join(", ", model.SelectedTableIds.Select(id => $"Bàn {id}"));
-                TempData["Success"] = $"Đặt bàn thành công cho khách hàng {model.CustomerName}! Các bàn: {tableNames}";
+                var dishSummary = selectedDishes != null && selectedDishes.Any()
+                    ? $" và {selectedDishes.Count} món ăn"
+                    : "";
+
+                TempData["Success"] = $"Đặt bàn thành công cho khách hàng {model.CustomerName}! Các bàn: {tableNames}{dishSummary}";
                 return RedirectToAction("CreateBooking");
             }
             catch (Exception ex)
@@ -184,6 +245,79 @@ namespace testpayment6._0.Areas.admin.Controllers
                 TempData["Error"] = "Có lỗi xảy ra khi đặt bàn: " + ex.Message;
                 return RedirectToAction("CreateBooking");
             }
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetRegions()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/region");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var regions = JsonSerializer.Deserialize<List<RegionViewModel>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    return Json(new { success = true, data = regions });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading regions");
+            }
+            return Json(new { success = false, message = "Không thể tải danh sách khu vực" });
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetTablesByRegion(int regionId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/table/region/{regionId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var tables = JsonSerializer.Deserialize<List<TablesViewModel>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return Json(new { success = true, data = tables });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error loading tables for region {regionId}");
+            }
+
+            return Json(new { success = false, message = "Không thể tải danh sách bàn" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMenuByRegion(int regionId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu/region/{regionId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var menu = JsonSerializer.Deserialize<List<MenuViewModel>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return Json(new { success = true, data = menu });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error loading menu for region {regionId}");
+            }
+
+            return Json(new { success = false, message = "Không thể tải danh sách món ăn" });
         }
 
         // Phương thức kiểm tra bàn trống
@@ -282,6 +416,19 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 _logger.LogInformation("Loading booking data...");
+
+                // Lấy danh sách khu vực
+                var regionsResponse = await _httpClient.GetAsync($"{BASE_API_URL}/region");
+                if (regionsResponse.IsSuccessStatusCode)
+                {
+                    var regionsJson = await regionsResponse.Content.ReadAsStringAsync();
+                    model.Regions = JsonSerializer.Deserialize<List<RegionViewModel>>(regionsJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<RegionViewModel>();
+
+                    _logger.LogInformation("Loaded {Count} regions", model.Regions.Count);
+                }
 
                 // Lấy danh sách bàn
                 var tablesResponse = await _httpClient.GetAsync($"{BASE_API_URL}/table");

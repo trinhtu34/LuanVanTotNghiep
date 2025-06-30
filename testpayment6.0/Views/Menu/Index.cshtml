@@ -139,9 +139,80 @@
     </div>
 </div>
 
+<!-- Thêm script này vào cuối file Menu/Index.cshtml, thay thế phần <script> trống -->
 <script>
+    $(document).ready(function() {
+        // Load cart count khi trang được tải
+        loadCartCount();
 
+        // Xử lý thêm vào giỏ hàng
+        $('.add-to-cart-btn').click(function() {
+            var dishId = $(this).data('dish-id');
+            var dishName = $(this).data('dish-name');
+            var priceText = $(this).closest('.card-body').find('.h5.text-danger').text();
+            var price = parseFloat(priceText.replace(/[^\d]/g, ''));
+            var image = $(this).closest('.card').find('img').attr('src');
 
+            // Disable button temporarily
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
+
+            $.post('@Url.Action("AddToCart", "Cart")', {
+                dishId: dishId,
+                dishName: dishName,
+                price: price,
+                image: image
+            }, function(response) {
+                if (response.success) {
+                    // Show success message
+                    showToast('Đã thêm vào giỏ hàng!', 'success');
+
+                    // Update cart badge
+                    updateCartBadge(response.cartCount);
+                } else {
+                    showToast(response.message || 'Có lỗi xảy ra', 'error');
+                }
+            }).fail(function() {
+                showToast('Có lỗi xảy ra khi thêm vào giỏ hàng', 'error');
+            }).always(function() {
+                // Re-enable button
+                $('.add-to-cart-btn').prop('disabled', false).html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
+            });
+        });
+
+        function loadCartCount() {
+            $.get('@Url.Action("GetCartCount", "Cart")', function(count) {
+                updateCartBadge(count);
+            });
+        }
+
+        function updateCartBadge(count) {
+            var badge = $('#cartBadge');
+            if (count > 0) {
+                badge.text(count).show();
+            } else {
+                badge.hide();
+            }
+        }
+
+        function showToast(message, type) {
+            // Simple toast notification
+            var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            var toastHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            $('body').append(toastHtml);
+
+            // Auto dismiss after 3 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 3000);
+        }
+    });
 </script>
 
 <style>

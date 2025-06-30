@@ -17,7 +17,7 @@ namespace testpayment6._0.Controllers
             _httpClient = httpClient;
             BASE_API_URL = configuration["BaseAPI"];
         }
-
+        [HttpGet]
         public async Task<IActionResult> Index(int? categoryId = null, int? regionId = null, string search = "")
         {
             try
@@ -138,6 +138,8 @@ namespace testpayment6._0.Controllers
             }
             return new List<RegionModels_Menu>();
         }
+
+
 
     }
 }
