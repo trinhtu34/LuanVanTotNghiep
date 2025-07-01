@@ -494,6 +494,12 @@
                                 <i class="fas fa-list"></i> Đơn Của Tôi
                             </a>
                         </li>
+                        @* <li class="nav-item">
+                            <a class="nav-link @(currentController == "Cart" && currentAction == "Index" ? "active" : "")"
+                               asp-controller="Cart" asp-action="Index">
+                                <i class="fas fa-list"></i> Giỏ hàng
+                            </a>
+                        </li> *@
                         <li class="nav-item">
                             <a class="nav-link @(currentController == "Menu" && currentAction == "Index" ? "active" : "")"
                                asp-controller="Menu" asp-action="Index">Menu</a>
@@ -698,41 +704,8 @@
             document.body.classList.add('loaded');
         });
 
-        // ----------------------------------------------------------
-        // cart
-        $(document).ready(function() {
-            // Load cart count khi trang được tải
-        updateCartCount();
-
-            // Cập nhật cart count mỗi 30 giây (tùy chọn)
-        setInterval(updateCartCount, 30000);
-        });
-
-        function updateCartCount() {
-            @if (ViewBag.IsLoggedIn == true)
-            {
-                        <text>
-                        $.ajax({
-                            url: '@Url.Action("GetCartCount", "Cart")',
-                            type: 'GET',
-                            success: function(response) {
-                                var badge = $('#cartBadge');
-                                if (response.count > 0) {
-                                    badge.text(response.count).show();
-                                } else {
-                                    badge.hide();
-                                }
-                            },
-                            error: function() {
-                                console.log('Error getting cart count');
-                            }
-                        });
-                        </text>
-            }
-        }
-
-        // Hàm global để cập nhật cart count từ các trang khác
-        window.updateCartCount = updateCartCount;
     </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </body>
 </html>

@@ -19,51 +19,68 @@ namespace testpayment6._0.Controllers
             BASE_API_URL = configuration["BaseAPI"];
         }
 
-        // Hiển thị giỏ hàng
+
+        // Sửa lại method Index trong CartController
         public IActionResult Index()
         {
             var cart = GetCartFromSession();
             ViewBag.TotalAmount = cart.Sum(x => x.Total);
+
+            ViewBag.UserId = HttpContext.Session.GetString("UserId");
+            ViewBag.IsLoggedIn = !string.IsNullOrEmpty(ViewBag.UserId);
+
             return View(cart);
         }
-
-        // Thêm món vào giỏ hàng (AJAX)
         [HttpPost]
         public IActionResult AddToCart(string dishId, string dishName, decimal price, string image = "")
         {
+            _logger.LogInformation("AddToCart called with: dishId={DishId}, dishName={DishName}, price={Price}",
+                                  dishId, dishName, price);
+
+            var sessionId = HttpContext.Session.Id;
+            _logger.LogInformation("Session ID: {SessionId}", sessionId);
+
             try
             {
                 var cart = GetCartFromSession();
+                _logger.LogInformation("Current cart has {Count} items", cart.Count);
+
                 var existingItem = cart.FirstOrDefault(x => x.DishId == dishId);
 
                 if (existingItem != null)
                 {
                     existingItem.Quantity++;
+                    _logger.LogInformation("Updated existing item quantity to {Quantity}", existingItem.Quantity);
                 }
                 else
                 {
-                    cart.Add(new CartItem
+                    var newItem = new CartItem
                     {
                         DishId = dishId,
                         DishName = dishName,
                         Price = price,
                         Quantity = 1,
                         Image = image
-                    });
+                    };
+                    cart.Add(newItem);
+                    _logger.LogInformation("Added new item to cart: {DishName}", dishName);
                 }
 
                 SaveCartToSession(cart);
 
-                return Json(new { success = true, cartCount = cart.Sum(x => x.Quantity) });
+                var totalCount = cart.Sum(x => x.Quantity);
+                _logger.LogInformation("Cart saved. Total count: {TotalCount}", totalCount);
+
+                return Json(new { success = true, cartCount = totalCount });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding item to cart");
-                return Json(new { success = false, message = "Có lỗi xảy ra" });
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
             }
         }
 
-        // Cập nhật số lượng
+        // cập nhật số lượng , nhập số cũng đc , hoặc ấn nút tăng giảm cũng đc , tùy
         [HttpPost]
         public IActionResult UpdateQuantity(string dishId, int quantity)
         {
@@ -222,21 +239,44 @@ namespace testpayment6._0.Controllers
         {
             try
             {
+                _logger.LogInformation("CreateCartAsync called with userId: {UserId}", userId);
+                _logger.LogInformation("BASE_API_URL: {BaseApiUrl}", BASE_API_URL ?? "NULL");
+
                 var request = new CreateCartRequest { UserId = userId };
                 var json = JsonSerializer.Serialize(request);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                _logger.LogInformation("Request JSON: {Json}", json);
 
-                var response = await _httpClient.PostAsync($"{BASE_API_URL}/cart", content);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var apiUrl = $"{BASE_API_URL}/cart";
+
+                _logger.LogInformation("Making POST request to: {ApiUrl}", apiUrl);
+
+                var response = await _httpClient.PostAsync(apiUrl, content);
+
+                _logger.LogInformation("API Response - Status: {StatusCode}, IsSuccess: {IsSuccess}",
+                    response.StatusCode, response.IsSuccessStatusCode);
+
                 if (response.IsSuccessStatusCode)
                 {
                     var responseJson = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("API Response JSON: {ResponseJson}", responseJson);
+
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    return JsonSerializer.Deserialize<CartResponseModel>(responseJson, options);
+                    var result = JsonSerializer.Deserialize<CartResponseModel>(responseJson, options);
+
+                    _logger.LogInformation("Deserialized result - CartId: {CartId}", result?.CartId);
+                    return result;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("API Error - Status: {StatusCode}, Content: {ErrorContent}",
+                        response.StatusCode, errorContent);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating cart");
+                _logger.LogError(ex, "Exception in CreateCartAsync");
             }
             return null;
         }
@@ -245,6 +285,9 @@ namespace testpayment6._0.Controllers
         {
             try
             {
+                _logger.LogInformation("AddCartDetailAsync called - CartId: {CartId}, DishId: {DishId}, Quantity: {Quantity}, Price: {Price}",
+                    cartId, dishId, quantity, price);
+
                 var request = new AddCartDetailRequest
                 {
                     CartId = cartId,
@@ -252,26 +295,33 @@ namespace testpayment6._0.Controllers
                     Quantity = quantity,
                     Price = price
                 };
-                var json = JsonSerializer.Serialize(request);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{BASE_API_URL}/CartDetail", content);
+                var json = JsonSerializer.Serialize(request);
+                _logger.LogInformation("CartDetail Request JSON: {Json}", json);
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var apiUrl = $"{BASE_API_URL}/CartDetail";
+
+                _logger.LogInformation("Making POST request to: {ApiUrl}", apiUrl);
+
+                var response = await _httpClient.PostAsync(apiUrl, content);
+
+                _logger.LogInformation("CartDetail API Response - Status: {StatusCode}, IsSuccess: {IsSuccess}",
+                    response.StatusCode, response.IsSuccessStatusCode);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("CartDetail API Error - Content: {ErrorContent}", errorContent);
+                }
+
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding cart detail");
+                _logger.LogError(ex, "Exception in AddCartDetailAsync");
                 return false;
             }
         }
-    }
-    public class CartItem
-    {
-        public string DishId { get; set; } // Keep this definition
-        public string DishName { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
-        public string Image { get; set; }
-        public decimal Total => Quantity * Price;
     }
 }

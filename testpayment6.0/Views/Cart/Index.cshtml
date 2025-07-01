@@ -1,4 +1,5 @@
-﻿@model List<testpayment6._0.Controllers.CartItem>
+﻿@using System.Globalization
+@model List<testpayment6._0.ResponseModels.CartItem>
 @{
     ViewData["Title"] = "Giỏ hàng";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -41,7 +42,7 @@
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                <span class="fw-bold">@item.Price.ToString("N0") VNĐ</span>
+                                                <span class="fw-bold">@item.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) VNĐ</span>
                                             </td>
                                             <td class="align-middle">
                                                 <div class="input-group" style="width: 120px;">
@@ -58,7 +59,7 @@
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                <span class="fw-bold text-danger item-total">@item.Total.ToString("N0") VNĐ</span>
+                                                <span class="fw-bold text-danger item-total">@($"{item.Total:N0}") VNĐ</span>
                                             </td>
                                             <td class="align-middle">
                                                 <button class="btn btn-outline-danger btn-sm remove-btn"
@@ -81,8 +82,8 @@
                                 </a>
                             </div>
                             <div class="col-md-6 text-end">
-                                <h4>Tổng cộng: <span class="text-danger" id="totalAmount">@ViewBag.TotalAmount.ToString("N0") VNĐ</span></h4>
-                                <button class="btn btn-primary btn-lg mt-2" id="placeOrderBtn">
+                                <h4>Tổng cộng: <span class="text-danger" id="totalAmount">@ViewBag.TotalAmount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) VNĐ</span></h4>
+                                <button class="btn btn-primary btn-lg mt-2" id="placeOrderBtn" type="button">
                                     <i class="fas fa-check"></i> Đặt mua
                                 </button>
                             </div>
@@ -105,10 +106,111 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
+        console.log('Document ready - Cart page loaded');
+
+        // Kiểm tra jQuery có load không
+        if (typeof $ === 'undefined') {
+            console.error('jQuery is not loaded!');
+            alert('jQuery chưa được load. Vui lòng kiểm tra lại!');
+            return;
+        }
+
+        // Lấy thông tin user từ server
+        var userId = '@(ViewBag.UserId ?? "")';
+        var isLoggedIn = @Html.Raw((ViewBag.IsLoggedIn ?? false).ToString().ToLower());
+
+        console.log('User ID:', userId);
+        console.log('Is logged in:', isLoggedIn);
+
+        // Xử lý nút đặt mua
+        $('#placeOrderBtn').off('click').on('click', function(e) {
+            e.preventDefault();
+            console.log('=== PLACE ORDER BUTTON CLICKED ===');
+
+            // Kiểm tra đăng nhập
+            if (!isLoggedIn || userId === '') {
+                alert('Vui lòng đăng nhập trước khi đặt hàng');
+                return;
+            }
+
+            if (confirm('Xác nhận đặt hàng?')) {
+                console.log('User confirmed order - calling placeOrder()');
+                placeOrder();
+            } else {
+                console.log('User cancelled order');
+            }
+        });
+
+        // Function đặt hàng
+        function placeOrder() {
+            console.log('=== PLACE ORDER FUNCTION STARTED ===');
+
+            var btn = $('#placeOrderBtn');
+
+            // Disable button
+            btn.prop('disabled', true);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+
+            $.ajax({
+                url: '@Url.Action("PlaceOrder", "Cart")',
+                type: 'POST',
+                dataType: 'json',
+                timeout: 30000,
+                beforeSend: function() {
+                    console.log('AJAX request starting...');
+                },
+                success: function(response) {
+                    console.log('=== AJAX SUCCESS ===');
+                    console.log('Response:', response);
+
+                    if (response && response.success) {
+                        console.log('Order placed successfully');
+                        alert(response.message || 'Đặt hàng thành công!');
+
+                        // Redirect về menu
+                        window.location.href = '@Url.Action("Index", "Menu")';
+                    } else {
+                        console.error('Order failed:', response);
+                        alert(response.message || 'Có lỗi xảy ra khi đặt hàng');
+
+                        // Re-enable button
+                        btn.prop('disabled', false);
+                        btn.html('<i class="fas fa-check"></i> Đặt mua');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log('=== AJAX ERROR ===');
+                    console.error('XHR:', xhr);
+                    console.error('Status:', status);
+                    console.error('Error:', error);
+                    console.error('Response Text:', xhr.responseText);
+
+                    var errorMessage = 'Có lỗi xảy ra khi đặt hàng';
+
+                    if (xhr.status === 0) {
+                        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+                    } else if (status === 'timeout') {
+                        errorMessage = 'Yêu cầu hết thời gian chờ. Vui lòng thử lại.';
+                    }
+
+                    alert(errorMessage);
+
+                    // Re-enable button
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-check"></i> Đặt mua');
+                }
+            });
+        }
+
         // Xử lý thay đổi số lượng
-        $('.quantity-btn').click(function() {
+        $('.quantity-btn').off('click').on('click', function() {
             var action = $(this).data('action');
             var dishId = $(this).data('dish-id');
             var input = $(`input[data-dish-id="${dishId}"]`);
@@ -124,7 +226,7 @@
         });
 
         // Xử lý khi thay đổi trực tiếp input
-        $('.quantity-input').change(function() {
+        $('.quantity-input').off('change').on('change', function() {
             var dishId = $(this).data('dish-id');
             var quantity = parseInt($(this).val());
 
@@ -137,18 +239,11 @@
         });
 
         // Xử lý xóa món
-        $('.remove-btn').click(function() {
+        $('.remove-btn').off('click').on('click', function() {
             var dishId = $(this).data('dish-id');
 
             if (confirm('Bạn có chắc muốn xóa món này khỏi giỏ hàng?')) {
                 removeFromCart(dishId);
-            }
-        });
-
-        // Xử lý đặt hàng
-        $('#placeOrderBtn').click(function() {
-            if (confirm('Xác nhận đặt hàng?')) {
-                placeOrder();
             }
         });
 
@@ -198,29 +293,14 @@
             });
         }
 
-        function placeOrder() {
-            $('#placeOrderBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
-
-            $.post('@Url.Action("PlaceOrder", "Cart")', function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    window.location.href = '@Url.Action("Index", "Menu")';
-                } else {
-                    alert(response.message || 'Có lỗi xảy ra khi đặt hàng');
-                    $('#placeOrderBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Đặt mua');
-                }
-            }).fail(function() {
-                alert('Có lỗi xảy ra khi đặt hàng');
-                $('#placeOrderBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Đặt mua');
-            });
-        }
-
         function updateCartBadge(count) {
             var badge = $('#cartBadge');
-            if (count > 0) {
-                badge.text(count).show();
-            } else {
-                badge.hide();
+            if (badge.length > 0) {
+                if (count > 0) {
+                    badge.text(count).show();
+                } else {
+                    badge.hide();
+                }
             }
         }
     });
