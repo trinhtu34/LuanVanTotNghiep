@@ -164,8 +164,11 @@ namespace testpayment6._0.Controllers
                     return Json(new { success = false, message = "Giỏ hàng trống" });
                 }
 
-                // Tạo cart trong database
-                var cartResponse = await CreateCartAsync(userId);
+                // Tính tổng tiền của giỏ hàng
+                var totalPrice = cart.Sum(x => x.Total ?? 0);
+
+                // Tạo cart trong database với totalPrice
+                var cartResponse = await CreateCartAsync(userId, totalPrice);
                 if (cartResponse == null)
                 {
                     return Json(new { success = false, message = "Không thể tạo đơn hàng" });
@@ -235,23 +238,26 @@ namespace testpayment6._0.Controllers
             HttpContext.Session.SetString("Cart", cartJson);
         }
 
-        private async Task<CartResponseModel> CreateCartAsync(string userId)
+        private async Task<CartResponseModel> CreateCartAsync(string userId, decimal totalPrice)
         {
             try
             {
-                _logger.LogInformation("CreateCartAsync called with userId: {UserId}", userId);
+                _logger.LogInformation("CreateCartAsync called with userId: {UserId}, totalPrice: {TotalPrice}",
+                    userId, totalPrice);
                 _logger.LogInformation("BASE_API_URL: {BaseApiUrl}", BASE_API_URL ?? "NULL");
 
-                var request = new CreateCartRequest { UserId = userId };
+                var request = new CreateCartRequest
+                {
+                    UserId = userId,
+                    TotalPrice = totalPrice // Thêm TotalPrice vào request
+                };
+
                 var json = JsonSerializer.Serialize(request);
                 _logger.LogInformation("Request JSON: {Json}", json);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var apiUrl = $"{BASE_API_URL}/cart";
 
-                _logger.LogInformation("Making POST request to: {ApiUrl}", apiUrl);
-
-                var response = await _httpClient.PostAsync(apiUrl, content);
+                var response = await _httpClient.PostAsync($"{BASE_API_URL}/cart", content);
 
                 _logger.LogInformation("API Response - Status: {StatusCode}, IsSuccess: {IsSuccess}",
                     response.StatusCode, response.IsSuccessStatusCode);
@@ -300,11 +306,11 @@ namespace testpayment6._0.Controllers
                 _logger.LogInformation("CartDetail Request JSON: {Json}", json);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var apiUrl = $"{BASE_API_URL}/CartDetail";
+                //var apiUrl = $"{BASE_API_URL}/CartDetail";
 
-                _logger.LogInformation("Making POST request to: {ApiUrl}", apiUrl);
+                //_logger.LogInformation("Making POST request to: {ApiUrl}", apiUrl);
 
-                var response = await _httpClient.PostAsync(apiUrl, content);
+                var response = await _httpClient.PostAsync($"{BASE_API_URL}/CartDetail", content);
 
                 _logger.LogInformation("CartDetail API Response - Status: {StatusCode}, IsSuccess: {IsSuccess}",
                     response.StatusCode, response.IsSuccessStatusCode);

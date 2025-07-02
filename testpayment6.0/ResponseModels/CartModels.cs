@@ -19,6 +19,7 @@ namespace testpayment6._0.ResponseModels
         public int CartId { get; set; }
         public string UserId { get; set; }
         public DateTime OrderTime { get; set; }
+        public decimal TotalPrice { get; set; }
         public bool IsCancel { get; set; }
     }
 
@@ -35,6 +36,7 @@ namespace testpayment6._0.ResponseModels
     public class CreateCartRequest
     {
         public string UserId { get; set; }
+        public decimal TotalPrice { get; set; } // Thêm TotalPrice vào request
     }
 
     public class AddCartDetailRequest

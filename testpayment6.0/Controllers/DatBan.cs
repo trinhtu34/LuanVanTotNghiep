@@ -427,6 +427,9 @@ namespace testpayment6._0.Controllers
 
             return Json(new { success = false, message = "Không thể tải danh sách món ăn" });
         }
+
+
+        // Hiển thị danh sách đặt bàn của người dùng --------------------------------------------------------------------------------------------------------------------------
         public async Task<IActionResult> DanhSachDatBan()
         {
             var userId = HttpContext.Session.GetString("UserId");
