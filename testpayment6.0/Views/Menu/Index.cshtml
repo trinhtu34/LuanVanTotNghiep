@@ -107,15 +107,17 @@
                                     <span class="h5 text-danger mb-0">@dish.Price.ToString("N0") VNĐ</span>
                                     @if (ViewBag.IsLoggedIn == true)
                                     {
-                                        <button class="btn btn-primary btn-sm add-to-cart-btn"
-                                                data-dish-id="@dish.DishId" data-dish-name="@dish.DishName">
+                                        <button class="btn btn-primary btn-sm"
+                                                onclick="addToCart('@dish.DishId', '@Html.Raw(Html.Encode(dish.DishName))', @dish.Price, '@dish.Images')"
+                                                type="button">
                                             <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
                                         </button>
                                     }
                                     else
                                     {
                                         <button class="btn btn-outline-secondary btn-sm"
-                                                onclick="alert('Vui lòng đăng nhập để đặt món')">
+                                                onclick="alert('Vui lòng đăng nhập để đặt món')"
+                                                type="button">
                                             <i class="fas fa-lock"></i> Đặt món
                                         </button>
                                     }
@@ -139,61 +141,121 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Xử lý thêm vào giỏ hàng
-    $(document).ready(function() {
-        $('.add-to-cart-btn').click(function() {
-            var button = $(this);
-            var dishId = button.data('dish-id');
-            var dishName = button.data('dish-name');
+    // Kiểm tra jQuery có load không
+    if (typeof jQuery == 'undefined') {
+        console.error('jQuery chưa được load!');
+    } else {
+        console.log('jQuery đã load thành công');
+    }
+</script>
+<script>
 
-            button.prop('disabled', true);
-            button.html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
+    function addToCart(dishId, dishName, price, imageUrl) {
+        console.log('Adding to cart:', dishId, dishName, price);
 
-            $.ajax({
-                url: '@Url.Action("AddToCart", "Menu")',
-                type: 'POST',
-                data: { dishId: dishId },
-                success: function(response) {
-                    if (response.success) {
-                        // Hiển thị thông báo thành công
-                        showToast('success', response.message);
+        // Tìm button được click
+        var button = event.target.closest('button');
+        var originalHtml = button.innerHTML;
 
-                        // Reset button sau 2 giây
-                        setTimeout(function() {
-                            button.prop('disabled', false);
-                            button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
-                        }, 2000);
-                    } else {
-                        showToast('error', response.message);
-                        button.prop('disabled', false);
-                        button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
+        // Disable button và hiển thị loading
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+
+        // Gửi AJAX request
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '@Url.Action("AddToCart", "Cart")', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            showToast('Đã thêm vào giỏ hàng!', 'success');
+                            updateCartBadge(response.cartCount);
+                        } else {
+                            showToast(response.message || 'Có lỗi xảy ra', 'error');
+                        }
+                    } catch (e) {
+                        showToast('Lỗi xử lý phản hồi', 'error');
                     }
-                },
-                error: function() {
-                    showToast('error', 'Có lỗi xảy ra. Vui lòng thử lại.');
-                    button.prop('disabled', false);
-                    button.html('<i class="fas fa-shopping-cart"></i> Thêm vào giỏ');
+                } else {
+                    showToast('Có lỗi xảy ra khi thêm vào giỏ hàng', 'error');
                 }
-            });
-        });
-    });
+            }
+        };
 
-    // Hàm hiển thị toast notification
-    function showToast(type, message) {
-        var toastClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        var toast = $('<div class="alert ' + toastClass + ' alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">' +
-                     message +
-                     '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                     '</div>');
+        var data = 'dishId=' + encodeURIComponent(dishId) +
+                   '&dishName=' + encodeURIComponent(dishName) +
+                   '&price=' + price +
+                   '&image=' + encodeURIComponent(imageUrl || '');
 
-        $('body').append(toast);
+        xhr.send(data);
+    }
 
-        // Tự động ẩn sau 3 giây
+    function updateCartBadge(count) {
+        var badge = document.getElementById('cartBadge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    function showToast(message, type) {
+        var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        var toastHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" ' +
+                       'style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">' +
+                       message +
+                       '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                       '</div>';
+
+        document.body.insertAdjacentHTML('beforeend', toastHtml);
+
+        // Auto dismiss after 3 seconds
         setTimeout(function() {
-            toast.alert('close');
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    if (alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }, 300);
+            });
         }, 3000);
     }
+
+    function loadCartCount() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '@Url.Action("GetCartCount", "Cart")', true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    var count = JSON.parse(xhr.responseText);
+                    updateCartBadge(count);
+                } catch (e) {
+                    console.error('Error parsing cart count:', e);
+                }
+            }
+        };
+        xhr.send();
+    }
+
+    // Load cart count khi trang được tải
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCartCount();
+    });
 </script>
 
 <style>

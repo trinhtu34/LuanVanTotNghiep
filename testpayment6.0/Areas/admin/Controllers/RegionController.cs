@@ -94,14 +94,12 @@ namespace testpayment6._0.Controllers
                     {
                         PropertyNameCaseInsensitive = true
                     });
-
                     var region = regions?.FirstOrDefault(r => r.RegionId == id);
                     if (region != null)
                     {
                         return View(region);
                     }
                 }
-
                 ViewBag.Error = "Không tìm thấy khu vực";
                 return RedirectToAction(nameof(Index));
             }

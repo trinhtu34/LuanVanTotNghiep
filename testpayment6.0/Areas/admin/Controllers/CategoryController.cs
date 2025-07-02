@@ -74,19 +74,24 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/category");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var category = JsonSerializer.Deserialize<Category>(json, new JsonSerializerOptions
+                    var categories = JsonSerializer.Deserialize<List<Category>>(json, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
-                    return View(category);
+                    var category = categories?.FirstOrDefault(c => c.CategoryId == id);
+                    if (category != null)
+                    {
+                        return View(category);
+                    }
                 }
                 ViewBag.Error = "Không thể tải danh mục";
                 return RedirectToAction("Index");
@@ -111,7 +116,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             {
                 var categoryData = new { CategoryId = id, CategoryName = categoryName };
                 var content = new StringContent(JsonSerializer.Serialize(categoryData), System.Text.Encoding.UTF8, "application/json");
-                var response = await _httpClient.PutAsync($"{BASE_API_URL}/{id}", content);
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/category/{id}", content);
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["Success"] = "Cập nhật loại món ăn thành công!";

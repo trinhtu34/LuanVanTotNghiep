@@ -35,7 +35,16 @@ namespace testpayment6._0.ResponseModels
         [JsonPropertyName("description")]
         public string Description { get; set; } = string.Empty;
     }
-
+    public class MenuViewModel
+    {
+        public string DishId { get; set; } = string.Empty;
+        public string DishName { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Descriptions { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public int RegionId { get; set; }
+        public string Images { get; set; } = string.Empty;
+    }
     public class OrderTableResponse
     {
         [JsonPropertyName("orderTableId")]
@@ -61,13 +70,13 @@ namespace testpayment6._0.ResponseModels
 
     public class OrderTableViewModel
     {
-        public long OrderTableId { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public DateTime StartingTime { get; set; }
-        public bool IsCancel { get; set; }
-        public decimal TotalPrice { get; set; }
-        public decimal? TotalDeposit { get; set; }
-        public DateTime OrderDate { get; set; }
+        public long orderTableId { get; set; }
+        public string? userId { get; set; } = string.Empty;
+        public DateTime startingTime { get; set; }
+        public bool isCancel { get; set; }
+        public decimal? totalPrice { get; set; }
+        public decimal? totalDeposit { get; set; }
+        public DateTime orderDate { get; set; }
     }
     public class OrderTableDetailViewModel
     {
@@ -80,16 +89,7 @@ namespace testpayment6._0.ResponseModels
         [JsonPropertyName("tableId")]
         public int TableId { get; set; }
     }
-    public class MenuViewModel
-    {
-        public string DishId { get; set; } = string.Empty;
-        public string DishName { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-        public string Descriptions { get; set; } = string.Empty;
-        public int CategoryId { get; set; }
-        public int RegionId { get; set; }
-        public string Images { get; set; } = string.Empty;
-    }
+
     public class OrderFoodDetailViewModel
     {
         public long OrderFoodDetailId { get; set; }

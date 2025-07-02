@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace testpayment6._0.ResponseModels
 {
@@ -28,5 +29,38 @@ namespace testpayment6._0.ResponseModels
 
         [JsonProperty("createAt")]
         public DateTime? CreateAt { get; set; }
+    }
+    public class RegisterViewModel
+    {
+        [Required(ErrorMessage = "Tên đăng nhập là bắt buộc")]
+        [Display(Name = "Tên đăng nhập")]
+        public string UserId { get; set; }
+
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
+        [Display(Name = "Mật khẩu")]
+        [DataType(DataType.Password)]
+        public string UPassword { get; set; }
+
+        [Required(ErrorMessage = "Xác nhận mật khẩu là bắt buộc")]
+        [Display(Name = "Xác nhận mật khẩu")]
+        [DataType(DataType.Password)]
+        [Compare("UPassword", ErrorMessage = "Mật khẩu xác nhận không khớp")]
+        public string ConfirmPassword { get; set; }
+
+        [Required(ErrorMessage = "Họ tên là bắt buộc")]
+        [Display(Name = "Họ tên")]
+        public string CustomerName { get; set; }
+
+        [Required(ErrorMessage = "Số điện thoại là bắt buộc")]
+        [Display(Name = "Số điện thoại")]
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
+        public string PhoneNumber { get; set; }
+
+        [Display(Name = "Email")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        public string Email { get; set; } = "";
+
+        [Display(Name = "Địa chỉ")]
+        public string Address { get; set; } = "";
     }
 }

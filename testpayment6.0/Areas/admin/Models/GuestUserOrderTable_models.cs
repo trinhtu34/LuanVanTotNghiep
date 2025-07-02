@@ -1,20 +1,76 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace testpayment6._0.Areas.admin.Models
 {
-    // Đảm bảo BookingViewModel có các properties với tên chính xác
+    public class RegionViewModel
+    {
+        public int regionId { get; set; }
+        public string regionName { get; set; }
+    }
+    public class TablesViewModel
+    {
+        [JsonPropertyName("tableId")]
+        public int TableId { get; set; }
+
+        [JsonPropertyName("regionId")]
+        public int RegionId { get; set; }
+
+        [JsonPropertyName("capacity")]
+        public int Capacity { get; set; }
+
+        [JsonPropertyName("deposit")]
+        public decimal Deposit { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; } = string.Empty;
+    }
+    public class MenuViewModel
+    {
+        public string DishId { get; set; } = string.Empty;
+        public string DishName { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Descriptions { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public int RegionId { get; set; }
+        public string Images { get; set; } = string.Empty;
+    }
+    // Updated BookingViewModel
     public class BookingViewModel
     {
-        // Quan trọng: Tên properties phải khớp chính xác với name attributes trong form
         public string CustomerName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public int SelectedTableId { get; set; }
 
+        // Thay đổi từ int sang List<int> để chọn nhiều bàn
+        public List<int> SelectedTableIds { get; set; } = new List<int>();
+        public List<RegionViewModel>? Regions { get; set; }
         public List<TableModel>? Tables { get; set; }
         public List<DishModel>? Dishes { get; set; }
         public List<SelectedDish>? SelectedDishes { get; set; }
+        public DateTime startingTime { get; set; }
     }
 
+    // Thêm model cho selected table
+    public class SelectedTable
+    {
+        public int TableId { get; set; }
+        public bool IsSelected { get; set; }
+        public int Capacity { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+    // Model cho table detail từ API
+    public class OrderTableDetailApiResponse
+    {
+        public int orderTablesDetailsId { get; set; }
+        public int orderTableId { get; set; }
+        public int tableId { get; set; }
+    }
+    public class TableModel
+    {
+        public int tableId { get; set; }
+        public int capacity { get; set; }
+        public string description { get; set; } = string.Empty;
+    }
     public class SelectedDish
     {
         public string DishId { get; set; }
@@ -30,16 +86,6 @@ namespace testpayment6._0.Areas.admin.Models
         public int Quantity { get; set; }
         public decimal Price { get; set; }
     }
-
-
-    // Các model khác cần có properties phù hợp
-    public class TableModel
-    {
-        public int tableId { get; set; }
-        public int capacity { get; set; }
-        public string description { get; set; } = string.Empty;
-    }
-
     public class DishModel
     {
         public string dishId { get; set; }
@@ -75,6 +121,7 @@ namespace testpayment6._0.Areas.admin.Models
         public bool isCancel { get; set; } = false;
         public decimal totalPrice { get; set; } = 0;
         public DateTime orderDate { get; set; }
+
     }
 
     public class OrderTableDetailRequest
@@ -90,8 +137,8 @@ namespace testpayment6._0.Areas.admin.Models
         public string userId { get; set; }
         public DateTime startingTime { get; set; }
         public bool isCancel { get; set; }
-        public decimal totalPrice { get; set; }
-        public decimal totalDeposit { get; set; }
+        public decimal? totalPrice { get; set; }
+        public decimal? totalDeposit { get; set; }
         public DateTime orderDate { get; set; }
     }
 }

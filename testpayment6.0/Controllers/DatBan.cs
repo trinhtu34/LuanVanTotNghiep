@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.X509;
 using System.Text;
 using System.Text.Json;
 using testpayment6._0.Models;
@@ -375,43 +376,6 @@ namespace testpayment6._0.Controllers
                 return Json(new { success = false, message = $"Có lỗi xảy ra: {ex.Message}" });
             }
         }
-
-        public async Task<IActionResult> DanhSachDatBan()
-        {
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId))
-            {
-                TempData["Error"] = "Vui lòng đăng nhập để xem danh sách đặt bàn";
-                return RedirectToAction("Login", "Home");
-            }
-
-            try
-            {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/{userId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    var orders = JsonSerializer.Deserialize<List<OrderTableViewModel>>(jsonContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    return View(orders ?? new List<OrderTableViewModel>());
-                }
-                else
-                {
-                    TempData["Error"] = "Không thể tải danh sách đặt bàn";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách đặt bàn";
-            }
-
-            return View(new List<OrderTableViewModel>());
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetTablesByRegion(int regionId)
         {
@@ -462,6 +426,43 @@ namespace testpayment6._0.Controllers
             }
 
             return Json(new { success = false, message = "Không thể tải danh sách món ăn" });
+        }
+
+
+        // Hiển thị danh sách đặt bàn của người dùng --------------------------------------------------------------------------------------------------------------------------
+        public async Task<IActionResult> DanhSachDatBan()
+        {
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["Error"] = "Vui lòng đăng nhập để xem danh sách đặt bàn";
+                return RedirectToAction("Login", "Home");
+            }
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/{userId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var orders = JsonSerializer.Deserialize<List<OrderTableViewModel>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    return View(orders ?? new List<OrderTableViewModel>());
+                }
+                else
+                {
+                    TempData["Error"] = "Không thể tải danh sách đặt bàn";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách đặt bàn";
+            }
+
+            return View(new List<OrderTableViewModel>());
         }
         [HttpGet]
         public async Task<IActionResult> GetOrderFoodDetails(long orderTableId)
