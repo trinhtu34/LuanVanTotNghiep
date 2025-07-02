@@ -10,7 +10,7 @@ namespace testpayment6._0.Areas.admin.Controllers
         private readonly HttpClient _httpClient;
         private readonly string BASE_API_URL;
 
-        public CategoryController(HttpClient httpClient , IConfiguration configuration)
+        public CategoryController(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             BASE_API_URL = configuration["BaseAPI"];
@@ -129,6 +129,31 @@ namespace testpayment6._0.Areas.admin.Controllers
             {
                 ViewBag.Error = $"Lỗi: {ex.Message}";
                 return View();
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BASE_API_URL}/category/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["Success"] = "Xóa loại món ăn thành công!";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    ViewBag.Error = "Không thể xóa danh mục";
+                    return RedirectToAction("Index");
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Lỗi: {ex.Message}";
+                return RedirectToAction("Index");
             }
         }
     }

@@ -53,6 +53,14 @@
 												   class="btn btn-sm btn-outline-primary" title="Sửa">
 													<i class="fas fa-edit"></i>
 												</a>
+												<button type="button" class="btn btn-sm btn-outline-danger"
+														data-bs-toggle="modal"
+														data-bs-target="#deleteModal"
+														data-category-id="@category.CategoryId"
+														data-category-name="@category.CategoryName"
+														title="Xóa">
+													<i class="fas fa-trash"></i>
+												</button>
 											</td>
 										</tr>
 									}
@@ -73,3 +81,49 @@
 		</div>
 	</div>
 </div>
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title text-danger" id="deleteModalLabel">
+					<i class="fas fa-exclamation-triangle"></i> Xác nhận xóa
+				</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<p>Bạn có chắc chắn muốn xóa loại món ăn <strong id="categoryNameToDelete"></strong> không?</p>
+				<p class="text-muted small">Hành động này không thể hoàn tác.</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+				<form id="deleteForm" method="post" class="d-inline">
+					@Html.AntiForgeryToken()
+					<button type="submit" class="btn btn-danger">
+						<i class="fas fa-trash"></i> Xóa
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	// Xử lý modal xóa
+	document.addEventListener('DOMContentLoaded', function() {
+		const deleteModal = document.getElementById('deleteModal');
+		const deleteForm = document.getElementById('deleteForm');
+		const categoryNameSpan = document.getElementById('categoryNameToDelete');
+
+		deleteModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			const CategoryId = button.getAttribute('data-category-id');
+			const CategoryName = button.getAttribute('data-category-name');
+
+			// Cập nhật tên khu vực trong modal
+			categoryNameSpan.textContent = CategoryName;
+
+			// Cập nhật action của form
+			deleteForm.action = '@Url.Action("Delete")' + '/' + CategoryId;
+		});
+	});
+</script>
