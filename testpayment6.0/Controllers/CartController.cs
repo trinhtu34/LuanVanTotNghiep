@@ -147,6 +147,7 @@ namespace testpayment6._0.Controllers
         }
 
         // Đặt hàng - Lưu vào database
+        // Sửa đổi method PlaceOrder trong CartController
         [HttpPost]
         public async Task<IActionResult> PlaceOrder()
         {
@@ -189,9 +190,19 @@ namespace testpayment6._0.Controllers
 
                 if (allItemsAdded)
                 {
-                    // Xóa giỏ hàng session sau khi đặt hàng thành công
-                    HttpContext.Session.Remove("Cart");
-                    return Json(new { success = true, message = "Đặt hàng thành công!" });
+                    // Lưu CartId vào session để sử dụng cho thanh toán
+                    HttpContext.Session.SetString("CartId", cartResponse.CartId.ToString());
+                    HttpContext.Session.SetString("CartTotalPrice", totalPrice.ToString());
+
+                    // Trả về thông tin để redirect đến trang thanh toán
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Đặt hàng thành công!",
+                        cartId = cartResponse.CartId,
+                        totalPrice = totalPrice,
+                        redirectToPayment = true
+                    });
                 }
                 else
                 {

@@ -15,7 +15,8 @@ namespace testpayment6._0.Models
         public string Description { get; set; } = string.Empty;
 
         [Display(Name = "Mã đơn hàng")]
-        public long OrderTableId { get; set; }
+        public long? OrderTableId { get; set; }
+        public long? CartId { get; set; }
     }
 
     public class PaymentResultViewModel

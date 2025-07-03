@@ -12,7 +12,32 @@
             <div class="card-body">
                 <form asp-controller="Payment" asp-action="CreatePayment" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <input type="hidden" name="OrderTableId" value="@Model.OrderTableId" />
+                    @* if(@Model.OrderTableId != null){
+                        <input type="hidden" name="OrderTableId" value="@Model.OrderTableId" />
+                    }
+                    if(@Model.CartId != null){
+                        <input type="hidden" name="OrderTableId" value="@Model.OrderTableId" />
+                    } *@
+                    @* Xử lý OrderTableId (backward compatibility) *@
+                    @if (Model.OrderTableId != null && Model.OrderTableId > 0)
+                    {
+                        <input type="hidden" name="OrderTableId" value="@Model.OrderTableId" />
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Đơn hàng bàn #@Model.OrderTableId</strong>
+                        </div>
+                    }
+
+                    @* Xử lý CartId (chức năng mới) *@
+                    @if (Model.CartId != null && Model.CartId > 0)
+                    {
+                        <input type="hidden" name="CartId" value="@Model.CartId" />
+                        <div class="alert alert-success mb-3">
+                            <i class="fas fa-shopping-cart"></i>
+                            <strong>Giỏ hàng #@Model.CartId</strong>
+                        </div>
+                    }
+
                     <div class="form-group mb-3">
                         <label asp-for="Amount" class="control-label"></label>
                         <div class="input-group">
