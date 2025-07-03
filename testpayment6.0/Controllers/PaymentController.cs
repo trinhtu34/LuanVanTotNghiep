@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Net;
-using VNPAY.NET;
-using testpayment6._0.Models;
-using VNPAY.NET.Enums;
-using VNPAY.NET.Models;
-using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using testpayment6._0.Models;
+using VNPAY.NET;
+using VNPAY.NET.Enums;
+using VNPAY.NET.Models;
 
 namespace VnPayDemo.Controllers
 {
@@ -216,11 +217,11 @@ namespace VnPayDemo.Controllers
                     var saveResult = await SavePaymentToDatabase(resultModel);
                     if (paymentResult.IsSuccess)
                     {
-                        // Xóa session cart nếu thanh toán thành công và là Cart
-                        //if (cartId > 0)
-                        //{
-                        //    HttpContext.Session.Remove("Cart");
-                        //}
+                        //Xóa session cart nếu thanh toán thành công và là Cart
+                        if (cartId > 0)
+                        {
+                            HttpContext.Session.Remove("Cart");
+                        }
 
                         return View("Success", resultModel);
                     }
@@ -251,11 +252,26 @@ namespace VnPayDemo.Controllers
         {
             try
             {
+                // Xác định giá trị null dựa trên logic business
+                long? orderTableId = null;
+                long? cartId = null;
+
+                if (paymentResult.CartId > 0)
+                {
+                    cartId = paymentResult.CartId;
+                    orderTableId = null; // Đảm bảo orderTableId là null khi có cartId
+                }
+                else if (paymentResult.OrderTableId > 0)
+                {
+                    orderTableId = paymentResult.OrderTableId;
+                    cartId = null; // Đảm bảo cartId là null khi có orderTableId
+                }
+                _logger.LogInformation($"test order table id: {paymentResult.OrderTableId}");
                 // Tạo payload để gửi đến API
                 var paymentData = new
                 {
-                    orderTableId = paymentResult.OrderTableId,
-                    cartId = paymentResult.CartId, // Thêm CartId
+                    orderTableId = orderTableId, // Sử dụng biến đã xử lý
+                    cartId = cartId, // Sử dụng biến đã xử lý
                     amount = paymentResult.Amount,
                     paymentId = paymentResult.PaymentId,
                     isSuccess = paymentResult.IsSuccess,
