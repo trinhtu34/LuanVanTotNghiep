@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Net;
-using VNPAY.NET;
-using testpayment6._0.Models;
-using VNPAY.NET.Enums;
-using VNPAY.NET.Models;
-using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using testpayment6._0.Models;
+using VNPAY.NET;
+using VNPAY.NET.Enums;
+using VNPAY.NET.Models;
 
 namespace VnPayDemo.Controllers
 {
@@ -38,7 +39,7 @@ namespace VnPayDemo.Controllers
         [HttpPost]
         public IActionResult Index(PaymentViewModel model)
         {
-            _logger.LogInformation($"Payment Index - Amount: {model.Amount}, Description: {model.Description}, OrderTableId: {model.OrderTableId}");
+            _logger.LogInformation($"Payment Index - Amount: {model.Amount}, Description: {model.Description}, OrderTableId: {model.OrderTableId}, CartId: {model.CartId}");
 
             if (!ModelState.IsValid)
             {
@@ -70,9 +71,33 @@ namespace VnPayDemo.Controllers
 
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
-                // ENCODE OrderTableId vào PaymentId
+                // Xử lý PaymentId dựa trên Cart hoặc OrderTable
+                long paymentId;
                 var timestamp = DateTime.Now.Ticks % 1000000000;
-                var paymentId = long.Parse($"{timestamp}{model.OrderTableId:D9}");
+
+                if (model.CartId.HasValue && model.CartId.Value > 0)
+                {
+                    // Encode CartId vào PaymentId (thêm prefix để phân biệt)
+                    paymentId = long.Parse($"2{timestamp}{model.CartId.Value:D8}"); // prefix "2" cho Cart
+
+                    // Lưu vào session
+                    HttpContext.Session.SetString("CartId", model.CartId.Value.ToString());
+                    HttpContext.Session.SetString($"CartId_{paymentId}", model.CartId.Value.ToString());
+                }
+                else if (model.OrderTableId.HasValue && model.OrderTableId.Value > 0)
+                {
+                    // Encode OrderTableId vào PaymentId (giữ nguyên logic cũ)
+                    paymentId = long.Parse($"1{timestamp}{model.OrderTableId.Value:D8}"); // prefix "1" cho OrderTable
+
+                    // Lưu vào session
+                    HttpContext.Session.SetString("OrderTableId", model.OrderTableId.Value.ToString());
+                    HttpContext.Session.SetString($"OrderTableId_{paymentId}", model.OrderTableId.Value.ToString());
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Không tìm thấy thông tin đơn hàng");
+                    return View("Index", model);
+                }
 
                 var request = new PaymentRequest
                 {
@@ -86,16 +111,10 @@ namespace VnPayDemo.Controllers
                     Language = DisplayLanguage.Vietnamese
                 };
 
-                // Vẫn lưu vào session như backup
-                if (model.OrderTableId > 0)
-                {
-                    HttpContext.Session.SetString("OrderTableId", model.OrderTableId.ToString());
-                    HttpContext.Session.SetString($"OrderTableId_{paymentId}", model.OrderTableId.ToString());
-                    await HttpContext.Session.CommitAsync();
-                }
+                await HttpContext.Session.CommitAsync();
 
                 // Log để debug
-                _logger.LogInformation($"Created PaymentId: {paymentId} for OrderTableId: {model.OrderTableId}");
+                _logger.LogInformation($"Created PaymentId: {paymentId} for CartId: {model.CartId}, OrderTableId: {model.OrderTableId}");
 
                 var paymentUrl = _vnpay.GetPaymentUrl(request);
                 _logger.LogInformation($"Payment URL: {paymentUrl}");
@@ -122,6 +141,7 @@ namespace VnPayDemo.Controllers
                 {
                     var paymentResult = _vnpay.GetPaymentResult(Request.Query);
                     long orderTableId = 0;
+                    long cartId = 0;
                     decimal amount = 0;
 
                     var vnp_AmountStr = Request.Query["vnp_Amount"];
@@ -133,25 +153,44 @@ namespace VnPayDemo.Controllers
                         }
                     }
 
-                    // DECODE OrderTableId từ PaymentId
+                    // Decode ID từ PaymentId
                     var paymentIdStr = paymentResult.PaymentId.ToString();
-                    if (paymentIdStr.Length >= 9)
+                    if (paymentIdStr.Length >= 10) // Ít nhất 1 (prefix) + 9 (timestamp portion) + 8 (id)
                     {
-                        // Lấy 9 số cuối là OrderTableId
-                        var orderTableIdPart = paymentIdStr.Substring(paymentIdStr.Length - 9);
-                        if (long.TryParse(orderTableIdPart, out var decodedOrderTableId) && decodedOrderTableId > 0)
+                        var prefix = paymentIdStr.Substring(0, 1);
+                        var idPart = paymentIdStr.Substring(paymentIdStr.Length - 8); // 8 số cuối
+
+                        if (prefix == "2") // Cart
                         {
-                            orderTableId = decodedOrderTableId;
+                            if (long.TryParse(idPart, out var decodedCartId) && decodedCartId > 0)
+                            {
+                                cartId = decodedCartId;
+                            }
+                        }
+                        else if (prefix == "1") // OrderTable
+                        {
+                            if (long.TryParse(idPart, out var decodedOrderTableId) && decodedOrderTableId > 0)
+                            {
+                                orderTableId = decodedOrderTableId;
+                            }
                         }
                     }
 
                     // Fallback: Thử lấy từ session
-                    if (orderTableId == 0)
+                    if (cartId == 0 && orderTableId == 0)
                     {
-                        var orderTableIdStr = HttpContext.Session.GetString("OrderTableId");
-                        if (!string.IsNullOrEmpty(orderTableIdStr) && long.TryParse(orderTableIdStr, out var sessionOrderTableId))
+                        var cartIdStr = HttpContext.Session.GetString("CartId");
+                        if (!string.IsNullOrEmpty(cartIdStr) && long.TryParse(cartIdStr, out var sessionCartId))
                         {
-                            orderTableId = sessionOrderTableId;
+                            cartId = sessionCartId;
+                        }
+                        else
+                        {
+                            var orderTableIdStr = HttpContext.Session.GetString("OrderTableId");
+                            if (!string.IsNullOrEmpty(orderTableIdStr) && long.TryParse(orderTableIdStr, out var sessionOrderTableId))
+                            {
+                                orderTableId = sessionOrderTableId;
+                            }
                         }
                     }
 
@@ -168,14 +207,22 @@ namespace VnPayDemo.Controllers
                         BankTransactionId = paymentResult.BankingInfor?.BankTransactionId ?? string.Empty,
                         ResponseDescription = paymentResult.PaymentResponse?.Description ?? string.Empty,
                         TransactionStatusDescription = paymentResult.TransactionStatus?.Description ?? string.Empty,
-                        OrderTableId = orderTableId
+                        OrderTableId = orderTableId,
+                        CartId = cartId
                     };
 
                     _logger.LogInformation($"Parsed amount: {amount} from vnp_Amount: {vnp_AmountStr}");
+                    _logger.LogInformation($"Decoded CartId: {cartId}, OrderTableId: {orderTableId}");
 
                     var saveResult = await SavePaymentToDatabase(resultModel);
                     if (paymentResult.IsSuccess)
                     {
+                        //Xóa session cart nếu thanh toán thành công và là Cart
+                        if (cartId > 0)
+                        {
+                            HttpContext.Session.Remove("Cart");
+                        }
+
                         return View("Success", resultModel);
                     }
                     else
@@ -200,14 +247,31 @@ namespace VnPayDemo.Controllers
                 Description = "Không tìm thấy thông tin thanh toán"
             });
         }
+
         private async Task<SavePaymentResult> SavePaymentToDatabase(PaymentResultViewModel paymentResult)
         {
             try
             {
+                // Xác định giá trị null dựa trên logic business
+                long? orderTableId = null;
+                long? cartId = null;
+
+                if (paymentResult.CartId > 0)
+                {
+                    cartId = paymentResult.CartId;
+                    orderTableId = null; // Đảm bảo orderTableId là null khi có cartId
+                }
+                else if (paymentResult.OrderTableId > 0)
+                {
+                    orderTableId = paymentResult.OrderTableId;
+                    cartId = null; // Đảm bảo cartId là null khi có orderTableId
+                }
+                _logger.LogInformation($"test order table id: {paymentResult.OrderTableId}");
                 // Tạo payload để gửi đến API
                 var paymentData = new
                 {
-                    orderTableId = paymentResult.OrderTableId,
+                    orderTableId = orderTableId, // Sử dụng biến đã xử lý
+                    cartId = cartId, // Sử dụng biến đã xử lý
                     amount = paymentResult.Amount,
                     paymentId = paymentResult.PaymentId,
                     isSuccess = paymentResult.IsSuccess,
@@ -271,7 +335,7 @@ namespace VnPayDemo.Controllers
         }
     }
 
-    public class SavePaymentResult
+        public class SavePaymentResult
     {
         public bool IsSuccess { get; set; }
         public string? ErrorMessage { get; set; }

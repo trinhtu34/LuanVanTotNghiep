@@ -107,6 +107,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Thay thế phần JavaScript trong file Cart/Index.cshtml -->
 <script>
     $(document).ready(function() {
         console.log('Document ready - Cart page loaded');
@@ -136,7 +137,7 @@
                 return;
             }
 
-            if (confirm('Xác nhận đặt hàng?')) {
+            if (confirm('Xác nhận đặt hàng và chuyển đến trang thanh toán?')) {
                 console.log('User confirmed order - calling placeOrder()');
                 placeOrder();
             } else {
@@ -168,10 +169,44 @@
 
                     if (response && response.success) {
                         console.log('Order placed successfully');
-                        alert(response.message || 'Đặt hàng thành công!');
 
-                        // Redirect về menu
-                        window.location.href = '@Url.Action("Index", "Menu")';
+                        // Kiểm tra xem có cần redirect đến thanh toán không
+                        if (response.redirectToPayment && response.cartId && response.totalPrice) {
+                            console.log('Redirecting to payment with CartId:', response.cartId, 'TotalPrice:', response.totalPrice);
+
+                            // Tạo form ẩn để gửi dữ liệu sang trang thanh toán
+                            var form = $('<form>', {
+                                method: 'POST',
+                                action: '@Url.Action("Index", "Payment")'
+                            });
+
+                            // Thêm các input ẩn
+                            form.append($('<input>', {
+                                type: 'hidden',
+                                name: 'CartId',
+                                value: response.cartId
+                            }));
+
+                            form.append($('<input>', {
+                                type: 'hidden',
+                                name: 'Amount',
+                                value: response.totalPrice
+                            }));
+
+                            form.append($('<input>', {
+                                type: 'hidden',
+                                name: 'Description',
+                                value: 'Thanh toán đơn hàng #' + response.cartId
+                            }));
+
+                            // Append form to body và submit
+                            $('body').append(form);
+                            form.submit();
+                        } else {
+                            // Fallback: redirect về menu nếu không có thông tin thanh toán
+                            alert(response.message || 'Đặt hàng thành công!');
+                            window.location.href = '@Url.Action("Index", "Menu")';
+                        }
                     } else {
                         console.error('Order failed:', response);
                         alert(response.message || 'Có lỗi xảy ra khi đặt hàng');
@@ -209,6 +244,7 @@
             });
         }
 
+        // Các function khác giữ nguyên...
         // Xử lý thay đổi số lượng
         $('.quantity-btn').off('click').on('click', function() {
             var action = $(this).data('action');

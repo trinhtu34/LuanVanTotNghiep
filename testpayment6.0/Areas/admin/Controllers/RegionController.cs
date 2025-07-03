@@ -11,7 +11,7 @@ namespace testpayment6._0.Controllers
         private readonly HttpClient _httpClient;
         private readonly string BASE_API_URL;
 
-        public RegionController(HttpClient httpClient , IConfiguration configuration)
+        public RegionController(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             BASE_API_URL = configuration["BaseAPI"];
@@ -143,6 +143,31 @@ namespace testpayment6._0.Controllers
             {
                 ViewBag.Error = $"Lỗi: {ex.Message}";
                 return View(new Region { RegionId = id, RegionName = regionName });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BASE_API_URL}/region/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["Success"] = "Xóa khu vực thành công!";
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["Error"] = "Không thể xóa khu vực. Vui lòng thử lại.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Lỗi: {ex.Message}";
+                return RedirectToAction(nameof(Index));
             }
         }
     }
