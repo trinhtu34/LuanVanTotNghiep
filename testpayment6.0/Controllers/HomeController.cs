@@ -34,6 +34,18 @@ namespace testpayment6._0.Controllers
         }
 
         [HttpGet]
+        public IActionResult MyOrders()
+        {
+            // Kiểm tra đăng nhập
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("login");
+            }
+
+            // Chuyển hướng đến trang đơn hàng
+            return RedirectToAction("Index", "Order");
+        }
+        [HttpGet]
         public IActionResult Login()
         {
             // Nếu đã đăng nhập thì về trang chủ

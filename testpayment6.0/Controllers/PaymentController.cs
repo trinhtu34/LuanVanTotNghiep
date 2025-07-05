@@ -266,12 +266,12 @@ namespace VnPayDemo.Controllers
                     orderTableId = paymentResult.OrderTableId;
                     cartId = null; // Đảm bảo cartId là null khi có orderTableId
                 }
-                _logger.LogInformation($"test order table id: {paymentResult.OrderTableId}");
+
                 // Tạo payload để gửi đến API
                 var paymentData = new
                 {
-                    orderTableId = orderTableId, // Sử dụng biến đã xử lý
-                    cartId = cartId, // Sử dụng biến đã xử lý
+                    orderTableId = orderTableId,
+                    cartId = cartId,
                     amount = paymentResult.Amount,
                     paymentId = paymentResult.PaymentId,
                     isSuccess = paymentResult.IsSuccess,

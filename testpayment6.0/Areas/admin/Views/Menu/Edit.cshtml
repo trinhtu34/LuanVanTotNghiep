@@ -1,4 +1,4 @@
-﻿@model testpayment6._0.Areas.admin.Models.MenuAdmin
+﻿@model testpayment6._0.Areas.admin.Models.MenuAdminEdit
 
 @{
     ViewData["Title"] = "Chỉnh sửa món ăn";
@@ -113,6 +113,12 @@
                                       placeholder="Nhập mô tả chi tiết về món ăn (tùy chọn)">@Model?.Descriptions</textarea>
                             <span asp-validation-for="Descriptions" class="text-danger"></span>
                         </div>
+                        <div class="mb-3 form-check">
+                            @Html.EditorFor(m => m.IsAvailable, new { htmlAttributes = new { @class = "form-check-input" } })
+                            <label asp-for="IsAvailable" class="form-check-label fw-bold">
+                                Còn khả dụng (hiển thị trong thực đơn)
+                            </label>
+                        </div>
 
                         <div class="mb-3">
                             <label asp-for="Images" class="form-label fw-bold">URL Hình ảnh</label>
@@ -144,6 +150,7 @@
                             </button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
