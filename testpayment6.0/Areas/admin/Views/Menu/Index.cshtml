@@ -1,4 +1,4 @@
-﻿@model List<testpayment6._0.Areas.admin.Models.MenuAdmin>
+﻿@model List<testpayment6._0.Areas.admin.Models.MenuAdminEdit>
 
 @{
     ViewData["Title"] = "Quản lý thực đơn";
@@ -49,6 +49,7 @@
                                     <tr>
                                         <th>Mã món</th>
                                         <th>Tên món ăn</th>
+                                        <th>Được dùng</th>
                                         <th>Giá</th>
                                         <th>Danh mục</th>
                                         <th>Khu vực</th>
@@ -66,6 +67,21 @@
                                             <td>
                                                 <strong>@item.DishName</strong>
                                             </td>
+                                            <td>
+                                                @if (item.IsAvailable == true)
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check"></i> Còn phục vụ
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times"></i> Hết món
+                                                    </span>
+                                                }
+                                            </td>
+
                                             <td>
                                                 <span class="text-success fw-bold">
                                                     @item.Price.ToString("N0") VNĐ

@@ -1,0 +1,241 @@
+﻿@model testpayment6._0.ResponseModels.OrderDetailViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-receipt"></i> Chi tiết đơn hàng #@Model.Order?.CartId</h2>
+                <div>
+                    <a href="@Url.Action("Index", "Order")" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                    <button onclick="window.print()" class="btn btn-info">
+                        <i class="fas fa-print"></i> In hóa đơn
+                    </button>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(ViewBag.Error))
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
+                </div>
+            }
+
+            @if (Model.Order != null)
+            {
+                <!-- Thông tin đơn hàng -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong><i class="fas fa-hashtag"></i> Mã đơn hàng:</strong></td>
+                                        <td>#@Model.Order.CartId</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-user"></i> Khách hàng:</strong></td>
+                                        <td>@Model.Order.UserId</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-calendar-alt"></i> Thời gian đặt:</strong></td>
+                                        <td>@Model.Order.OrderTime.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong><i class="fas fa-money-bill-wave"></i> Tổng tiền:</strong></td>
+                                        <td class="text-success h5">@Model.Order.TotalPrice.ToString("N0") VNĐ</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-info-circle"></i> Trạng thái đơn hàng:</strong></td>
+                                        <td>
+                                            @if (Model.Order.IsCancel)
+                                            {
+                                                <span class="badge badge-danger" style="color: orangered;">
+                                                    <i class="fas fa-times-circle"></i> Đã hủy
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-success" style="color: lightgreen;">
+                                                    <i class="fas fa-check-circle"></i> Đang hoạt động
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-credit-card"></i> Trạng thái thanh toán:</strong></td>
+                                        <td>
+                                            @if (Model.PaymentStatus != null && Model.PaymentStatus.IsSuccess)
+                                            {
+                                                <span class="badge badge-success" style="color: lightgreen;">
+                                                    <i class="fas fa-check"></i> Đã thanh toán
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-warning" style="color: orangered;">
+                                                    <i class="fas fa-clock"></i> Chưa thanh toán
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chi tiết món ăn -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-utensils"></i> Chi tiết món ăn</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fas fa-hashtag"></i> STT</th>
+                                            <th><i class="fas fa-utensils"></i> Mã món ăn</th>
+                                            <th><i class="fas fa-sort-numeric-up"></i> Số lượng</th>
+                                            <th><i class="fas fa-money-bill-wave"></i> Đơn giá</th>
+                                            <th><i class="fas fa-calculator"></i> Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int index = 1;
+                                            decimal totalAmount = 0;
+                                        }
+                                        @foreach (var detail in Model.OrderDetails)
+                                        {
+                                            var itemTotal = detail.Price * detail.Quantity;
+                                            totalAmount += itemTotal;
+                                            <tr>
+                                                <td>@index</td>
+                                                <td>
+                                                    <strong>@detail.DishId</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-primary">@detail.Quantity</span>
+                                                </td>
+                                                <td>@detail.Price.ToString("N0") VNĐ</td>
+                                                <td class="text-success">
+                                                    <strong>@itemTotal.ToString("N0") VNĐ</strong>
+                                                </td>
+                                            </tr>
+                                            index++;
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="4" class="text-right">
+                                                <strong><i class="fas fa-calculator"></i> Tổng cộng:</strong>
+                                            </td>
+                                            <td class="text-success">
+                                                <strong class="h5">@totalAmount.ToString("N0") VNĐ</strong>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Không có chi tiết món ăn</h5>
+                                <p class="text-muted">Không thể tải thông tin chi tiết các món ăn trong đơn hàng này.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Phần in hóa đơn -->
+                <div class="d-print-only mt-4">
+                    <div class="text-center">
+                        <h3>HÓA ĐƠN THANH TOÁN</h3>
+                        <p>Ngày in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                        <hr>
+                        <p>Cảm ơn quý khách đã sử dụng dịch vụ!</p>
+                        <p>Hotline: 1900-xxxx | Email: support@example.com</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-5x text-muted mb-3"></i>
+                    <h3 class="text-muted">Không tìm thấy đơn hàng</h3>
+                    <p class="text-muted">Đơn hàng bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+                    <a href="@Url.Action("Index", "Order")" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    // Styling cho trang in
+    const printStyles = `
+        @@media print {
+            body * {
+                visibility: hidden;
+            }
+            .container, .container * {
+                visibility: visible;
+            }
+            .d-print-none {
+                display: none !important;
+            }
+            .d-print-only {
+                display: block !important;
+            }
+            .card {
+                border: 1px solid #000 !important;
+                page-break-inside: avoid;
+            }
+            .badge {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+            }
+        }
+    `;
+
+    // Thêm styles vào head
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = printStyles;
+    document.head.appendChild(styleSheet);
+</script>
+<style>
+    .d-print-only {
+        display: none;
+    }
+
+    @@media print {
+        .d-print-none {
+            display: none !important;
+        }
+
+        .d-print-only {
+            display: block !important;
+        }
+    }
+</style>

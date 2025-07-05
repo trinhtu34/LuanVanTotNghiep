@@ -22,11 +22,11 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 // Load menu data
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu/byadmin");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var menus = JsonSerializer.Deserialize<List<MenuAdmin>>(json, new JsonSerializerOptions
+                    var menus = JsonSerializer.Deserialize<List<MenuAdminEdit>>(json, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -48,15 +48,15 @@ namespace testpayment6._0.Areas.admin.Controllers
                         }
                     }
 
-                    return View(menus ?? new List<MenuAdmin>());
+                    return View(menus ?? new List<MenuAdminEdit>());
                 }
                 ViewBag.Error = "Không thể tải danh sách thực đơn";
-                return View(new List<MenuAdmin>());
+                return View(new List<MenuAdminEdit>());
             }
             catch (Exception ex)
             {
                 ViewBag.Error = $"Lỗi: {ex.Message}";
-                return View(new List<MenuAdmin>());
+                return View(new List<MenuAdminEdit>());
             }
         }
 
@@ -127,11 +127,11 @@ namespace testpayment6._0.Areas.admin.Controllers
 
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu/{id}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu/admin/edit/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var menu = JsonSerializer.Deserialize<MenuAdmin>(json, new JsonSerializerOptions
+                    var menu = JsonSerializer.Deserialize<MenuAdminEdit>(json, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -139,7 +139,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                     if (menu == null)
                     {
                         await LoadDropdownData();
-                        return View(new MenuAdmin());
+                        return View(new MenuAdminEdit());
                     }
 
 
@@ -159,7 +159,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     await LoadDropdownData();
-                    return View(new MenuAdmin());
+                    return View(new MenuAdminEdit());
                 }
             }
             catch (Exception ex)
@@ -171,7 +171,7 @@ namespace testpayment6._0.Areas.admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(MenuAdmin menu)
+        public async Task<IActionResult> Edit(MenuAdminEdit menu)
         {
             // Validation
             var errors = new List<string>();
@@ -199,7 +199,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 var content = new StringContent(JsonSerializer.Serialize(menu), System.Text.Encoding.UTF8, "application/json");
-                var response = await _httpClient.PutAsync($"{BASE_API_URL}/menu/{menu.DishId}", content);
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/menu/admin/{menu.DishId}", content);
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["Success"] = "Cập nhật món ăn thành công!";

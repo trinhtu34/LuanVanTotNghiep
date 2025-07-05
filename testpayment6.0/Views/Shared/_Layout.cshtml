@@ -504,6 +504,14 @@
                             <a class="nav-link @(currentController == "Menu" && currentAction == "Index" ? "active" : "")"
                                asp-controller="Menu" asp-action="Index">Menu</a>
                         </li>
+                        @* @if (isLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Action("Index", "Order")">
+                                    <i class="fas fa-shopping-cart"></i> Đơn hàng của tôi
+                                </a>
+                            </li>
+                        } *@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 More
@@ -539,6 +547,11 @@
                                     Xin chào, @userId
                                 </a>
                                 <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Index", "Order")">
+                                            <i class="fas fa-shopping-cart"></i> Đơn hàng của tôi
+                                        </a>
+                                    </li>
                                     <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">Thông tin cá nhân</a></li>
                                     <li>
                                         <form asp-controller="Home" asp-action="Logout" method="post" style="display: inline;">
@@ -688,7 +701,7 @@
         style.textContent = `
         @@keyframes fadeInUp {
                 from {
-                    opacity: 0; 
+                    opacity: 0;
                     transform: translateY(30px);
                 }
                 to {
