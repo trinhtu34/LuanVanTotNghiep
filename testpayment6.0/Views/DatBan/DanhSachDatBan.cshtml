@@ -57,6 +57,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="stat-value" id="canceled">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span class="ms-2">Đang tải...</span>
+                                </div>
+                                <div class="stat-label">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                    Đã Bị Hủy
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -458,7 +470,6 @@
                 handlePaymentClick(orderTableId, depositAmount);
             }
         });
-        // Thêm vào sau phần xử lý click button thanh toán
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('cancel-order-btn') || e.target.closest('.cancel-order-btn')) {
                 const button = e.target.classList.contains('cancel-order-btn') ? e.target : e.target.closest('.cancel-order-btn');
@@ -468,7 +479,7 @@
             }
         });
     });
-    // load dashboard thống kê số liệu 
+    // load dashboard thống kê số liệu
     function loadOrderStatistics() {
         // Gọi API để lấy thống kê
         fetch('@Url.Action("GetOrderStatistics", "DatBan")', {
@@ -498,6 +509,10 @@
                 // Cập nhật số đơn chưa thanh toán
                 document.getElementById('unpaidOrderCount').innerHTML =
                     `<span class="text-warning">${result.data.unpaid}</span>`;
+
+                // Cập nhật số đơn đã bị hủy
+                document.getElementById('canceled').innerHTML =
+                    `<span class="text-warning">${result.data.canceled}</span>`;
             } else {
                 // Hiển thị lỗi
                 document.getElementById('totalOrderCount').innerHTML =
@@ -505,6 +520,8 @@
                 document.getElementById('paidOrderCount').innerHTML =
                     '<span class="text-danger">Lỗi</span>';
                 document.getElementById('unpaidOrderCount').innerHTML =
+                    '<span class="text-danger">Lỗi</span>';
+                document.getElementById('canceled').innerHTML =
                     '<span class="text-danger">Lỗi</span>';
             }
         })
@@ -518,6 +535,67 @@
                 '<span class="text-danger">Lỗi tải</span>';
             document.getElementById('unpaidOrderCount').innerHTML =
                 '<span class="text-danger">Lỗi tải</span>';
+        });
+    }
+    // Hàm xử lý hủy đơn đặt bàn
+    function handleCancelOrder(orderTableId) {
+        // Hiển thị confirm dialog
+        if (!confirm('Bạn có chắc chắn muốn hủy đơn đặt bàn này không?')) {
+            return;
+        }
+
+        // Tìm button để thay đổi trạng thái
+        const cancelButton = document.querySelector(`.cancel-order-btn[data-order-id="${orderTableId}"]`);
+
+        if (cancelButton) {
+            // Disable button và hiển thị loading
+            cancelButton.disabled = true;
+            cancelButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Đang hủy...';
+        }
+
+        // Gửi request hủy đơn
+        fetch('@Url.Action("CancelOrder", "DatBan")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                OrderTableId: parseInt(orderTableId)
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('Cancel order result:', result);
+
+            if (result.success) {
+                // Thành công - reload trang để cập nhật UI
+                alert('Hủy đơn thành công!');
+                location.reload();
+            } else {
+                // Thất bại
+                alert('Lỗi: ' + (result.message || 'Không thể hủy đơn'));
+
+                // Restore button
+                if (cancelButton) {
+                    cancelButton.disabled = false;
+                    cancelButton.innerHTML = '<i class="fas fa-times"></i> Hủy Đơn Đặt Bàn';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error canceling order:', error);
+            alert('Có lỗi xảy ra khi hủy đơn: ' + error.message);
+
+            // Restore button
+            if (cancelButton) {
+                cancelButton.disabled = false;
+                cancelButton.innerHTML = '<i class="fas fa-times"></i> Hủy Đơn Đặt Bàn';
+            }
         });
     }
     // Hàm tải trạng thái thanh toán

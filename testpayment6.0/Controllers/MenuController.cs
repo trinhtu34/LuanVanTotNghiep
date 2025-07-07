@@ -77,7 +77,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/menu/quantity/excludecount");
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
