@@ -1,4 +1,605 @@
-﻿@{
-	Layout = "~/Views/Shared/_Layout.cshtml";
+﻿@using System.Text.Json
+@model dynamic
+@{
+    ViewData["Title"] = "Trang chủ";
+    var featuredMenu = ViewBag.FeaturedMenu as List<dynamic> ?? new List<dynamic>();
 }
-đây là trang chủ 
+
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, rgba(206, 18, 18, 0.9) 0%, rgba(55, 55, 63, 0.9) 100%), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        text-align: center;
+        color: white;
+        z-index: 2;
+    }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+    .hero-buttons {
+        animation: fadeInUp 1s ease-out 0.6s both;
+    }
+
+    .floating-elements {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .floating-icon {
+        position: absolute;
+        color: rgba(255, 255, 255, 0.1);
+        font-size: 2rem;
+        animation: float 6s ease-in-out infinite;
+    }
+
+        .floating-icon:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-icon:nth-child(2) {
+            top: 30%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+
+        .floating-icon:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 2s;
+        }
+
+        .floating-icon:nth-child(4) {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 3s;
+        }
+
+    @@keyframes fadeInUp {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    @@keyframes float {
+        0%, 100%
+
+    {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+
+    }
+
+    .section-padding {
+        padding: 100px 0;
+    }
+
+    .about-section {
+        background: #f8f9fa;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+        border: none;
+    }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), #ff6b6b);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .stats-section {
+        background: linear-gradient(135deg, var(--secondary-color), #2c2c34);
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stats-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: 50px 50px;
+            animation: drift 20s linear infinite;
+        }
+
+   @@keyframes drift {
+        0%
+
+    {
+        transform: translateX(0) translateY(0);
+    }
+
+    100% {
+        transform: translateX(-50px) translateY(-50px);
+    }
+
+    }
+
+    .menu-preview {
+        background: white;
+    }
+
+    .menu-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+    }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .menu-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-card:hover img {
+            transform: scale(1.05);
+        }
+
+    .menu-card-content {
+        padding: 25px;
+    }
+
+    .menu-card h5 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        margin-bottom: 10px;
+    }
+
+    .menu-card .price {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+        float: right;
+    }
+
+    .testimonial-section {
+        background: #f8f9fa;
+    }
+
+    .testimonial-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            color: var(--primary-color);
+            font-family: serif;
+        }
+
+    .testimonial-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        object-fit: cover;
+    }
+
+    .cta-section {
+        background: linear-gradient(135deg, var(--primary-color), #ff6b6b);
+        color: white;
+        text-align: center;
+    }
+
+    .btn-cta {
+        background: white;
+        color: var(--primary-color);
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px;
+    }
+
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: var(--primary-color);
+        }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+        .section-title span {
+            color: var(--primary-color);
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-top: 10px;
+        }
+
+    @@media (max-width: 768px) {
+        .hero-content h1
+
+    {
+        font-size: 2.5rem;
+    }
+
+    .hero-content p {
+        font-size: 1.1rem;
+    }
+
+    .section-title h2 {
+        font-size: 2rem;
+    }
+
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="floating-elements">
+        <i class="fas fa-utensils floating-icon"></i>
+        <i class="fas fa-wine-glass floating-icon"></i>
+        <i class="fas fa-cookie-bite floating-icon"></i>
+        <i class="fas fa-coffee floating-icon"></i>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="hero-content">
+                    <h1>Chào mừng đến với Yummy</h1>
+                    <p>Trải nghiệm hương vị tuyệt vời với những món ăn được chế biến từ tình yêu và sự tận tâm. Nơi mỗi bữa ăn đều là một kỷ niệm đáng nhớ.</p>
+                    <div class="hero-buttons">
+                        <a href="@Url.Action("Index", "Menu")" class="btn btn-book">Xem Menu</a>
+                        <a href="@Url.Action("Index", "DatBan")" class="btn btn-watch">
+                            <i class="fas fa-calendar-alt"></i> Đặt Bàn Ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section section-padding">
+    <div class="container">
+        <div class="section-title">
+            <span>Về chúng tôi</span>
+            <h2>Tại sao chọn Yummy?</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h4>Món Ăn Tươi Ngon</h4>
+                    <p>Tất cả các món ăn đều được chế biến từ nguyên liệu tươi ngon, đảm bảo chất lượng và hương vị tuyệt vời nhất.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h4>Phục Vụ Nhanh Chóng</h4>
+                    <p>Đội ngũ nhân viên chuyên nghiệp, phục vụ nhanh chóng và chu đáo, mang đến trải nghiệm tốt nhất cho khách hàng.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h4>Không Gian Ấm Cúng</h4>
+                    <p>Không gian nhà hàng được thiết kế ấm cúng, thoải mái, lý tưởng cho các bữa ăn gia đình và hẹn hò.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section section-padding">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <i class="fas fa-users"></i>
+                    <div class="number">1,234</div>
+                    <div class="label">Khách Hàng Hài Lòng</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <i class="fas fa-utensils"></i>
+                    <div class="number">@ViewBag.MenuCount <p> + </p></div>
+                    <div class="label">Món Ăn Đặc Biệt</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <i class="fas fa-award"></i>
+                    <div class="number">5</div>
+                    <div class="label">Năm Kinh Nghiệm</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <i class="fas fa-star"></i>
+                    <div class="number">4.9</div>
+                    <div class="label">Đánh Giá Trung Bình</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Menu Preview Section -->
+<section class="menu-preview section-padding">
+    <div class="container">
+        <div class="section-title">
+            <span>Menu của chúng tôi</span>
+            <h2>Món Ăn Nổi Bật</h2>
+        </div>
+
+        <div class="row">
+            @if (featuredMenu != null && featuredMenu.Any())
+            {
+                @foreach (var item in featuredMenu)
+                {
+                    var menuItem = (JsonElement)item;
+                    <div class="col-lg-4 col-md-6">
+                        <div class="menu-card">
+                            <img src="@menuItem.GetProperty("images").GetString()" alt="@menuItem.GetProperty("dishName").GetString()" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'">
+                            <div class="menu-card-content">
+                                <h5>@menuItem.GetProperty("dishName").GetString()</h5>
+                                <span class="price">@menuItem.GetProperty("price").GetDecimal().ToString("N0") VNĐ</span>
+                                <div class="clearfix"></div>
+                                @{
+                                    var descriptions = menuItem.TryGetProperty("descriptions", out var desc) && desc.ValueKind != JsonValueKind.Null
+                                    ? desc.GetString()
+                                    : null;
+                                }
+                                @if (!string.IsNullOrEmpty(descriptions))
+                                {
+                                    <p class="mt-2 text-muted">@descriptions</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- Fallback menu items nếu API không hoạt động -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="menu-card">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Món ăn đặc biệt">
+                        <div class="menu-card-content">
+                            <h5>Món Ăn Đặc Biệt</h5>
+                            <span class="price">Liên hệ</span>
+                            <div class="clearfix"></div>
+                            <p class="mt-2 text-muted">Khám phá những món ăn tuyệt vời tại nhà hàng chúng tôi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="menu-card">
+                        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Pizza đặc biệt">
+                        <div class="menu-card-content">
+                            <h5>Pizza Đặc Biệt</h5>
+                            <span class="price">Liên hệ</span>
+                            <div class="clearfix"></div>
+                            <p class="mt-2 text-muted">Pizza thơm ngon với nguyên liệu tươi ngon</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="menu-card">
+                        <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Món tráng miệng">
+                        <div class="menu-card-content">
+                            <h5>Món Tráng Miệng</h5>
+                            <span class="price">Liên hệ</span>
+                            <div class="clearfix"></div>
+                            <p class="mt-2 text-muted">Kết thúc bữa ăn với những món tráng miệng tuyệt vời</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="@Url.Action("Index", "Menu")" class="btn btn-book">Xem Tất Cả Menu</a>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonial-section section-padding">
+    <div class="container">
+        <div class="section-title">
+            <span>Đánh giá</span>
+            <h2>Khách Hàng Nói Gì</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Khách hàng" class="testimonial-avatar">
+                    <p>Món ăn rất ngon, phục vụ tận tình. Tôi và gia đình rất hài lòng với trải nghiệm tại đây. Chắc chắn sẽ quay lại!</p>
+                    <h5>Anh Minh</h5>
+                    <span class="text-muted">Khách hàng thân thiết</span>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616c2d0a8c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Khách hàng" class="testimonial-avatar">
+                    <p>Không gian nhà hàng rất đẹp và ấm cúng. Thức ăn ngon miệng, giá cả hợp lý. Đây là nơi lý tưởng cho các buổi hẹn hò.</p>
+                    <h5>Chị Lan</h5>
+                    <span class="text-muted">Khách hàng VIP</span>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Khách hàng" class="testimonial-avatar">
+                    <p>Dịch vụ tuyệt vời, nhân viên nhiệt tình. Món ăn được trình bày đẹp mắt và có hương vị tuyệt vời. Rất khuyến khích!</p>
+                    <h5>Anh Tùng</h5>
+                    <span class="text-muted">Khách hàng mới</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2>Sẵn Sàng Trải Nghiệm?</h2>
+                <p class="lead">Hãy đến với chúng tôi để thưởng thức những món ăn tuyệt vời và tạo nên những kỷ niệm đáng nhớ.</p>
+                <a href="@Url.Action("Index", "DatBan")" class="btn-cta">Đặt Bàn Ngay</a>
+                <a href="@Url.Action("Index", "Menu")" class="btn-cta">Xem Menu</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Counter animation
+    const counters = document.querySelectorAll('.number');
+    const speed = 200; // The lower the slower
+
+    counters.forEach(counter => {
+        const animate = () => {
+            const value = +counter.getAttribute('data-target') || +counter.innerText.replace(/[^\d.-]/g, '');
+            const data = +counter.innerText.replace(/[^\d.-]/g, '');
+
+            const time = value / speed;
+
+            if (data < value) {
+                counter.innerText = Math.ceil(data + time);
+                setTimeout(animate, 1);
+            } else {
+                counter.innerText = value;
+            }
+        };
+
+        // Set data-target attribute
+        counter.setAttribute('data-target', counter.innerText.replace(/[^\d.-]/g, ''));
+
+        // Start animation when element is in viewport
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animate();
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+
+        observer.observe(counter);
+    });
+</script>

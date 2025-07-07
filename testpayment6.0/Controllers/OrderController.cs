@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text;
 using System.Text.Json;
 using testpayment6._0.Models;
 using testpayment6._0.ResponseModels;
@@ -44,29 +45,10 @@ namespace testpayment6._0.Controllers
                         PropertyNameCaseInsensitive = true
                     });
 
-                    // Lấy thông tin thanh toán cho từng đơn hàng
+                    // Lấy thông tin thanh toán cho từng đơn hàng với logic mới
                     foreach (var cart in carts)
                     {
-                        try
-                        {
-                            var paymentResponse = await _httpClient.GetAsync($"{BASE_API_URL}/Payment/cart/status/{cart.CartId}");
-                            if (paymentResponse.IsSuccessStatusCode)
-                            {
-                                var paymentContent = await paymentResponse.Content.ReadAsStringAsync();
-                                _logger.LogInformation($"Successfully retrieved payment status for cart {cart.CartId}: {paymentContent}");
-                                var paymentStatuses = JsonSerializer.Deserialize<List<PaymentStatusViewModel>>(paymentContent, new JsonSerializerOptions
-                                {
-                                    PropertyNameCaseInsensitive = true
-                                });
-
-                                cart.PaymentStatus = paymentStatuses?.FirstOrDefault() ?? new PaymentStatusViewModel { CartId = cart.CartId, IsSuccess = false };
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, $"Could not get payment status for cart {cart.CartId}");
-                            cart.PaymentStatus = new PaymentStatusViewModel { CartId = cart.CartId, IsSuccess = false };
-                        }
+                        cart.PaymentStatus = await GetPaymentStatusAsync(cart.CartId);
                     }
 
                     var model = new OrderListViewModel
@@ -138,26 +120,8 @@ namespace testpayment6._0.Controllers
                     }) ?? new List<CartDetailViewModel>();
                 }
 
-                // Lấy thông tin thanh toán
-                PaymentStatusViewModel paymentStatus = new PaymentStatusViewModel { CartId = cartId, IsSuccess = false };
-                try
-                {
-                    var paymentResponse = await _httpClient.GetAsync($"{BASE_API_URL}/Payment/cart/status/{cartId}");
-                    if (paymentResponse.IsSuccessStatusCode)
-                    {
-                        var paymentContent = await paymentResponse.Content.ReadAsStringAsync();
-                        var paymentStatuses = JsonSerializer.Deserialize<List<PaymentStatusViewModel>>(paymentContent, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-
-                        paymentStatus = paymentStatuses?.FirstOrDefault() ?? paymentStatus;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, $"Could not get payment status for cart {cartId}");
-                }
+                // Lấy thông tin thanh toán với logic mới
+                PaymentStatusViewModel paymentStatus = await GetPaymentStatusAsync(cartId);
 
                 var model = new OrderDetailViewModel
                 {
@@ -174,6 +138,44 @@ namespace testpayment6._0.Controllers
                 ViewBag.Error = "Đã xảy ra lỗi khi tải chi tiết đơn hàng. Vui lòng thử lại.";
                 return View(new OrderDetailViewModel());
             }
+        }
+
+        // Phương thức helper để lấy trạng thái thanh toán
+        private async Task<PaymentStatusViewModel> GetPaymentStatusAsync(int cartId)
+        {
+            var paymentStatus = new PaymentStatusViewModel { CartId = cartId, IsSuccess = false };
+
+            try
+            {
+                var paymentResponse = await _httpClient.GetAsync($"{BASE_API_URL}/Payment/cart/status/{cartId}");
+                if (paymentResponse.IsSuccessStatusCode)
+                {
+                    var paymentContent = await paymentResponse.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"Payment status response for cart {cartId}: {paymentContent}");
+
+                    var paymentStatuses = JsonSerializer.Deserialize<List<PaymentStatusViewModel>>(paymentContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    // Logic kiểm tra: nếu có ít nhất một payment status là true thì đơn hàng đã thanh toán
+                    if (paymentStatuses != null && paymentStatuses.Any(p => p.IsSuccess))
+                    {
+                        paymentStatus.IsSuccess = true;
+                        // Lấy thông tin từ payment status đầu tiên có IsSuccess = true
+                        var successPayment = paymentStatuses.First(p => p.IsSuccess);
+                        paymentStatus.PaymentDate = successPayment.PaymentDate;
+                        paymentStatus.PaymentMethod = successPayment.PaymentMethod;
+                        paymentStatus.Amount = successPayment.Amount;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Could not get payment status for cart {cartId}");
+            }
+
+            return paymentStatus;
         }
 
         // Helper method để kiểm tra trạng thái đăng nhập
