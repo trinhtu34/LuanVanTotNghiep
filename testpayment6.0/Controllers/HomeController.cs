@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using testpayment6._0.Models;
 using testpayment6._0.ResponseModels;
+using System.Linq;
 
 namespace testpayment6._0.Controllers
 {
@@ -19,12 +20,62 @@ namespace testpayment6._0.Controllers
             _httpClient = httpClient;
             BASE_API_URL = configuration["BaseAPI"];
         }
-
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             // Kiểm tra trạng thái đăng nhập
             ViewBag.IsLoggedIn = !string.IsNullOrEmpty(HttpContext.Session.GetString("UserId"));
             ViewBag.UserId = HttpContext.Session.GetString("UserId");
+
+            // Gọi API để lấy số lượng món ăn
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    // Gọi API count
+                    var countResponse = await httpClient.GetAsync("https://p7igzosmei.execute-api.ap-southeast-1.amazonaws.com/Prod/api/menu/quantity/count");
+                    if (countResponse.IsSuccessStatusCode)
+                    {
+                        var countContent = await countResponse.Content.ReadAsStringAsync();
+                        if (int.TryParse(countContent, out int menuCount))
+                        {
+                            ViewBag.MenuCount = menuCount;
+                        }
+                        else
+                        {
+                            ViewBag.MenuCount = 50; // Fallback value
+                        }
+                    }
+                    else
+                    {
+                        ViewBag.MenuCount = 50; // Fallback value
+                    }
+
+                    // Gọi API featured menu
+                    var menuResponse = await httpClient.GetAsync("https://p7igzosmei.execute-api.ap-southeast-1.amazonaws.com/Prod/api/menu/quantity");
+                    if (menuResponse.IsSuccessStatusCode)
+                    {
+                        var menuContent = await menuResponse.Content.ReadAsStringAsync();
+                        var menuItems = JsonSerializer.Deserialize<List<dynamic>>(menuContent, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        // Sắp xếp theo count giảm dần, lấy 3-6 món
+                        var featuredMenu = menuItems
+                            .OrderByDescending(x => ((JsonElement)x).GetProperty("count").GetInt32())
+                            .Take(3)
+                            .ToList();
+
+                        ViewBag.FeaturedMenu = featuredMenu;
+                    }
+                }
+            }
+            catch
+            {
+                ViewBag.MenuCount = 50; // Fallback value nếu có lỗi
+                ViewBag.FeaturedMenu = new List<dynamic>(); // Empty list
+            }
+
             return View();
         }
 
@@ -230,6 +281,156 @@ namespace testpayment6._0.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Unexpected error during registration for user {model.UserId}");
+                ViewBag.Error = "Đã xảy ra lỗi. Vui lòng thử lại.";
+            }
+
+            return View(model);
+        }
+        // Thêm các method này vào HomeController.cs của bạn
+
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            // Kiểm tra đăng nhập
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login");
+            }
+
+            var userId = HttpContext.Session.GetString("UserId");
+
+            try
+            {
+                // Gọi API để lấy thông tin profile hiện tại
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/user/{userId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var userProfile = JsonSerializer.Deserialize<UserProfileResponse>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    var model = new ProfileViewModel
+                    {
+                        UserId = userId,
+                        CustomerName = userProfile?.CustomerName ?? "",
+                        PhoneNumber = userProfile?.PhoneNumber ?? "",
+                        Email = userProfile?.Email ?? "",
+                        Address = userProfile?.Address ?? ""
+                    };
+
+                    return View(model);
+                }
+                else
+                {
+                    _logger.LogWarning($"Failed to get profile for user {userId}: {response.StatusCode}");
+                    // Nếu không lấy được thông tin, tạo model rỗng
+                    var model = new ProfileViewModel
+                    {
+                        UserId = userId,
+                        CustomerName = "",
+                        PhoneNumber = "",
+                        Email = "",
+                        Address = ""
+                    };
+                    ViewBag.Error = "Không thể tải thông tin profile. Vui lòng thử lại.";
+                    return View(model);
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, $"Network error getting profile for user {userId}");
+                ViewBag.Error = "Không thể kết nối đến server. Vui lòng thử lại.";
+
+                var model = new ProfileViewModel
+                {
+                    UserId = userId,
+                    CustomerName = "",
+                    PhoneNumber = "",
+                    Email = "",
+                    Address = ""
+                };
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unexpected error getting profile for user {userId}");
+                ViewBag.Error = "Đã xảy ra lỗi. Vui lòng thử lại.";
+
+                var model = new ProfileViewModel
+                {
+                    UserId = userId,
+                    CustomerName = "",
+                    PhoneNumber = "",
+                    Email = "",
+                    Address = ""
+                };
+                return View(model);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(ProfileViewModel model)
+        {
+            // Kiểm tra đăng nhập
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login");
+            }
+
+            var userId = HttpContext.Session.GetString("UserId");
+            model.UserId = userId; // Đảm bảo UserId không bị thay đổi
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                // Chuẩn bị dữ liệu để gửi API
+                var request = new
+                {
+                    UPassword = model.UPassword,
+                    CustomerName = string.IsNullOrWhiteSpace(model.CustomerName) ? null : model.CustomerName.Trim(),
+                    PhoneNumber = model.PhoneNumber,
+                    Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
+                    Address = string.IsNullOrWhiteSpace(model.Address) ? null : model.Address.Trim()
+                };
+
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation($"Updating profile for user: {userId}");
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/user/modify/{userId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"Profile updated successfully for user {userId}");
+
+                    TempData["Message"] = "Cập nhật thông tin thành công!";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning($"Profile update failed for user {userId}: {response.StatusCode} - {errorContent}");
+
+                    ViewBag.Error = "Cập nhật thông tin không thành công. Vui lòng thử lại.";
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, $"Network error during profile update for user {userId}");
+                ViewBag.Error = "Không thể kết nối đến server. Vui lòng thử lại.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unexpected error during profile update for user {userId}");
                 ViewBag.Error = "Đã xảy ra lỗi. Vui lòng thử lại.";
             }
 

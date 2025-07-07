@@ -107,4 +107,9 @@ namespace testpayment6._0.ResponseModels
         public decimal Price { get; set; }
         public string? note { get; set; }
     }
+    // Thêm class model cho request
+    public class CancelOrderRequest
+    {
+        public long OrderTableId { get; set; }
+    }
 }

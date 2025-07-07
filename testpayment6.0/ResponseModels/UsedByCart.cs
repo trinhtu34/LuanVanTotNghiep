@@ -29,8 +29,10 @@ namespace testpayment6._0.ResponseModels
     {
         public int CartId { get; set; }
         public bool IsSuccess { get; set; }
+        public DateTime? PaymentDate { get; set; }
+        public string PaymentMethod { get; set; }
+        public decimal? Amount { get; set; }
     }
-
     // Model cho trang danh sách đơn hàng
     public class OrderListViewModel
     {

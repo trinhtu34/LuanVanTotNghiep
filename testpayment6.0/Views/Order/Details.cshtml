@@ -68,7 +68,7 @@
                                             }
                                             else
                                             {
-                                                <span class="badge badge-success" style="color: lightgreen;">
+                                                <span class="badge badge-success" style="color: green;">
                                                     <i class="fas fa-check-circle"></i> Đang hoạt động
                                                 </span>
                                             }
@@ -79,7 +79,7 @@
                                         <td>
                                             @if (Model.PaymentStatus != null && Model.PaymentStatus.IsSuccess)
                                             {
-                                                <span class="badge badge-success" style="color: lightgreen;">
+                                                <span class="badge badge-success" style="color: green;">
                                                     <i class="fas fa-check"></i> Đã thanh toán
                                                 </span>
                                             }
@@ -131,7 +131,7 @@
                                                     <strong>@detail.DishId</strong>
                                                 </td>
                                                 <td>
-                                                    <span class="badge badge-primary">@detail.Quantity</span>
+                                                    <span class="badge badge-primary" style="color: deepskyblue">@detail.Quantity</span>
                                                 </td>
                                                 <td>@detail.Price.ToString("N0") VNĐ</td>
                                                 <td class="text-success">

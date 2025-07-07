@@ -79,10 +79,24 @@
                                     </div>
                                 </div>
                                 <div class="card-footer">
-                                    <a href="@Url.Action("Details", "Order", new { cartId = order.CartId })"
-                                       class="btn btn-primary btn-block">
-                                        <i class="fas fa-eye"></i> Xem chi tiết
-                                    </a>
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <a href="@Url.Action("Details", "Order", new { cartId = order.CartId })"
+                                               class="btn btn-primary btn-block">
+                                                <i class="fas fa-eye"></i> Xem chi tiết
+                                            </a>
+                                        </div>
+                                        @if (!order.IsCancel && (order.PaymentStatus == null || !order.PaymentStatus.IsSuccess))
+                                        {
+                                            <div class="col-12">
+                                                <button type="button"
+                                                        class="btn btn-success btn-block payment-btn"
+                                                        onclick="handlePaymentClick(@order.CartId, @order.TotalPrice)">
+                                                    <i class="fas fa-credit-card"></i> Thanh toán ngay
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -140,9 +154,63 @@
     </div>
 </div>
 
+<!-- Anti-forgery token for payment form -->
+@Html.AntiForgeryToken()
+
 <script>
+    // Hàm xử lý khi click button thanh toán
+    function handlePaymentClick(cartId, totalPrice) {
+        // Tạo form ẩn để gửi dữ liệu đến trang thanh toán
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/Payment/Index";
+
+        // Thêm các trường dữ liệu
+        const amountInput = document.createElement("input");
+        amountInput.type = "hidden";
+        amountInput.name = "Amount";
+        amountInput.value = totalPrice;
+        form.appendChild(amountInput);
+
+        const descriptionInput = document.createElement("input");
+        descriptionInput.type = "hidden";
+        descriptionInput.name = "Description";
+        descriptionInput.value = `Thanh toán đơn hàng - Mã đơn #${cartId}`;
+        form.appendChild(descriptionInput);
+
+        const cartIdInput = document.createElement("input");
+        cartIdInput.type = "hidden";
+        cartIdInput.name = "CartId";
+        cartIdInput.value = cartId;
+        form.appendChild(cartIdInput);
+
+        // Thêm anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        if (token) {
+            const tokenInput = document.createElement("input");
+            tokenInput.type = "hidden";
+            tokenInput.name = "__RequestVerificationToken";
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
     // Tự động refresh trang sau 5 phút để cập nhật trạng thái
     setTimeout(function() {
         location.reload();
     }, 300000);
 </script>
+
+<style>
+    .payment-btn {
+        transition: all 0.3s ease;
+    }
+
+        .payment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+</style>

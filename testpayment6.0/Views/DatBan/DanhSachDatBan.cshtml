@@ -1,551 +1,740 @@
 ﻿@model List<testpayment6._0.ResponseModels.OrderTableViewModel>
 @{
-	ViewData["Title"] = "Danh Sách Đặt Bàn";
+    ViewData["Title"] = "Danh Sách Đặt Bàn";
 }
 
 <div class="container mt-4">
-	<div class="d-flex justify-content-between align-items-center mb-4">
-		<h2>Danh Sách Đặt Bàn Của Tôi</h2>
-		<a href="@Url.Action("Index", "DatBan")" class="btn btn-success">
-			<i class="fas fa-plus"></i> Đặt Bàn Mới
-		</a>
-	</div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Danh Sách Đặt Bàn Của Tôi</h2>
+        <a href="@Url.Action("Index", "DatBan")" class="btn btn-success">
+            <i class="fas fa-plus"></i> Đặt Bàn Mới
+        </a>
+    </div>
+    <!--Section thống kê -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card statistics-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Thống Kê Đơn Đặt Bàn
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalOrderCount">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span class="ms-2">Đang tải...</span>
+                                </div>
+                                <div class="stat-label">
+                                    <i class="fas fa-clipboard-list text-primary"></i>
+                                    Tổng Số Đơn
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="stat-value" id="paidOrderCount">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span class="ms-2">Đang tải...</span>
+                                </div>
+                                <div class="stat-label">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    Đã Thanh Toán
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="stat-value" id="unpaidOrderCount">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span class="ms-2">Đang tải...</span>
+                                </div>
+                                <div class="stat-label">
+                                    <i class="fas fa-exclamation-circle text-warning"></i>
+                                    Chưa Thanh Toán
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-	@if (Model != null && Model.Any())
-	{
-		<div class="row">
-			@foreach (var order in Model.OrderByDescending(o => o.orderDate))
-			{
-				<div class="col-md-6 col-lg-4 mb-4">
-					<div class="card order-card @(order.isCancel ? "cancelled" : "")">
-						<div class="card-header d-flex justify-content-between align-items-center">
-							<h6 class="mb-0">
-								<i class="fas fa-receipt"></i>
-								Mã đơn: #@order.orderTableId
-							</h6>
-							<span class="badge @(order.isCancel ? "bg-danger" : "bg-success")">
-								@(order.isCancel ? "Đã hủy" : "Đang hoạt động")
-							</span>
-						</div>
-						<div class="card-body">
-							<div class="order-info">
-								<p class="info-item">
-									<i class="fas fa-calendar-alt text-primary"></i>
-									<strong>Ngày đặt:</strong><br>
-									<span class="ms-3">@order.orderDate.ToString("dd/MM/yyyy HH:mm")</span>
-								</p>
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var order in Model.OrderByDescending(o => o.orderDate))
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card order-card @(order.isCancel ? "cancelled" : "")">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-receipt"></i>
+                                Mã đơn: #@order.orderTableId
+                            </h6>
+                            <span class="badge @(order.isCancel ? "bg-danger" : "bg-success")">
+                                @(order.isCancel ? "Đã hủy" : "Đang hoạt động")
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="order-info">
+                                <p class="info-item">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                    <strong>Ngày đặt:</strong><br>
+                                    <span class="ms-3">@order.orderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                                </p>
 
-								<p class="info-item">
-									<i class="fas fa-clock text-warning"></i>
-									<strong>Thời gian bắt đầu:</strong><br>
-									<span class="ms-3">@order.startingTime.ToString("dd/MM/yyyy HH:mm")</span>
-								</p>
+                                <p class="info-item">
+                                    <i class="fas fa-clock text-warning"></i>
+                                    <strong>Thời gian bắt đầu:</strong><br>
+                                    <span class="ms-3">@order.startingTime.ToString("dd/MM/yyyy HH:mm")</span>
+                                </p>
 
-								<p class="info-item">
-									<i class="fas fa-money-bill-wave text-success"></i>
-									<strong>Tổng tiền:</strong><br>
-									<span class="ms-3">@string.Format("{0:N0}", order.totalPrice) VNĐ</span>
-								</p>
+                                <p class="info-item">
+                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                    <strong>Tổng tiền:</strong><br>
+                                    <span class="ms-3">@string.Format("{0:N0}", order.totalPrice) VNĐ</span>
+                                </p>
 
-								<p class="info-item">
-									<i class="fas fa-coins text-warning"></i>
-									<strong>Tiền cọc:</strong><br>
-									<span class="ms-3">@string.Format("{0:N0}", order.totalDeposit) VNĐ</span>
-								</p>
+                                <p class="info-item">
+                                    <i class="fas fa-coins text-warning"></i>
+                                    <strong>Tiền cọc:</strong><br>
+                                    <span class="ms-3">@string.Format("{0:N0}", order.totalDeposit) VNĐ</span>
+                                </p>
 
-								<!-- Trạng thái thanh toán tiền cọc -->
-								<p class="info-item">
-									<i class="fas fa-credit-card text-info"></i>
-									<strong>Trạng thái thanh toán:</strong><br>
-									<span class="ms-3 payment-status-placeholder" data-order-id="@order.orderTableId">
-										<span class="spinner-border spinner-border-sm" role="status"></span>
-										Đang kiểm tra...
-									</span>
-								</p>
+                                <!-- Trạng thái thanh toán tiền cọc -->
+                                <p class="info-item">
+                                    <i class="fas fa-credit-card text-info"></i>
+                                    <strong>Trạng thái thanh toán:</strong><br>
+                                    <span class="ms-3 payment-status-placeholder" data-order-id="@order.orderTableId">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        Đang kiểm tra...
+                                    </span>
+                                </p>
 
-								<!-- Button thanh toán - chỉ hiện khi chưa thanh toán -->
-								<div class="payment-button-container" data-order-id="@order.orderTableId" style="display: none;">
-									<button type="button" class="btn btn-warning btn-sm w-100 payment-btn"
-											data-order-id="@order.orderTableId"
-											data-deposit="@order.orderTableId">
-										<i class="fas fa-credit-card"></i> Thanh Toán Tiền Cọc
-									</button>
-								</div>
+                                <!-- Button thanh toán - chỉ hiện khi chưa thanh toán -->
+                                <div class="payment-button-container" data-order-id="@order.orderTableId" style="display: none;">
+                                    <button type="button" class="btn btn-warning btn-sm w-100 payment-btn"
+                                            data-order-id="@order.orderTableId"
+                                            data-deposit="@order.totalDeposit">
+                                        <i class="fas fa-credit-card"></i> Thanh Toán Tiền Cọc
+                                    </button>
+                                </div>
 
-								<!-- Thông tin số bàn -->
-								<p class="info-item">
-									<i class="fas fa-utensils text-info"></i>
-									<strong>Số bàn đã đặt:</strong><br>
-									<span class="ms-3 table-count-placeholder" data-order-id="@order.orderTableId">
-										<span class="spinner-border spinner-border-sm" role="status"></span>
-										Đang tải...
-									</span>
-								</p>
-								<!-- Thông tin món ăn đã đặt -->
-								<p class="info-item">
-									<i class="fas fa-utensils text-success"></i>
-									<strong>Món ăn đã đặt:</strong><br>
-									<span class="ms-3 food-count-placeholder" data-order-id="@order.orderTableId">
-										<span class="spinner-border spinner-border-sm" role="status"></span>
-										Đang tải...
-									</span>
-								</p>
-							</div>
-						</div>
-						<div class="card-footer text-muted text-center">
-							<small>
-								@{
-									var timeUntilStart = order.startingTime - DateTime.Now;
-									if (timeUntilStart.TotalHours > 0 && !order.isCancel)
-									{
-										<span class="text-info">
-											<i class="fas fa-hourglass-half"></i>
-											Còn @Math.Round(timeUntilStart.TotalHours, 1) giờ nữa
-										</span>
-									}
-									else if (!order.isCancel && timeUntilStart.TotalHours <= 0 && timeUntilStart.TotalHours > -2)
-									{
-										<span class="text-warning">
-											<i class="fas fa-exclamation-triangle"></i>
-											Đã đến giờ
-										</span>
-									}
-									else if (!order.isCancel)
-									{
-										<span class="text-secondary">
-											<i class="fas fa-check-circle"></i>
-											Đã qua
-										</span>
-									}
-									else
-									{
-										<span class="text-danger">
-											<i class="fas fa-times-circle"></i>
-											Đã hủy
-										</span>
-									}
-								}
-							</small>
-						</div>
-					</div>
-				</div>
-			}
-		</div>
-	}
-	else
-	{
-		<div class="text-center py-5">
-			<div class="empty-state">
-				<i class="fas fa-calendar-times fa-5x text-muted mb-3"></i>
-				<h4 class="text-muted">Chưa có đơn đặt bàn nào</h4>
-				<p class="text-muted">Bạn chưa đặt bàn lần nào. Hãy đặt bàn ngay để trải nghiệm dịch vụ của chúng tôi!</p>
-				<a href="@Url.Action("Index", "DatBan")" class="btn btn-primary btn-lg">
-					<i class="fas fa-plus"></i> Đặt Bàn Ngay
-				</a>
-			</div>
-		</div>
-	}
+                                <!-- Thông tin số bàn -->
+                                <p class="info-item">
+                                    <i class="fas fa-utensils text-info"></i>
+                                    <strong>Số bàn đã đặt:</strong><br>
+                                    <span class="ms-3 table-count-placeholder" data-order-id="@order.orderTableId">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        Đang tải...
+                                    </span>
+                                </p>
+                                <!-- Thông tin món ăn đã đặt -->
+                                <p class="info-item">
+                                    <i class="fas fa-utensils text-success"></i>
+                                    <strong>Món ăn đã đặt:</strong><br>
+                                    <span class="ms-3 food-count-placeholder" data-order-id="@order.orderTableId">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        Đang tải...
+                                    </span>
+                                </p>
+                                <!-- Hủy đơn đặt bàn -->
+                                <div class="info-item">
+                                    @if (!order.isCancel)
+                                    {
+                                        <button type="button" class="btn btn-danger btn-sm w-100 cancel-order-btn"
+                                                data-order-id="@order.orderTableId">
+                                            <i class="fas fa-times"></i> Hủy Đơn Đặt Bàn
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted text-center">
+                            <small>
+                                @{
+                                    var timeUntilStart = order.startingTime - DateTime.Now;
+                                    if (timeUntilStart.TotalHours > 0 && !order.isCancel)
+                                    {
+                                        <span class="text-info">
+                                            <i class="fas fa-hourglass-half"></i>
+                                            Còn @Math.Round(timeUntilStart.TotalHours, 1) giờ nữa
+                                        </span>
+                                    }
+                                    else if (!order.isCancel && timeUntilStart.TotalHours <= 0 && timeUntilStart.TotalHours > -2)
+                                    {
+                                        <span class="text-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Đã đến giờ
+                                        </span>
+                                    }
+                                    else if (!order.isCancel)
+                                    {
+                                        <span class="text-secondary">
+                                            <i class="fas fa-check-circle"></i>
+                                            Đã qua
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">
+                                            <i class="fas fa-times-circle"></i>
+                                            Đã hủy
+                                        </span>
+                                    }
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-calendar-times fa-5x text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có đơn đặt bàn nào</h4>
+                <p class="text-muted">Bạn chưa đặt bàn lần nào. Hãy đặt bàn ngay để trải nghiệm dịch vụ của chúng tôi!</p>
+                <a href="@Url.Action("Index", "DatBan")" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Đặt Bàn Ngay
+                </a>
+            </div>
+        </div>
+    }
 </div>
 
 <style>
-	.food-list {
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
-	}
+    .food-list {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
 
-	.food-item {
-		background-color: #e8f5e8;
-		color: #2e7d32;
-		padding: 4px 8px;
-		border-radius: 12px;
-		font-size: 0.8rem;
-		font-weight: 500;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
+    .food-item {
+        background-color: #e8f5e8;
+        color: #2e7d32;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-	.food-quantity {
-		background-color: #2e7d32;
-		color: white;
-		border-radius: 50%;
-		width: 20px;
-		height: 20px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.7rem;
-		margin-left: 5px;
-	}
+    .food-quantity {
+        background-color: #2e7d32;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        margin-left: 5px;
+    }
 
-	/* Styles cho trạng thái thanh toán */
-	.payment-status {
-		padding: 4px 8px;
-		border-radius: 12px;
-		font-size: 0.8rem;
-		font-weight: 500;
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-	}
+    /* Styles cho trạng thái thanh toán */
+    .payment-status {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
 
-		.payment-status.paid {
-			background-color: #d4edda;
-			color: #155724;
-			border: 1px solid #c3e6cb;
-		}
+        .payment-status.paid {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
 
-		.payment-status.unpaid {
-			background-color: #f8d7da;
-			color: #721c24;
-			border: 1px solid #f5c6cb;
-		}
+        .payment-status.unpaid {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
 
-		.payment-status.error {
-			background-color: #fff3cd;
-			color: #856404;
-			border: 1px solid #ffeaa7;
-		}
+        .payment-status.error {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
 
-	/* Styles cho button thanh toán */
-	.payment-button-container {
-		margin-top: 10px;
-		margin-bottom: 10px;
-	}
+    /* Styles cho button thanh toán */
+    .payment-button-container {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
 
-	.payment-btn {
-		transition: all 0.3s ease;
-		font-weight: 500;
-	}
+    .payment-btn {
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
 
-		.payment-btn:hover {
-			transform: translateY(-1px);
-			box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-		}
+        .payment-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
 
-		.payment-btn:active {
-			transform: translateY(0);
-		}
+        .payment-btn:active {
+            transform: translateY(0);
+        }
 
-	.order-card {
-		border-radius: 10px;
-		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-		transition: all 0.3s ease;
-	}
+    .order-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
 
-		.order-card:hover {
-			box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-			transform: translateY(-2px);
-		}
+        .order-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
 
-		.order-card.cancelled {
-			opacity: 0.7;
-			border-left: 4px solid #dc3545;
-		}
+        .order-card.cancelled {
+            opacity: 0.7;
+            border-left: 4px solid #dc3545;
+        }
 
-	.info-item {
-		margin-bottom: 15px;
-		padding: 8px 0;
-		border-bottom: 1px solid #eee;
-	}
+    .info-item {
+        margin-bottom: 15px;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
 
-		.info-item:last-child {
-			border-bottom: none;
-		}
+        .info-item:last-child {
+            border-bottom: none;
+        }
 
-		.info-item i {
-			width: 20px;
-		}
-	.empty-state {
-		max-width: 400px;
-		margin: 0 auto;
-	}
+        .info-item i {
+            width: 20px;
+        }
 
-	.card-header {
-		background: linear-gradient(45deg, #007bff, #0056b3);
-		color: white;
-	}
+    .empty-state {
+        max-width: 400px;
+        margin: 0 auto;
+    }
 
-	.card-footer {
-		background-color: #f8f9fa;
-	}
+    .card-header {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+    }
 
-	.table-count-placeholder {
-		font-size: 0.9rem;
-	}
+    .card-footer {
+        background-color: #f8f9fa;
+    }
 
-	.table-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 5px;
-	}
+    .table-count-placeholder {
+        font-size: 0.9rem;
+    }
 
-	.table-badge {
-		background-color: #e3f2fd;
-		color: #1976d2;
-		padding: 4px 8px;
-		border-radius: 12px;
-		font-size: 0.8rem;
-		font-weight: 500;
-	}
+    .table-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
 
-	.table-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-		gap: 15px;
-	}
+    .table-badge {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
 
-	@@media (max-width: 768px) {
-		.order-card
-	{
-		margin-bottom: 20px;
-	}
+    .table-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
 
-	.info-item {
-		padding: 5px 0;
-	}
+    @@media (max-width: 768px) {
+        .order-card {
+            margin-bottom: 20px;
+        }
 
-	.table-grid {
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-	}
+        .info-item {
+            padding: 5px 0;
+        }
 
-	}
+        .table-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+    }
+
+    .cancel-order-btn {
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+        .cancel-order-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .cancel-order-btn:active {
+            transform: translateY(0);
+        }
+    /* Styles cho thống kê */
+    .statistics-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+        .statistics-card .card-header {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+
+    .stat-item {
+        padding: 15px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        margin: 5px;
+        transition: all 0.3s ease;
+    }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+        .stat-label i {
+            margin-right: 5px;
+        }
+
+    @@media (max-width: 768px) {
+        .stat-value {
+            font-size: 1.5rem;
+        }
+
+        .stat-item {
+            margin-bottom: 15px;
+        }
+    }
 </style>
 
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-		// Tải tất cả thông tin cho mỗi đơn
-		loadTableCounts();
-		loadPaymentStatus();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tải tất cả thông tin cho mỗi đơn
+        loadTableCounts();
+        loadPaymentStatus();
+        loadOrderStatistics();
 
-		// Xử lý click button thanh toán
-		document.addEventListener('click', function(e) {
-			if (e.target.classList.contains('payment-btn') || e.target.closest('.payment-btn')) {
-				const button = e.target.classList.contains('payment-btn') ? e.target : e.target.closest('.payment-btn');
-				const orderTableId = button.getAttribute('data-order-id');
-				const depositAmount = button.getAttribute('data-deposit');
+        // Xử lý click button thanh toán
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('payment-btn') || e.target.closest('.payment-btn')) {
+                const button = e.target.classList.contains('payment-btn') ? e.target : e.target.closest('.payment-btn');
+                const orderTableId = button.getAttribute('data-order-id');
+                const depositAmount = button.getAttribute('data-deposit');
 
-				handlePaymentClick(orderTableId, depositAmount);
-			}
-		});
-	});
+                handlePaymentClick(orderTableId, depositAmount);
+            }
+        });
+        // Thêm vào sau phần xử lý click button thanh toán
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('cancel-order-btn') || e.target.closest('.cancel-order-btn')) {
+                const button = e.target.classList.contains('cancel-order-btn') ? e.target : e.target.closest('.cancel-order-btn');
+                const orderTableId = button.getAttribute('data-order-id');
 
-	// Hàm tải trạng thái thanh toán
-	function loadPaymentStatus() {
-		document.querySelectorAll('.payment-status-placeholder').forEach(function(element) {
-			const orderTableId = element.getAttribute('data-order-id');
-			const paymentButtonContainer = document.querySelector(`.payment-button-container[data-order-id="${orderTableId}"]`);
+                handleCancelOrder(orderTableId);
+            }
+        });
+    });
+    // load dashboard thống kê số liệu 
+    function loadOrderStatistics() {
+        // Gọi API để lấy thống kê
+        fetch('@Url.Action("GetOrderStatistics", "DatBan")', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('Statistics result:', result);
 
-			fetch(`@Url.Action("GetPaymentStatus", "DatBan")?orderTableId=${orderTableId}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			})
-			.then(response => {
-				console.log(`Payment status response for order ${orderTableId}:`, response.status);
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				return response.json();
-			})
-			.then(result => {
-				console.log(`Payment status result for order ${orderTableId}:`, result);
+            if (result.success && result.data) {
+                // Cập nhật tổng số đơn
+                document.getElementById('totalOrderCount').innerHTML =
+                    `<span class="text-primary">${result.data.total}</span>`;
 
-				if (result.success && result.data) {
-					const isPaid = result.data.isPaid;
-					console.log(`Order ${orderTableId} - isPaid:`, isPaid);
+                // Cập nhật số đơn đã thanh toán
+                document.getElementById('paidOrderCount').innerHTML =
+                    `<span class="text-success">${result.data.paid}</span>`;
 
-					if (isPaid === true) {
-						element.innerHTML = `
-							<span class="payment-status paid">
-								<i class="fas fa-check-circle"></i>
-								Đã thanh toán
-							</span>
-						`;
-						// Ẩn button thanh toán khi đã thanh toán
-						if (paymentButtonContainer) {
-							paymentButtonContainer.style.display = 'none';
-						}
-					} else if (isPaid === false) {
-						element.innerHTML = `
-							<span class="payment-status unpaid">
-								<i class="fas fa-exclamation-circle"></i>
-								Chưa thanh toán
-							</span>
-						`;
-						// Hiện button thanh toán khi chưa thanh toán
-						if (paymentButtonContainer) {
-							paymentButtonContainer.style.display = 'block';
-						}
-					} else {
-						console.log(`Order ${orderTableId} - isPaid is neither true nor false:`, isPaid, typeof isPaid);
-						element.innerHTML = `
-							<span class="payment-status error">
-								<i class="fas fa-question-circle"></i>
-								Chưa thanh toán (${isPaid})
-							</span>
-						`;
-						// Hiện button thanh toán khi không xác định được trạng thái
-						if (paymentButtonContainer) {
-							paymentButtonContainer.style.display = 'block';
-						}
-					}
-				} else {
-					console.log(`Order ${orderTableId} - result.success:`, result.success, 'result.data:', result.data);
-					element.innerHTML = `
-						<span class="payment-status error">
-							<i class="fas fa-question-circle"></i>
-							Chưa thanh toán
-						</span>
-					`;
-					// Hiện button thanh toán khi có lỗi
-					if (paymentButtonContainer) {
-						paymentButtonContainer.style.display = 'block';
-					}
-				}
-			})
-			.catch(error => {
-				console.error('Error loading payment status for order', orderTableId, ':', error);
-				element.innerHTML = `
-					<span class="payment-status error">
-						<i class="fas fa-exclamation-triangle"></i>
-						Lỗi tải dữ liệu
-					</span>
-				`;
-				// Hiện button thanh toán khi có lỗi
-				if (paymentButtonContainer) {
-					paymentButtonContainer.style.display = 'block';
-				}
-			});
-		});
-	}
+                // Cập nhật số đơn chưa thanh toán
+                document.getElementById('unpaidOrderCount').innerHTML =
+                    `<span class="text-warning">${result.data.unpaid}</span>`;
+            } else {
+                // Hiển thị lỗi
+                document.getElementById('totalOrderCount').innerHTML =
+                    '<span class="text-danger">Lỗi</span>';
+                document.getElementById('paidOrderCount').innerHTML =
+                    '<span class="text-danger">Lỗi</span>';
+                document.getElementById('unpaidOrderCount').innerHTML =
+                    '<span class="text-danger">Lỗi</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading statistics:', error);
 
-	// Hàm xử lý khi click button thanh toán
-	function handlePaymentClick(orderTableId, depositAmount) {
-		// Tạo form ẩn để gửi dữ liệu đến trang thanh toán
-		const form = document.createElement("form");
-		form.method = "POST";
-		form.action = "/Payment/Index";
+            // Hiển thị lỗi cho tất cả các thống kê
+            document.getElementById('totalOrderCount').innerHTML =
+                '<span class="text-danger">Lỗi tải</span>';
+            document.getElementById('paidOrderCount').innerHTML =
+                '<span class="text-danger">Lỗi tải</span>';
+            document.getElementById('unpaidOrderCount').innerHTML =
+                '<span class="text-danger">Lỗi tải</span>';
+        });
+    }
+    // Hàm tải trạng thái thanh toán
+    function loadPaymentStatus() {
+        document.querySelectorAll('.payment-status-placeholder').forEach(function(element) {
+            const orderTableId = element.getAttribute('data-order-id');
+            const paymentButtonContainer = document.querySelector(`.payment-button-container[data-order-id="${orderTableId}"]`);
 
-		// Thêm các trường dữ liệu
-		const amountInput = document.createElement("input");
-		amountInput.type = "hidden";
-		amountInput.name = "Amount";
-		amountInput.value = depositAmount;
-		form.appendChild(amountInput);
+            fetch(`@Url.Action("GetPaymentStatus", "DatBan")?orderTableId=${orderTableId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log(`Payment status response for order ${orderTableId}:`, response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log(`Payment status result for order ${orderTableId}:`, result);
 
-		const descriptionInput = document.createElement("input");
-		descriptionInput.type = "hidden";
-		descriptionInput.name = "Description";
-		descriptionInput.value = `Thanh toán cọc đặt bàn - Mã đơn #${orderTableId}`;
-		form.appendChild(descriptionInput);
+                if (result.success && result.data) {
+                    const isPaid = result.data.isPaid;
+                    console.log(`Order ${orderTableId} - isPaid:`, isPaid);
 
-		const orderIdInput = document.createElement("input");
-		orderIdInput.type = "hidden";
-		orderIdInput.name = "OrderTableId";
-		orderIdInput.value = orderTableId;
-		form.appendChild(orderIdInput);
+                    if (isPaid === true) {
+                        element.innerHTML = `
+                            <span class="payment-status paid">
+                                <i class="fas fa-check-circle"></i>
+                                Đã thanh toán
+                            </span>
+                        `;
+                        // Ẩn button thanh toán khi đã thanh toán
+                        if (paymentButtonContainer) {
+                            paymentButtonContainer.style.display = 'none';
+                        }
+                    } else if (isPaid === false) {
+                        element.innerHTML = `
+                            <span class="payment-status unpaid">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Chưa thanh toán
+                            </span>
+                        `;
+                        // Hiện button thanh toán khi chưa thanh toán
+                        if (paymentButtonContainer) {
+                            paymentButtonContainer.style.display = 'block';
+                        }
+                    } else {
+                        console.log(`Order ${orderTableId} - isPaid is neither true nor false:`, isPaid, typeof isPaid);
+                        element.innerHTML = `
+                            <span class="payment-status error">
+                                <i class="fas fa-question-circle"></i>
+                                Chưa thanh toán (${isPaid})
+                            </span>
+                        `;
+                        // Hiện button thanh toán khi không xác định được trạng thái
+                        if (paymentButtonContainer) {
+                            paymentButtonContainer.style.display = 'block';
+                        }
+                    }
+                } else {
+                    console.log(`Order ${orderTableId} - result.success:`, result.success, 'result.data:', result.data);
+                    element.innerHTML = `
+                        <span class="payment-status error">
+                            <i class="fas fa-question-circle"></i>
+                            Chưa thanh toán
+                        </span>
+                    `;
+                    // Hiện button thanh toán khi có lỗi
+                    if (paymentButtonContainer) {
+                        paymentButtonContainer.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading payment status for order', orderTableId, ':', error);
+                element.innerHTML = `
+                    <span class="payment-status error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Lỗi tải dữ liệu
+                    </span>
+                `;
+                // Hiện button thanh toán khi có lỗi
+                if (paymentButtonContainer) {
+                    paymentButtonContainer.style.display = 'block';
+                }
+            });
+        });
+    }
 
-		// Thêm anti-forgery token nếu có
-		const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-		if (token) {
-			const tokenInput = document.createElement("input");
-			tokenInput.type = "hidden";
-			tokenInput.name = "__RequestVerificationToken";
-			tokenInput.value = token;
-			form.appendChild(tokenInput);
-		}
+    // Hàm xử lý khi click button thanh toán
+    function handlePaymentClick(orderTableId, depositAmount) {
+        // Tạo form ẩn để gửi dữ liệu đến trang thanh toán
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/Payment/Index";
 
-		document.body.appendChild(form);
-		form.submit();
-	}
+        // Thêm các trường dữ liệu
+        const amountInput = document.createElement("input");
+        amountInput.type = "hidden";
+        amountInput.name = "Amount";
+        amountInput.value = depositAmount;
+        form.appendChild(amountInput);
 
-	// lấy số lượng bàn , lấy từ phương thức bên controller
-	function loadTableCounts() {
-		document.querySelectorAll('.table-count-placeholder').forEach(function(element)
-		{
-			const orderTableId = element.getAttribute('data-order-id');
+        const descriptionInput = document.createElement("input");
+        descriptionInput.type = "hidden";
+        descriptionInput.name = "Description";
+        descriptionInput.value = `Thanh toán cọc đặt bàn - Mã đơn #${orderTableId}`;
+        form.appendChild(descriptionInput);
 
-			// Gọi API thông qua Controller , ko gọi từ frontend được vì là API Gateway không cho gọi
-			fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			})
-			.then(response => {
-				console.log('Response status:', response.status);
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				return response.json();
-			})
-			.then(result => {
-				console.log('Controller response:', result);
+        const orderIdInput = document.createElement("input");
+        orderIdInput.type = "hidden";
+        orderIdInput.name = "OrderTableId";
+        orderIdInput.value = orderTableId;
+        form.appendChild(orderIdInput);
 
-				if (result.success && result.data && result.data.length > 0) {
-					const tableCount = result.data.length;
-					const tableIds = result.data.map(item => item.tableId).sort((a, b) => a - b);
+        // Thêm anti-forgery token nếu có
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        if (token) {
+            const tokenInput = document.createElement("input");
+            tokenInput.type = "hidden";
+            tokenInput.name = "__RequestVerificationToken";
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+        }
 
-					// Hiển thị số lượng và danh sách bàn
-					element.innerHTML = `
-						<span class="fw-bold">${tableCount} bàn</span><br>
-						<div class="table-list mt-1">
-							${tableIds.map(id => `<span class="table-badge">Bàn ${id}</span>`).join('')}
-						</div>
-					`;
-				} else {
-					element.innerHTML = '<span class="text-muted">Không có bàn</span>';
-				}
-			})
-			.catch(error => {
-				console.error('Error loading table count:', error);
-				element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
-			});
-		});
-			// Tải danh sách món ăn cho mỗi đơn
-		document.querySelectorAll('.food-count-placeholder').forEach(function(element)
-		{
-			const orderTableId = element.getAttribute('data-order-id');
+        document.body.appendChild(form);
+        form.submit();
+    }
 
-			fetch(`@Url.Action("GetOrderFoodDetails", "DatBan")?orderTableId=${orderTableId}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			})
-			.then(response => {
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				return response.json();
-			})
-			.then(result => {
-				if (result.success && result.data && result.data.length > 0) {
-					const foodCount = result.data.length;
+    // lấy số lượng bàn , lấy từ phương thức bên controller
+    function loadTableCounts() {
+        document.querySelectorAll('.table-count-placeholder').forEach(function(element)
+        {
+            const orderTableId = element.getAttribute('data-order-id');
 
-					// Hiển thị số lượng và danh sách món ăn
-					element.innerHTML = `
-						<span class="fw-bold">${foodCount} món</span><br>
-						<div class="food-list mt-1">
-							${result.data.map(food => `
-								<div class="food-item">
-									<span>${food.dishName}</span>
-									<span class="food-quantity">${food.quantity}</span>
-								</div>
-							`).join('')}
-						</div>
-					`;
-				} else {
-					element.innerHTML = '<span class="text-muted">Chưa đặt món</span>';
-				}
-			})
-			.catch(error => {
-				console.error('Error loading food details:', error);
-				element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
-			});
-		});
-	}
+            // Gọi API thông qua Controller , ko gọi từ frontend được vì là API Gateway không cho gọi
+            fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Controller response:', result);
+
+                if (result.success && result.data && result.data.length > 0) {
+                    const tableCount = result.data.length;
+                    const tableIds = result.data.map(item => item.tableId).sort((a, b) => a - b);
+
+                    // Hiển thị số lượng và danh sách bàn
+                    element.innerHTML = `
+                        <span class="fw-bold">${tableCount} bàn</span><br>
+                        <div class="table-list mt-1">
+                            ${tableIds.map(id => `<span class="table-badge">Bàn ${id}</span>`).join('')}
+                        </div>
+                    `;
+                } else {
+                    element.innerHTML = '<span class="text-muted">Không có bàn</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading table count:', error);
+                element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
+            });
+        });
+            // Tải danh sách món ăn cho mỗi đơn
+        document.querySelectorAll('.food-count-placeholder').forEach(function(element)
+        {
+            const orderTableId = element.getAttribute('data-order-id');
+
+            fetch(`@Url.Action("GetOrderFoodDetails", "DatBan")?orderTableId=${orderTableId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success && result.data && result.data.length > 0) {
+                    const foodCount = result.data.length;
+
+                    // Hiển thị số lượng và danh sách món ăn
+                    element.innerHTML = `
+                        <span class="fw-bold">${foodCount} món</span><br>
+                        <div class="food-list mt-1">
+                            ${result.data.map(food => `
+                                <div class="food-item">
+                                    <span>${food.dishName}</span>
+                                    <span class="food-quantity">${food.quantity}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    element.innerHTML = '<span class="text-muted">Chưa đặt món</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading food details:', error);
+                element.innerHTML = '<span class="text-danger">Lỗi tải dữ liệu</span>';
+            });
+        });
+    }
 </script>

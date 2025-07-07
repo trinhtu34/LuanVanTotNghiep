@@ -589,6 +589,49 @@ namespace testpayment6._0.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CancelOrder([FromBody] CancelOrderRequest request)
+        {
+            try
+            {
+                var content = new StringContent(
+                    JsonSerializer.Serialize(new { IsCancel = true }),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/OrderTable/state/{request.OrderTableId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Hủy đơn thành công"
+                    });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error when canceling order {request.OrderTableId}: {response.StatusCode} - {errorContent}");
+
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Không thể hủy đơn. Lỗi API: {response.StatusCode}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error canceling order {request.OrderTableId}");
+                return Json(new
+                {
+                    success = false,
+                    message = "Có lỗi không mong muốn xảy ra khi hủy đơn"
+                });
+            }
+        }
         [HttpGet]
         public async Task<IActionResult> GetPaymentStatus(long orderTableId)
         {
@@ -629,10 +672,21 @@ namespace testpayment6._0.Controllers
 
                         if (paymentStatus != null && paymentStatus.Any())
                         {
-                            var firstPayment = paymentStatus.First();
-                            var isSuccess = firstPayment.GetProperty("isSuccess").GetBoolean();
+                            // Logic mới: Kiểm tra xem có bất kỳ payment nào thành công không
+                            bool hasSuccessfulPayment = paymentStatus.Any(payment =>
+                            {
+                                try
+                                {
+                                    return payment.GetProperty("isSuccess").GetBoolean();
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning($"Error reading isSuccess property for order {orderTableId}: {ex.Message}");
+                                    return false;
+                                }
+                            });
 
-                            _logger.LogInformation($"Payment status for order {orderTableId}: isSuccess = {isSuccess}");
+                            _logger.LogInformation($"Payment status for order {orderTableId}: hasSuccessfulPayment = {hasSuccessfulPayment}");
 
                             return Json(new
                             {
@@ -640,8 +694,8 @@ namespace testpayment6._0.Controllers
                                 data = new
                                 {
                                     orderTableId = orderTableId,
-                                    isSuccess = isSuccess,
-                                    isPaid = isSuccess
+                                    isSuccess = hasSuccessfulPayment,
+                                    isPaid = hasSuccessfulPayment
                                 }
                             });
                         }
@@ -718,6 +772,135 @@ namespace testpayment6._0.Controllers
                     success = false,
                     message = "Có lỗi không mong muốn xảy ra khi kiểm tra trạng thái thanh toán"
                 });
+            }
+        }
+
+        // 1. Phương thức lấy tổng số đơn đặt bàn
+        [HttpGet]
+        public async Task<IActionResult> GetTotalOrderCount()
+        {
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "Chưa đăng nhập" });
+            }
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/count/{userId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var count = int.Parse(content);
+                    return Json(new { success = true, data = count });
+                }
+                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống" });
+            }
+        }
+
+        // 2. Phương thức lấy số đơn đã thanh toán
+        [HttpGet]
+        public async Task<IActionResult> GetPaidOrderCount()
+        {
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "Chưa đăng nhập" });
+            }
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/paid/count/{userId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var count = int.Parse(content);
+                    return Json(new { success = true, data = count });
+                }
+                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống" });
+            }
+        }
+
+        // 3. Phương thức lấy số đơn chưa thanh toán
+        [HttpGet]
+        public async Task<IActionResult> GetUnpaidOrderCount()
+        {
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "Chưa đăng nhập" });
+            }
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/unpaid/count/{userId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var count = int.Parse(content);
+                    return Json(new { success = true, data = count });
+                }
+                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống" });
+            }
+        }
+
+        // 4. Phương thức lấy tất cả thống kê cùng lúc
+        [HttpGet]
+        public async Task<IActionResult> GetOrderStatistics()
+        {
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "Chưa đăng nhập" });
+            }
+
+            try
+            {
+                // Gọi 3 API cùng lúc
+                var totalTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/count/{userId}");
+                var paidTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/paid/count/{userId}");
+                var unpaidTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/unpaid/count/{userId}");
+
+                await Task.WhenAll(totalTask, paidTask, unpaidTask);
+
+                var totalResponse = await totalTask;
+                var paidResponse = await paidTask;
+                var unpaidResponse = await unpaidTask;
+
+                if (totalResponse.IsSuccessStatusCode && paidResponse.IsSuccessStatusCode && unpaidResponse.IsSuccessStatusCode)
+                {
+                    var totalCount = int.Parse(await totalResponse.Content.ReadAsStringAsync());
+                    var paidCount = int.Parse(await paidResponse.Content.ReadAsStringAsync());
+                    var unpaidCount = int.Parse(await unpaidResponse.Content.ReadAsStringAsync());
+
+                    return Json(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            total = totalCount,
+                            paid = paidCount,
+                            unpaid = unpaidCount
+                        }
+                    });
+                }
+                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống" });
             }
         }
     }
