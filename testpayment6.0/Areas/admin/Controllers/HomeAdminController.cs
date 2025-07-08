@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Net.Http;
 using System.Text;
 using testpayment6._0.ResponseModels;
-using testpayment6._0.Attributes;
 
 namespace testpayment6._0.Areas.admin.Controllers
 {

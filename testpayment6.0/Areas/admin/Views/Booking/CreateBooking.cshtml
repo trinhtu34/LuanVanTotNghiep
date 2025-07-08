@@ -1,82 +1,284 @@
 ﻿@using testpayment6._0.Areas.admin.Models
 @model BookingViewModel
 @{
-    ViewData["Title"] = "Đặt bàn cho khách hàng ";
+    ViewData["Title"] = "Đặt bàn cho khách hàng";
     Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
 }
 
-	@* @if (TempData["Error"] != null)
-	{
-		<div class="alert alert-danger">
-			@TempData["Error"]
-		</div>
-	} *@
-<form asp-action="CreateBooking" method="post" id="bookingForm">
-    @Html.AntiForgeryToken()
+<div class="container-fluid">
+    <h2>Đặt bàn cho khách hàng</h2>
 
-    <!-- Thông tin khách hàng -->
-    <div class="form-group">
-        <label for="CustomerName">Tên khách hàng:</label>
-        <input name="CustomerName" id="CustomerName"
-               value="@Model?.CustomerName"
-               class="form-control" required />
-    </div>
-
-    <div class="form-group">
-        <label for="PhoneNumber">Số điện thoại:</label>
-        <input name="PhoneNumber" id="PhoneNumber"
-               value="@Model?.PhoneNumber"
-               class="form-control" type="tel" required />
-    </div>
-
-    <div class="form-group">
-        <label for="startingTime">Thời gian đặt bàn:</label>
-        <input id="startingTime" name="startingTime" type="datetime-local" class="form-control" required />
-    </div>
-
-    <!-- Chọn khu vực -->
-    <div class="form-group">
-        <label for="regionSelect">Chọn khu vực:</label>
-        <select id="regionSelect" class="form-control">
-            <option value="">-- Chọn khu vực --</option>
-            @if (Model.Regions != null)
-            {
-                @foreach (var region in Model.Regions)
-                {
-                    <option value="@region.regionId">@region.regionName</option>
-                }
-            }
-        </select>
-    </div>
-
-    <!-- Container để hiển thị bàn theo khu vực -->
-    <div class="form-group">
-        <label>Chọn bàn:</label>
-        <div id="tablesContainer">
-            <!-- Bàn sẽ được load bằng AJAX -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
         </div>
-    </div>
+    }
 
-    <!-- Container để hiển thị món ăn theo khu vực -->
-    <div class="form-group">
-        <label>Chọn món ăn:</label>
-        <div id="menuContainer">
-            <!-- Món ăn sẽ được load bằng AJAX -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
         </div>
-    </div>
+    }
 
-    <!-- Hidden container để chứa các input hidden cho SelectedDishes -->
-    <div id="selectedDishesContainer" style="display: none;">
-        <!-- Các input hidden sẽ được tạo động ở đây -->
-    </div>
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
 
-    <button type="submit" class="btn btn-primary">Đặt bàn</button>
-</form>
+    <form asp-action="CreateBooking" method="post" id="bookingForm">
+        @Html.AntiForgeryToken()
 
-<!-- Thêm jQuery và script -->
+        <div class="row">
+            <!-- Thông tin khách hàng -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Thông tin khách hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label for="CustomerName" class="form-label">Tên khách hàng</label>
+                            <input name="CustomerName" id="CustomerName"
+                                   value="@Model?.CustomerName"
+                                   class="form-control"
+                                   placeholder="Nhập tên khách hàng"
+                                   required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="PhoneNumber" class="form-label">Số điện thoại</label>
+                            <input name="PhoneNumber" id="PhoneNumber"
+                                   value="@Model?.PhoneNumber"
+                                   class="form-control"
+                                   type="tel"
+                                   placeholder="Nhập số điện thoại"
+                                   required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="startingTime" class="form-label">Thời gian đặt bàn</label>
+                            <input id="startingTime" name="startingTime"
+                                   type="datetime-local"
+                                   class="form-control"
+                                   required />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chọn khu vực và bàn -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Chọn khu vực và bàn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label for="regionSelect" class="form-label">Chọn khu vực</label>
+                            <select id="regionSelect" class="form-select">
+                                <option value="">-- Chọn khu vực --</option>
+                                @if (Model.Regions != null)
+                                {
+                                    @foreach (var region in Model.Regions)
+                                    {
+                                        <option value="@region.regionId">@region.regionName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div id="tablesSection" style="display: none;">
+                            <h6>Danh sách bàn</h6>
+                            <div id="tablesContainer" class="row">
+                                <!-- Bàn sẽ được load bằng AJAX -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chọn món ăn -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Chọn món ăn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="menuSection" style="display: none;">
+                            <h6>Danh sách món ăn</h6>
+                            <div id="menuContainer" class="row">
+                                <!-- Món ăn sẽ được load bằng AJAX -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Giỏ hàng món ăn -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Tóm tắt đơn đặt bàn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="selectedTablesContainer">
+                            <h6>Bàn đã chọn:</h6>
+                            <div id="selectedTables">
+                                <p class="text-muted">Chưa chọn bàn nào</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div id="selectedDishesDisplay">
+                            <h6>Món ăn đã chọn:</h6>
+                            <div id="cartItems">
+                                <p class="text-muted">Chưa có món ăn nào được chọn</p>
+                            </div>
+                            <div id="totalAmount" class="text-end">
+                                <strong>Tổng tiền món ăn: <span id="totalPrice">0</span> VNĐ</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden container để chứa các input hidden cho SelectedDishes -->
+        <div id="selectedDishesContainer" style="display: none;">
+            <!-- Các input hidden sẽ được tạo động ở đây -->
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-lg">Hoàn tất đặt bàn</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg ms-2">Hủy</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .table-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .table-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+
+        .table-item.selected {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+
+    .dish-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: box-shadow 0.3s;
+    }
+
+        .dish-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+    .dish-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quantity-btn {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+
+        .quantity-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .quantity-btn.decrease {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .quantity-btn.increase {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+    }
+
+    .selected-table-item {
+        display: inline-block;
+        background: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        margin: 2px;
+        font-size: 12px;
+    }
+
+    .no-items {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    var currentDishes = []; // Lưu trữ danh sách món ăn hiện tại
+    var currentDishes = [];
+    var selectedTables = [];
 
     $(document).ready(function() {
         // Khi chọn khu vực
@@ -84,27 +286,27 @@
             var regionId = $(this).val();
 
             if (regionId) {
-                // Load bàn theo khu vực
                 loadTablesByRegion(regionId);
-                // Load món ăn theo khu vực
                 loadMenuByRegion(regionId);
             } else {
-                // Clear bàn và món ăn nếu không chọn khu vực
+                $('#tablesSection').hide();
+                $('#menuSection').hide();
                 $('#tablesContainer').empty();
                 $('#menuContainer').empty();
                 $('#selectedDishesContainer').empty();
                 currentDishes = [];
+                selectedTables = [];
+                updateSelectedTablesDisplay();
+                updateCart();
             }
         });
 
         // Xử lý submit form
         $('#bookingForm').submit(function(e) {
-            // Cập nhật selectedDishesContainer trước khi submit
             updateSelectedDishesContainer();
 
-            // Kiểm tra xem có bàn nào được chọn không
-            var selectedTables = $('input[name="SelectedTableIds"]:checked');
-            if (selectedTables.length === 0) {
+            var selectedTableIds = $('input[name="SelectedTableIds"]:checked');
+            if (selectedTableIds.length === 0) {
                 alert('Vui lòng chọn ít nhất một bàn!');
                 e.preventDefault();
                 return false;
@@ -112,6 +314,11 @@
 
             console.log('Form is being submitted...');
             return true;
+        });
+
+        // Xử lý thay đổi checkbox bàn
+        $(document).on('change', 'input[name="SelectedTableIds"]', function() {
+            updateSelectedTablesDisplay();
         });
     });
 
@@ -127,23 +334,31 @@
                     var tablesHtml = '';
                     $.each(response.data, function(index, table) {
                         tablesHtml += `
-                            <div class="table-item" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                                <input type="checkbox" name="SelectedTableIds" value="${table.tableId}" id="table_${table.tableId}" />
-                                <label for="table_${table.tableId}" style="margin-left: 10px; font-weight: bold;">
-                                    Bàn ${table.tableId} (${table.capacity} chỗ)
-                                </label>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="table-item">
+                                    <input type="checkbox" name="SelectedTableIds" value="${table.tableId}" id="table_${table.tableId}" />
+                                    <label for="table_${table.tableId}" style="margin-left: 10px; font-weight: bold; cursor: pointer;">
+                                        Bàn ${table.tableId}
+                                    </label>
+                                    <div class="text-muted mt-1">
+                                        <small>Sức chứa: ${table.capacity} người</small>
+                                    </div>
+                                </div>
                             </div>
                         `;
                     });
                     $('#tablesContainer').html(tablesHtml);
+                    $('#tablesSection').show();
                 } else {
-                    $('#tablesContainer').html('<p>Không có bàn nào trong khu vực này</p>');
+                    $('#tablesContainer').html('<div class="col-12"><p class="no-items">Không có bàn nào trong khu vực này</p></div>');
+                    $('#tablesSection').show();
                     console.error('Error:', response.message);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('AJAX Error loading tables:', error);
-                $('#tablesContainer').html('<p>Lỗi khi tải danh sách bàn</p>');
+                $('#tablesContainer').html('<div class="col-12"><p class="text-danger">Lỗi khi tải danh sách bàn</p></div>');
+                $('#tablesSection').show();
             }
         });
     }
@@ -157,68 +372,108 @@
                 console.log('Menu response:', response);
 
                 if (response.success && response.data) {
-                    currentDishes = response.data; // Lưu trữ danh sách món ăn
+                    currentDishes = response.data;
                     var menuHtml = '';
                     $.each(response.data, function(index, dish) {
                         menuHtml += `
-                            <div class="dish-item" style="margin: 10px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
-                                <div class="dish-info">
-                                    <div class="dish-name" style="font-weight: bold; font-size: 16px;">${dish.dishName}</div>
-                                    <div class="dish-price" style="color: #e74c3c; font-weight: bold;">${dish.price.toLocaleString('vi-VN')} VNĐ</div>
-                                </div>
-                                <div class="quantity-control" style="display: flex; align-items: center;">
-                                    <button type="button" class="btn-decrease" onclick="decreaseQuantity(${index})" style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; margin-right: 10px;">-</button>
-                                    <input type="number" id="quantity_${index}" value="0" min="0" max="99"
-                                           class="quantity-input" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
-                                           onchange="validateQuantity(${index})" />
-                                    <button type="button" class="btn-increase" onclick="increaseQuantity(${index})" style="background: #28a745; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; margin-left: 10px;">+</button>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="dish-card">
+                                    <img src="${dish.images || '/images/no-image.jpg'}" alt="${dish.dishName}" class="dish-image">
+                                    <h6 class="mt-2">${dish.dishName}</h6>
+                                    <p class="text-muted">${dish.descriptions || ''}</p>
+                                    <p class="text-success"><strong>${formatCurrency(dish.price)}</strong></p>
+                                    <div class="quantity-controls">
+                                        <button type="button" class="quantity-btn decrease" onclick="changeQuantity(${index}, -1)">-</button>
+                                        <input type="number" class="quantity-input" id="quantity_${index}" value="0" min="0" max="99"
+                                               onchange="updateQuantity(${index}, this.value)" />
+                                        <button type="button" class="quantity-btn increase" onclick="changeQuantity(${index}, 1)">+</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
                     });
                     $('#menuContainer').html(menuHtml);
+                    $('#menuSection').show();
                 } else {
-                    $('#menuContainer').html('<p>Không có món ăn nào trong khu vực này</p>');
+                    $('#menuContainer').html('<div class="col-12"><p class="no-items">Không có món ăn nào trong khu vực này</p></div>');
+                    $('#menuSection').show();
                     console.error('Error:', response.message);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('AJAX Error loading menu:', error);
-                $('#menuContainer').html('<p>Lỗi khi tải danh sách món ăn</p>');
+                $('#menuContainer').html('<div class="col-12"><p class="text-danger">Lỗi khi tải danh sách món ăn</p></div>');
+                $('#menuSection').show();
             }
         });
     }
 
-    // Hàm tăng số lượng
-    function increaseQuantity(index) {
+    function changeQuantity(index, change) {
         var input = document.getElementById('quantity_' + index);
         var currentValue = parseInt(input.value) || 0;
-        if (currentValue < 99) {
-            input.value = currentValue + 1;
-        }
+        var newValue = Math.max(0, Math.min(99, currentValue + change));
+        input.value = newValue;
+        updateCart();
     }
 
-    // Hàm giảm số lượng
-    function decreaseQuantity(index) {
-        var input = document.getElementById('quantity_' + index);
-        var currentValue = parseInt(input.value) || 0;
-        if (currentValue > 0) {
-            input.value = currentValue - 1;
-        }
+    function updateQuantity(index, quantity) {
+        quantity = parseInt(quantity) || 0;
+        if (quantity < 0) quantity = 0;
+        if (quantity > 99) quantity = 99;
+        document.getElementById('quantity_' + index).value = quantity;
+        updateCart();
     }
 
-    // Hàm validate số lượng
-    function validateQuantity(index) {
-        var input = document.getElementById('quantity_' + index);
-        var value = parseInt(input.value) || 0;
-        if (value < 0) {
-            input.value = 0;
-        } else if (value > 99) {
-            input.value = 99;
+    function updateSelectedTablesDisplay() {
+        var selectedTableIds = $('input[name="SelectedTableIds"]:checked');
+        var tablesHtml = '';
+
+        if (selectedTableIds.length > 0) {
+            selectedTableIds.each(function() {
+                var tableId = $(this).val();
+                tablesHtml += `<span class="selected-table-item">Bàn ${tableId}</span>`;
+            });
+        } else {
+            tablesHtml = '<p class="text-muted">Chưa chọn bàn nào</p>';
         }
+
+        $('#selectedTables').html(tablesHtml);
     }
 
-    // Hàm cập nhật selectedDishesContainer trước khi submit
+    function updateCart() {
+        var cartItems = '';
+        var total = 0;
+        var hasItems = false;
+
+        $.each(currentDishes, function(index, dish) {
+            var quantity = parseInt($('#quantity_' + index).val()) || 0;
+            if (quantity > 0) {
+                hasItems = true;
+                var subtotal = dish.price * quantity;
+                total += subtotal;
+
+                cartItems += `
+                    <div class="cart-item">
+                        <div>
+                            <strong>${dish.dishName}</strong><br>
+                            <small>${formatCurrency(dish.price)} x ${quantity}</small>
+                        </div>
+                        <div>
+                            <strong>${formatCurrency(subtotal)}</strong>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (!hasItems) {
+            cartItems = '<p class="text-muted">Chưa có món ăn nào được chọn</p>';
+        }
+
+        $('#cartItems').html(cartItems);
+        $('#totalPrice').text(formatCurrency(total));
+    }
+
     function updateSelectedDishesContainer() {
         var container = $('#selectedDishesContainer');
         container.empty();
@@ -226,7 +481,6 @@
         $.each(currentDishes, function(index, dish) {
             var quantity = parseInt($('#quantity_' + index).val()) || 0;
 
-            // Tạo các input hidden cho mỗi món ăn (kể cả quantity = 0)
             container.append(`
                 <input type="hidden" name="SelectedDishes[${index}].DishId" value="${dish.dishId}" />
                 <input type="hidden" name="SelectedDishes[${index}].DishName" value="${dish.dishName}" />
@@ -237,24 +491,11 @@
 
         console.log('Updated selectedDishesContainer with', currentDishes.length, 'dishes');
     }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(amount);
+    }
 </script>
-
-<style>
-    .table-item:hover {
-        background-color: #f8f9fa;
-    }
-
-    .dish-item:hover {
-        background-color: #f8f9fa;
-    }
-
-    .btn-decrease:hover, .btn-increase:hover {
-        opacity: 0.8;
-    }
-
-    .quantity-input:focus {
-        outline: none;
-        border-color: #007bff;
-        box-shadow: 0 0 5px rgba(0,123,255,0.3);
-    }
-</style>

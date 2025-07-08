@@ -66,7 +66,7 @@ namespace testpayment6._0.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["Success"] = "Thêm khu vực thành công!";
+                    TempData["SuccessRegion"] = "Thêm khu vực thành công!";
                     return RedirectToAction(nameof(Index));
                 }
                 else
@@ -130,7 +130,7 @@ namespace testpayment6._0.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["Success"] = "Cập nhật khu vực thành công!";
+                    TempData["SuccessRegion"] = "Cập nhật khu vực thành công!";
                     return RedirectToAction(nameof(Index));
                 }
                 else
@@ -155,18 +155,18 @@ namespace testpayment6._0.Controllers
                 var response = await _httpClient.DeleteAsync($"{BASE_API_URL}/region/{id}");
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["Success"] = "Xóa khu vực thành công!";
+                    TempData["SuccessRegion"] = "Xóa khu vực thành công!";
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể xóa khu vực. Vui lòng thử lại.";
+                    TempData["ErrorRegion"] = "Không thể xóa khu vực. Vui lòng thử lại.";
                     return RedirectToAction(nameof(Index));
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Lỗi: {ex.Message}";
+                TempData["ErrorRegion"] = $"Lỗi: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
         }

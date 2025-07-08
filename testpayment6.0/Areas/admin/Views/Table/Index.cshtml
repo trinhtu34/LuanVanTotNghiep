@@ -13,17 +13,17 @@
                     <i class="fas fa-plus"></i> Thêm bàn mới
                 </a>
             </div>
-            @if (TempData["Success"] != null)
+            @if (TempData["SuccessTable"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @TempData["Success"]
+                    @TempData["SuccessTable"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
-            @if (TempData["Error"] != null)
+            @if (TempData["ErrorTable"] != null)
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @TempData["Error"]
+                    @TempData["ErrorTable"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
@@ -85,6 +85,13 @@
                                                        title="Chỉnh sửa món ăn">
                                                         <i class="fas fa-edit"></i> Sửa
                                                     </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteModal"
+                                                            data-table-id="@item.TableId"
+                                                            title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -112,4 +119,46 @@
         </div>
     </div>
 </div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa bàn không?</p>
+                <p class="text-muted small">Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+<script>
+    // Xử lý modal xóa
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteForm = document.getElementById('deleteForm');
+
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const tableId = button.getAttribute('data-table-id');
+
+            // Cập nhật action của form
+            deleteForm.action = '@Url.Action("Delete")' + '/' + tableId;
+        });
+    });
+</script>

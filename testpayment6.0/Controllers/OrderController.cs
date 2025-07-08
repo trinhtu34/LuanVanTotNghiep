@@ -75,6 +75,7 @@ namespace testpayment6._0.Controllers
                 return View(new OrderListViewModel { UserId = userId });
             }
         }
+
         private async Task<StatisticsViewModel> GetStatisticsAsync(string userId)
         {
             var statistics = new StatisticsViewModel();

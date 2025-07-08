@@ -265,5 +265,31 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
             return new List<CategoryAdmin>();
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(string id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BASE_API_URL}/menu/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["Success"] = "Xóa món ăn thành công!";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    TempData["Error"] = $"Không thể xóa món ăn. API Error: {errorContent}";
+                    return RedirectToAction("Index");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Lỗi: {ex.Message}";
+                return RedirectToAction("Index");
+            }
+        }
     }
 }

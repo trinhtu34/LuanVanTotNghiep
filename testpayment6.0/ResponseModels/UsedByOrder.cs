@@ -38,7 +38,7 @@
         public int PaidOrders { get; set; }
         public int UnpaidOrders { get; set; }
         public decimal TotalAmount { get; set; }
-        public decimal PaidAmount { get; set; }      // Thêm
-        public decimal UnpaidAmount { get; set; }    // Thêm
+        public decimal PaidAmount { get; set; }     
+        public decimal UnpaidAmount { get; set; }  
     }
 }
