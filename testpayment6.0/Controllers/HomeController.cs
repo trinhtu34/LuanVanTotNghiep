@@ -436,5 +436,106 @@ namespace testpayment6._0.Controllers
 
             return View(model);
         }
+        // Thêm các methods này vào HomeController.cs
+
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            // Kiểm tra đăng nhập
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login");
+            }
+
+            return View(new ChangePasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            // Kiểm tra đăng nhập
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var userId = HttpContext.Session.GetString("UserId");
+
+            try
+            {
+                // Bước 1: Xác thực mật khẩu hiện tại bằng cách gọi API login
+                var loginRequest = new { UserId = userId, UPassword = model.CurrentPassword };
+                var loginJson = JsonSerializer.Serialize(loginRequest);
+                var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
+
+                var loginResponse = await _httpClient.PostAsync($"{BASE_API_URL}/user/login", loginContent);
+
+                if (!loginResponse.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError("CurrentPassword", "Mật khẩu hiện tại không đúng");
+                    return View(model);
+                }
+
+                // Bước 2: Lấy thông tin user hiện tại
+                var userResponse = await _httpClient.GetAsync($"{BASE_API_URL}/user/{userId}");
+                if (!userResponse.IsSuccessStatusCode)
+                {
+                    ViewBag.Error = "Không thể lấy thông tin người dùng. Vui lòng thử lại.";
+                    return View(model);
+                }
+
+                var userContent = await userResponse.Content.ReadAsStringAsync();
+                var userProfile = JsonSerializer.Deserialize<UserProfileResponse>(userContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                // Bước 3: Cập nhật mật khẩu mới
+                var updateRequest = new
+                {
+                    UPassword = model.NewPassword,
+                    CustomerName = userProfile?.CustomerName ?? "",
+                    PhoneNumber = userProfile?.PhoneNumber ?? "",
+                    Email = userProfile?.Email ?? "",
+                    Address = userProfile?.Address ?? ""
+                };
+
+                var updateJson = JsonSerializer.Serialize(updateRequest);
+                var updateContent = new StringContent(updateJson, Encoding.UTF8, "application/json");
+
+                var updateResponse = await _httpClient.PutAsync($"{BASE_API_URL}/user/modify/{userId}", updateContent);
+
+                if (updateResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation($"Password changed successfully for user {userId}");
+                    TempData["Message"] = "Thay đổi mật khẩu thành công!";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    var errorContent = await updateResponse.Content.ReadAsStringAsync();
+                    _logger.LogWarning($"Password change failed for user {userId}: {updateResponse.StatusCode} - {errorContent}");
+                    ViewBag.Error = "Thay đổi mật khẩu không thành công. Vui lòng thử lại.";
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, $"Network error during password change for user {userId}");
+                ViewBag.Error = "Không thể kết nối đến server. Vui lòng thử lại.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unexpected error during password change for user {userId}");
+                ViewBag.Error = "Đã xảy ra lỗi. Vui lòng thử lại.";
+            }
+
+            return View(model);
+        }
     }
 }

@@ -324,7 +324,7 @@
     }
 </style>
 
-<!-- Hero Section -->
+<!-- phần section giao diện chính  -->
 <section class="hero-section">
     <div class="floating-elements">
         <i class="fas fa-utensils floating-icon"></i>
@@ -351,7 +351,7 @@
     </div>
 </section>
 
-<!-- About Section -->
+<!-- phần tìm hiểu thêm về nhà hàng -->
 <section class="about-section section-padding">
     <div class="container">
         <div class="section-title">
@@ -393,14 +393,14 @@
     </div>
 </section>
 
-<!-- Stats Section -->
+<!-- một vài thông số của nhà hàng , chỉ có số món ăn là thật , còn lại fixed cứng -->
 <section class="stats-section section-padding">
     <div class="container">
         <div class="row text-center">
             <div class="col-lg-3 col-md-6">
                 <div class="stat-item">
                     <i class="fas fa-users"></i>
-                    <div class="number">1,234</div>
+                    <div class="number">834</div>
                     <div class="label">Khách Hàng Hài Lòng</div>
                 </div>
             </div>
@@ -408,7 +408,7 @@
             <div class="col-lg-3 col-md-6">
                 <div class="stat-item">
                     <i class="fas fa-utensils"></i>
-                    <div class="number">@ViewBag.MenuCount <p> + </p></div>
+                    <div class="number">@ViewBag.MenuCount</div>
                     <div class="label">Món Ăn Đặc Biệt</div>
                 </div>
             </div>
@@ -432,7 +432,7 @@
     </div>
 </section>
 
-<!-- Menu Preview Section -->
+<!-- phần menu món ăn nổi bật -->
 <section class="menu-preview section-padding">
     <div class="container">
         <div class="section-title">
@@ -469,7 +469,7 @@
             }
             else
             {
-                <!-- Fallback menu items nếu API không hoạt động -->
+                <!-- nếu api không hoạt động thì phần menu đi vào đây -->
                 <div class="col-lg-4 col-md-6">
                     <div class="menu-card">
                         <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Món ăn đặc biệt">
@@ -553,7 +553,7 @@
     </div>
 </section>
 
-<!-- Call to Action Section -->
+<!-- gọi tới action như đặt bàn hay là menu  -->
 <section class="cta-section section-padding">
     <div class="container">
         <div class="row">
@@ -568,9 +568,8 @@
 </section>
 
 <script>
-    // Counter animation
     const counters = document.querySelectorAll('.number');
-    const speed = 200; // The lower the slower
+    const speed = 200; 
 
     counters.forEach(counter => {
         const animate = () => {
@@ -587,10 +586,9 @@
             }
         };
 
-        // Set data-target attribute
         counter.setAttribute('data-target', counter.innerText.replace(/[^\d.-]/g, ''));
 
-        // Start animation when element is in viewport
+        // Start animation when element is in viewport 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {

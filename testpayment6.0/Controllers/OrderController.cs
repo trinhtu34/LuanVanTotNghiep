@@ -32,20 +32,21 @@ namespace testpayment6._0.Controllers
 
             try
             {
+                // Lấy thống kê từ API
+                var statistics = await GetStatisticsAsync(userId);
+
                 // Lấy danh sách đơn hàng từ API
                 var cartResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/{userId}");
 
                 if (cartResponse.IsSuccessStatusCode)
                 {
                     var cartContent = await cartResponse.Content.ReadAsStringAsync();
-
-                    _logger.LogInformation($"Successfully retrieved orders for user {cartContent}");
                     var carts = JsonSerializer.Deserialize<List<CartViewModel>>(cartContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    // Lấy thông tin thanh toán cho từng đơn hàng với logic mới
+                    // Lấy thông tin thanh toán cho từng đơn hàng
                     foreach (var cart in carts)
                     {
                         cart.PaymentStatus = await GetPaymentStatusAsync(cart.CartId);
@@ -54,7 +55,8 @@ namespace testpayment6._0.Controllers
                     var model = new OrderListViewModel
                     {
                         UserId = userId,
-                        Orders = carts ?? new List<CartViewModel>()
+                        Orders = carts ?? new List<CartViewModel>(),
+                        Statistics = statistics
                     };
 
                     return View(model);
@@ -63,7 +65,7 @@ namespace testpayment6._0.Controllers
                 {
                     _logger.LogError($"Failed to get orders for user {userId}: {cartResponse.StatusCode}");
                     ViewBag.Error = "Không thể tải danh sách đơn hàng. Vui lòng thử lại.";
-                    return View(new OrderListViewModel { UserId = userId });
+                    return View(new OrderListViewModel { UserId = userId, Statistics = statistics });
                 }
             }
             catch (Exception ex)
@@ -73,7 +75,67 @@ namespace testpayment6._0.Controllers
                 return View(new OrderListViewModel { UserId = userId });
             }
         }
+        private async Task<StatisticsViewModel> GetStatisticsAsync(string userId)
+        {
+            var statistics = new StatisticsViewModel();
 
+            try
+            {
+                // api 1: Tổng số đơn hàng
+                var totalResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/count/{userId}");
+                if (totalResponse.IsSuccessStatusCode)
+                {
+                    var totalContent = await totalResponse.Content.ReadAsStringAsync();
+                    statistics.TotalOrders = int.Parse(totalContent);
+                }
+
+                // api 2: Số đơn đã thanh toán
+                var paidResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/paid/count/{userId}");
+                if (paidResponse.IsSuccessStatusCode)
+                {
+                    var paidContent = await paidResponse.Content.ReadAsStringAsync();
+                    statistics.PaidOrders = int.Parse(paidContent);
+                }
+
+                // api 3: Số đơn chưa thanh toán
+                var unpaidResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/unpaid/count/{userId}");
+                if (unpaidResponse.IsSuccessStatusCode)
+                {
+                    var unpaidContent = await unpaidResponse.Content.ReadAsStringAsync();
+                    statistics.UnpaidOrders = int.Parse(unpaidContent);
+                }
+
+                // api 4: Tổng tiền tất cả đơn hàng
+                var totalPriceResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/totalprice/{userId}");
+                if (totalPriceResponse.IsSuccessStatusCode)
+                {
+                    var totalPriceContent = await totalPriceResponse.Content.ReadAsStringAsync();
+                    statistics.TotalAmount = decimal.Parse(totalPriceContent);
+                }
+
+                // api 5: Tổng tiền đơn hàng đã thanh toán
+                var paidAmountResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/totalprice/paid/{userId}");
+                if (paidAmountResponse.IsSuccessStatusCode)
+                {
+                    var paidAmountContent = await paidAmountResponse.Content.ReadAsStringAsync();
+                    statistics.PaidAmount = decimal.Parse(paidAmountContent);
+                }
+
+                // api 6: Tổng tiền đơn hàng chưa thanh toán
+                var unpaidAmountResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/totalprice/unpaid/{userId}");
+                if (unpaidAmountResponse.IsSuccessStatusCode)
+                {
+                    var unpaidAmountContent = await unpaidAmountResponse.Content.ReadAsStringAsync();
+                    statistics.UnpaidAmount = decimal.Parse(unpaidAmountContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting statistics for user {userId}");
+            }
+
+            return statistics;
+        }
         // Trang chi tiết đơn hàng
         public async Task<IActionResult> Details(int cartId)
         {
@@ -120,7 +182,6 @@ namespace testpayment6._0.Controllers
                     }) ?? new List<CartDetailViewModel>();
                 }
 
-                // Lấy thông tin thanh toán với logic mới
                 PaymentStatusViewModel paymentStatus = await GetPaymentStatusAsync(cartId);
 
                 var model = new OrderDetailViewModel

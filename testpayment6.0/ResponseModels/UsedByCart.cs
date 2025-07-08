@@ -33,12 +33,6 @@ namespace testpayment6._0.ResponseModels
         public string PaymentMethod { get; set; }
         public decimal? Amount { get; set; }
     }
-    // Model cho trang danh sách đơn hàng
-    public class OrderListViewModel
-    {
-        public string UserId { get; set; }
-        public List<CartViewModel> Orders { get; set; } = new List<CartViewModel>();
-    }
 
     // Model cho chi tiết đơn hàng
     public class OrderDetailViewModel

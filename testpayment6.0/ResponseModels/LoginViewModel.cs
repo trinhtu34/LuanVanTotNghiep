@@ -68,6 +68,7 @@ namespace testpayment6._0.ResponseModels
         public string OrderDate { get; set; } = string.Empty;
     }
 
+    // models của trang danh sách đặt bàn 
     public class OrderTableViewModel
     {
         public long orderTableId { get; set; }
@@ -77,6 +78,8 @@ namespace testpayment6._0.ResponseModels
         public decimal? totalPrice { get; set; }
         public decimal? totalDeposit { get; set; }
         public DateTime orderDate { get; set; }
+
+
     }
     public class OrderTableDetailViewModel
     {
