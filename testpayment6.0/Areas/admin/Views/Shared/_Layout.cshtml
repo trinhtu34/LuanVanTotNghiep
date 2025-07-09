@@ -1,829 +1,868 @@
 ﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>@ViewBag.Title - Admin Quản Lý Nhà Hàng</title>
-
-	<!-- CSS Dependencies -->
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-
-	<style>
-		:root {
-			--primary-color: #2c3e50;
-			--secondary-color: #34495e;
-			--accent-color: #e74c3c;
-			--success-color: #27ae60;
-			--warning-color: #f39c12;
-			--info-color: #3498db;
-			--light-bg: #f8f9fa;
-			--sidebar-width: 280px;
-			--header-height: 70px;
-			--transition: all 0.3s ease;
-		}
-
-		* {
-			margin: 0;
-			padding: 0;
-			box-sizing: border-box;
-		}
-
-		body {
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			background-color: var(--light-bg);
-			line-height: 1.6;
-		}
-
-		/* Header Styles */
-		.admin-header {
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			height: var(--header-height);
-			background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-			color: white;
-			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-			z-index: 1000;
-			display: flex;
-			align-items: center;
-			padding: 0 20px;
-		}
-
-		.header-left {
-			display: flex;
-			align-items: center;
-			gap: 20px;
-		}
-
-		.menu-toggle {
-			background: none;
-			border: none;
-			color: white;
-			font-size: 1.2rem;
-			cursor: pointer;
-			padding: 8px;
-			border-radius: 5px;
-			transition: var(--transition);
-		}
-
-			.menu-toggle:hover {
-				background-color: rgba(255,255,255,0.1);
-			}
-
-		.logo {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			font-size: 1.5rem;
-			font-weight: bold;
-			color: white;
-			text-decoration: none;
-		}
-
-			.logo:hover {
-				color: white;
-			}
-
-		.header-right {
-			margin-left: auto;
-			display: flex;
-			align-items: center;
-			gap: 15px;
-		}
-
-		.notification-icon {
-			position: relative;
-			color: white;
-			text-decoration: none;
-			padding: 8px;
-			border-radius: 50%;
-			transition: var(--transition);
-		}
-
-			.notification-icon:hover {
-				background-color: rgba(255,255,255,0.1);
-				color: white;
-			}
-
-		.notification-badge {
-			position: absolute;
-			top: 2px;
-			right: 2px;
-			background: var(--accent-color);
-			color: white;
-			font-size: 0.7rem;
-			padding: 2px 6px;
-			border-radius: 10px;
-			min-width: 18px;
-			text-align: center;
-		}
-
-		/* User Menu Styles - Improved */
-		.user-menu {
-			position: relative;
-		}
-
-		.user-info {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			cursor: pointer;
-			padding: 8px 12px;
-			border-radius: 25px;
-			transition: var(--transition);
-			background: rgba(255,255,255,0.1);
-			border: 1px solid rgba(255,255,255,0.2);
-		}
-
-			.user-info:hover {
-				background-color: rgba(255,255,255,0.2);
-				transform: translateY(-1px);
-			}
-
-		.user-avatar {
-			width: 35px;
-			height: 35px;
-			border-radius: 50%;
-			object-fit: cover;
-			border: 2px solid rgba(255,255,255,0.3);
-			background: var(--accent-color);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-weight: bold;
-			font-size: 0.9rem;
-		}
-
-		.user-name {
-			font-weight: 500;
-			max-width: 120px;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		.user-dropdown {
-			position: absolute;
-			top: 100%;
-			right: 0;
-			background: white;
-			border-radius: 10px;
-			box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-			min-width: 200px;
-			opacity: 0;
-			visibility: hidden;
-			transform: translateY(-10px);
-			transition: var(--transition);
-			z-index: 1001;
-			margin-top: 5px;
-		}
-
-			.user-menu:hover .user-dropdown,
-			.user-dropdown:hover {
-				opacity: 1;
-				visibility: visible;
-				transform: translateY(0);
-			}
-
-		.dropdown-header {
-			padding: 15px 20px 10px;
-			border-bottom: 1px solid #eee;
-		}
-
-		.dropdown-user-name {
-			font-weight: 600;
-			color: var(--primary-color);
-			margin-bottom: 5px;
-		}
-
-		.dropdown-user-role {
-			font-size: 0.85rem;
-			color: #666;
-		}
-
-		.dropdown-menu-items {
-			padding: 10px 0;
-		}
-
-		.dropdown-item {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-			padding: 12px 20px;
-			color: var(--secondary-color);
-			text-decoration: none;
-			transition: var(--transition);
-			border: none;
-			background: none;
-			width: 100%;
-			text-align: left;
-			cursor: pointer;
-		}
-
-			.dropdown-item:hover {
-				background-color: var(--light-bg);
-				color: var(--primary-color);
-			}
-
-			.dropdown-item i {
-				width: 16px;
-				text-align: center;
-			}
-
-		.dropdown-divider {
-			height: 1px;
-			background: #eee;
-			margin: 5px 0;
-		}
-
-		.logout-btn {
-			color: var(--accent-color) !important;
-		}
-
-			.logout-btn:hover {
-				background-color: rgba(231, 76, 60, 0.1) !important;
-				color: var(--accent-color) !important;
-			}
-
-		/* Guest Login Button */
-		.guest-login {
-			background: rgba(255,255,255,0.1);
-			color: white;
-			padding: 8px 16px;
-			border-radius: 20px;
-			text-decoration: none;
-			font-weight: 500;
-			transition: var(--transition);
-			border: 1px solid rgba(255,255,255,0.2);
-		}
-
-			.guest-login:hover {
-				background: rgba(255,255,255,0.2);
-				color: white;
-				transform: translateY(-1px);
-			}
-
-		/* Sidebar Styles */
-		.sidebar {
-			position: fixed;
-			top: var(--header-height);
-			left: 0;
-			width: var(--sidebar-width);
-			height: calc(100vh - var(--header-height));
-			background: white;
-			box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-			overflow-y: auto;
-			transition: var(--transition);
-			z-index: 999;
-		}
-
-			.sidebar.collapsed {
-				transform: translateX(-100%);
-			}
-
-		.sidebar-menu {
-			list-style: none;
-			padding: 20px 0;
-		}
-
-		.menu-item {
-			margin: 5px 0;
-		}
-
-		.menu-link {
-			display: flex;
-			align-items: center;
-			gap: 15px;
-			padding: 12px 25px;
-			color: var(--secondary-color);
-			text-decoration: none;
-			transition: var(--transition);
-			border-left: 3px solid transparent;
-		}
-
-			.menu-link:hover,
-			.menu-link.active {
-				background-color: var(--light-bg);
-				color: var(--primary-color);
-				border-left-color: var(--accent-color);
-			}
-
-		.menu-icon {
-			width: 20px;
-			text-align: center;
-			font-size: 1.1rem;
-		}
-
-		.menu-text {
-			font-weight: 500;
-		}
-
-		.submenu {
-			list-style: none;
-			background-color: #f8f9fa;
-			border-left: 2px solid var(--accent-color);
-			margin-left: 20px;
-		}
-
-			.submenu .menu-link {
-				padding: 8px 25px 8px 50px;
-				font-size: 0.9rem;
-			}
-
-		/* Main Content */
-		.main-content {
-			margin-left: var(--sidebar-width);
-			margin-top: var(--header-height);
-			padding: 30px;
-			min-height: calc(100vh - var(--header-height));
-			transition: var(--transition);
-		}
-
-			.main-content.expanded {
-				margin-left: 0;
-			}
-
-		.page-header {
-			background: white;
-			padding: 20px 30px;
-			border-radius: 10px;
-			box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-			margin-bottom: 30px;
-		}
-
-		.page-title {
-			font-size: 1.8rem;
-			font-weight: 600;
-			color: var(--primary-color);
-			margin-bottom: 5px;
-		}
-
-		.breadcrumb {
-			background: none;
-			padding: 0;
-			margin: 0;
-		}
-
-		.breadcrumb-item a {
-			color: var(--info-color);
-			text-decoration: none;
-		}
-
-		/* Content Area */
-		.content-area {
-			background: white;
-			border-radius: 10px;
-			box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-			padding: 30px;
-			min-height: 400px;
-		}
-
-		/* Footer */
-		.admin-footer {
-			margin-left: var(--sidebar-width);
-			background: white;
-			padding: 20px 30px;
-			text-align: center;
-			color: #666;
-			border-top: 1px solid #eee;
-			transition: var(--transition);
-		}
-
-			.admin-footer.expanded {
-				margin-left: 0;
-			}
-
-		/* Loading Animation */
-		.loading {
-			display: inline-block;
-			width: 20px;
-			height: 20px;
-			border: 2px solid #f3f3f3;
-			border-radius: 50%;
-			border-top-color: var(--accent-color);
-			animation: spin 1s ease-in-out infinite;
-		}
-
-		@@keyframes spin {
-			to {
-				transform: rotate(360deg);
-			}
-		}
-
-		/* Responsive Design */
-		@@media (max-width: 768px) {
-			.sidebar {
-				transform: translateX(-100%);
-			}
-
-				.sidebar.show {
-					transform: translateX(0);
-				}
-
-			.main-content,
-			.admin-footer {
-				margin-left: 0;
-			}
-
-			.header-right .user-name {
-				display: none;
-			}
-		}
-
-		/* Overlay for mobile */
-		.sidebar-overlay {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: rgba(0,0,0,0.5);
-			z-index: 998;
-			display: none;
-		}
-
-			.sidebar-overlay.show {
-				display: block;
-			}
-
-		/* Utility Classes */
-		.badge-restaurant {
-			background: var(--accent-color);
-			color: white;
-			padding: 4px 8px;
-			border-radius: 12px;
-			font-size: 0.75rem;
-		}
-
-		.btn-restaurant {
-			background: var(--accent-color);
-			color: white;
-			border: none;
-			padding: 10px 20px;
-			border-radius: 5px;
-			font-weight: 500;
-			transition: var(--transition);
-		}
-
-			.btn-restaurant:hover {
-				background: #c0392b;
-				color: white;
-			}
-
-		/* Logout Confirmation Modal */
-		.logout-modal .modal-content {
-			border: none;
-			border-radius: 15px;
-			box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-		}
-
-		.logout-modal .modal-header {
-			background: linear-gradient(135deg, var(--accent-color), #c0392b);
-			color: white;
-			border-radius: 15px 15px 0 0;
-			border: none;
-		}
-
-		.logout-modal .btn-close {
-			filter: invert(1);
-		}
-	</style>
-
-	@RenderSection("Styles", required: false)
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewBag.Title - Admin Quản Lý Nhà Hàng</title>
+
+    <!-- CSS Dependencies -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+            --light-bg: #f8f9fa;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .admin-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            transition: var(--transition);
+        }
+
+            .menu-toggle:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+            .logo:hover {
+                color: white;
+            }
+
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            position: relative;
+            color: white;
+            text-decoration: none;
+            padding: 8px;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+            .notification-icon:hover {
+                background-color: rgba(255,255,255,0.1);
+                color: white;
+            }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--accent-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* User Menu Styles - Improved */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 25px;
+            transition: var(--transition);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+            .user-info:hover {
+                background-color: rgba(255,255,255,0.2);
+                transform: translateY(-1px);
+            }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .user-name {
+            font-weight: 500;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: var(--transition);
+            z-index: 1001;
+            margin-top: 5px;
+        }
+
+            .user-menu:hover .user-dropdown,
+            .user-dropdown:hover {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+        .dropdown-header {
+            padding: 15px 20px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-user-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .dropdown-user-role {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .dropdown-menu-items {
+            padding: 10px 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+            .dropdown-item:hover {
+                background-color: var(--light-bg);
+                color: var(--primary-color);
+            }
+
+            .dropdown-item i {
+                width: 16px;
+                text-align: center;
+            }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #eee;
+            margin: 5px 0;
+        }
+
+        .logout-btn {
+            color: var(--accent-color) !important;
+        }
+
+            .logout-btn:hover {
+                background-color: rgba(231, 76, 60, 0.1) !important;
+                color: var(--accent-color) !important;
+            }
+
+        /* Guest Login Button */
+        .guest-login {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+            .guest-login:hover {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            transition: var(--transition);
+            z-index: 999;
+        }
+
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            margin: 5px 0;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 25px;
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+            .menu-link:hover,
+            .menu-link.active {
+                background-color: var(--light-bg);
+                color: var(--primary-color);
+                border-left-color: var(--accent-color);
+            }
+
+        .menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .menu-text {
+            font-weight: 500;
+        }
+
+        .submenu {
+            list-style: none;
+            background-color: #f8f9fa;
+            border-left: 2px solid var(--accent-color);
+            margin-left: 20px;
+        }
+
+            .submenu .menu-link {
+                padding: 8px 25px 8px 50px;
+                font-size: 0.9rem;
+            }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 30px;
+            min-height: calc(100vh - var(--header-height));
+            transition: var(--transition);
+        }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+        .page-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .breadcrumb {
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .breadcrumb-item a {
+            color: var(--info-color);
+            text-decoration: none;
+        }
+
+        /* Content Area */
+        .content-area {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        /* Footer */
+        .admin-footer {
+            margin-left: var(--sidebar-width);
+            background: white;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #eee;
+            transition: var(--transition);
+        }
+
+            .admin-footer.expanded {
+                margin-left: 0;
+            }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+                .sidebar.show {
+                    transform: translateX(0);
+                }
+
+            .main-content,
+            .admin-footer {
+                margin-left: 0;
+            }
+
+            .header-right .user-name {
+                display: none;
+            }
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+            display: none;
+        }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+        /* Utility Classes */
+        .badge-restaurant {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .btn-restaurant {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+            .btn-restaurant:hover {
+                background: #c0392b;
+                color: white;
+            }
+
+        /* Logout Confirmation Modal */
+        .logout-modal .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .logout-modal .modal-header {
+            background: linear-gradient(135deg, var(--accent-color), #c0392b);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            border: none;
+        }
+
+        .logout-modal .btn-close {
+            filter: invert(1);
+        }
+    </style>
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
-	@Html.AntiForgeryToken()
+    @Html.AntiForgeryToken()
 
-	<!-- Header -->
-	<header class="admin-header">
-		<div class="header-left">
-			<button class="menu-toggle" id="menuToggle">
-				<i class="fas fa-bars"></i>
-			</button>
-			<a href="/" class="logo">
-				<i class="fas fa-utensils"></i>
-				<span>Restaurant Admin</span>
-			</a>
-		</div>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="/" class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>Restaurant Admin</span>
+            </a>
+        </div>
 
-		<div class="header-right">
-			<a href="#" class="notification-icon">
-				<i class="fas fa-bell"></i>
-				<span class="notification-badge">3</span>
-			</a>
+        <div class="header-right">
+            <a href="#" class="notification-icon">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </a>
 
-			<a href="#" class="notification-icon">
-				<i class="fas fa-envelope"></i>
-				<span class="notification-badge">5</span>
-			</a>
+            <a href="#" class="notification-icon">
+                <i class="fas fa-envelope"></i>
+                <span class="notification-badge">5</span>
+            </a>
 
-			@if (Context.Session.GetString("UserId") != null)
-			{
-				<div class="user-menu">
-					<div class="user-info">
-						<div class="user-avatar">
-							@Context.Session.GetString("UserId").Substring(0, 1).ToUpper()
-						</div>
-						<span class="user-name">@Context.Session.GetString("UserId")</span>
-						<i class="fas fa-chevron-down"></i>
-					</div>
+            @if (Context.Session.GetString("UserId") != null)
+            {
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            @Context.Session.GetString("UserId").Substring(0, 1).ToUpper()
+                        </div>
+                        <span class="user-name">@Context.Session.GetString("UserId")</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
 
-					<div class="user-dropdown">
-						<div class="dropdown-header">
-							<div class="dropdown-user-name">@Context.Session.GetString("UserId")</div>
-							<div class="dropdown-user-role">Quản trị viên</div>
-						</div>
+                    <div class="user-dropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-name">@Context.Session.GetString("UserId")</div>
+                            <div class="dropdown-user-role">Quản trị viên</div>
+                        </div>
 
-						<div class="dropdown-menu-items">
-							<a href="/admin/profile" class="dropdown-item">
-								<i class="fas fa-user"></i>
-								<span>Thông tin cá nhân</span>
-							</a>
-							<a href="/admin/settings" class="dropdown-item">
-								<i class="fas fa-cog"></i>
-								<span>Cài đặt</span>
-							</a>
-							<div class="dropdown-divider"></div>
-							<button type="button" class="dropdown-item logout-btn" data-bs-toggle="modal" data-bs-target="#logoutModal">
-								<i class="fas fa-sign-out-alt"></i>
-								<span>Đăng xuất</span>
-							</button>
-						</div>
-					</div>
-				</div>
-			}
-			else
-			{
-				<a href="/admin/homeadmin/indexadminlogin" class="guest-login">
-					<i class="fas fa-sign-in-alt me-1"></i>
-					Đăng nhập
-				</a>
-			}
-		</div>
-	</header>
+                        <div class="dropdown-menu-items">
+                            <a href="/admin/profile" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>Thông tin cá nhân</span>
+                            </a>
+                            <a href="/admin/settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Cài đặt</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item logout-btn" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <a href="/admin/homeadmin/indexadminlogin" class="guest-login">
+                    <i class="fas fa-sign-in-alt me-1"></i>
+                    Đăng nhập
+                </a>
+            }
+        </div>
+    </header>
 
-	<!-- Logout Confirmation Modal -->
-	<div class="modal fade logout-modal" id="logoutModal" tabindex="-1">
-		<div class="modal-dialog modal-dialog-centered">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">
-						<i class="fas fa-sign-out-alt me-2"></i>
-						Xác nhận đăng xuất
-					</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-				</div>
-				<div class="modal-body text-center py-4">
-					<div class="mb-3">
-						<i class="fas fa-question-circle text-warning" style="font-size: 3rem;"></i>
-					</div>
-					<h6>Bạn có chắc chắn muốn đăng xuất?</h6>
-					<p class="text-muted mb-0">Phiên làm việc của bạn sẽ kết thúc và bạn cần đăng nhập lại để tiếp tục.</p>
-				</div>
-				<div class="modal-footer justify-content-center">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-						<i class="fas fa-times me-1"></i>
-						Hủy bỏ
-					</button>
-					<form asp-area="admin" asp-controller="HomeAdmin" asp-action="Logout" method="post" style="display: inline;" id="logoutForm">
-						<button type="submit" class="btn btn-danger" id="confirmLogoutBtn">
-							<i class="fas fa-sign-out-alt me-1"></i>
-							Đăng xuất
-						</button>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade logout-modal" id="logoutModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Xác nhận đăng xuất
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-question-circle text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h6>Bạn có chắc chắn muốn đăng xuất?</h6>
+                    <p class="text-muted mb-0">Phiên làm việc của bạn sẽ kết thúc và bạn cần đăng nhập lại để tiếp tục.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Hủy bỏ
+                    </button>
+                    <form asp-area="admin" asp-controller="HomeAdmin" asp-action="Logout" method="post" style="display: inline;" id="logoutForm">
+                        <button type="submit" class="btn btn-danger" id="confirmLogoutBtn">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            Đăng xuất
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-	<!-- Sidebar -->
-	<aside class="sidebar" id="sidebar">
-		<ul class="sidebar-menu">
-			<li class="menu-item">
-				<a href="/admin/region/index" class="menu-link">
-					<i class="fas fa-map-marker-alt menu-icon"></i>
-					<span class="menu-text">Quản lý khu vực</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/category/index" class="menu-link">
-					<i class="fas fa-map-marker-alt menu-icon"></i>
-					<span class="menu-text">Quản lý loại món ăn</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/menu/index" class="menu-link">
-					<i class="fas fa-map-marker-alt menu-icon"></i>
-					<span class="menu-text">Quản lý thực đơn</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/table/index" class="menu-link">
-					<i class="fas fa-map-marker-alt menu-icon"></i>
-					<span class="menu-text">Quản lý bàn</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/Booking/CreateBooking" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Đặt bàn cho khách hàng</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/Order/CreateOrder" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Đặt món ăn cho khách hàng</span>
-				</a>
-			<li class="menu-item">
-				<a href="/admin/Order/CreateOrder" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Xem danh sách món ăn </span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/OrdertableManage/Index" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Xem các đơn đặt bàn </span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/Order/CreateOrder" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Thanh toán đơn đặt bàn cho khách</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/Order/CreateOrder" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Thanh toán đơn đặt món ăn cho khách</span>
-				</a>
-			</li>
-			<li class="menu-item">
-				<a href="/admin/Order/CreateOrder" class="menu-link">
-					<i class="fas fa-chart-bar menu-icon"></i>
-					<span class="menu-text">Xem lịch sử thanh toán online của hệ thống</span>
-				</a>
-			</li>
-		</ul>
-	</aside>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
 
-	<!-- Sidebar Overlay for Mobile -->
-	<div class="sidebar-overlay" id="sidebarOverlay"></div>
+            <!-- Quản lý danh mục -->
+            <li class="menu-header">Quản lý danh mục</li>
 
-	<!-- Main Content -->
-	<main class="main-content" id="mainContent">
-		<!-- Content Area -->
-		<div class="content-area">
-			@RenderBody()
-		</div>
-	</main>
+            <li class="menu-item">
+                <a href="/admin/region/index" class="menu-link">
+                    <i class="fas fa-map-marked-alt menu-icon"></i>
+                    <span class="menu-text">Khu vực</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/category/index" class="menu-link">
+                    <i class="fas fa-list-alt menu-icon"></i>
+                    <span class="menu-text">Loại món ăn</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/menu/index" class="menu-link">
+                    <i class="fas fa-utensils menu-icon"></i>
+                    <span class="menu-text">Thực đơn</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/table/index" class="menu-link">
+                    <i class="fas fa-chair menu-icon"></i>
+                    <span class="menu-text">Bàn ăn</span>
+                </a>
+            </li>
 
-	<!-- Footer -->
-	<footer class="admin-footer" id="adminFooter">
-		<p>&copy; 2025 Restaurant Management System. Phát triển bởi <strong>Yummy. Restaurant</strong></p>
-	</footer>
+            <!-- Đặt dịch vụ -->
+            <li class="menu-header">Đặt dịch vụ</li>
 
-	<!-- JavaScript -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+            <li class="menu-item">
+                <a href="/admin/Booking/CreateBooking" class="menu-link">
+                    <i class="fas fa-calendar-check menu-icon"></i>
+                    <span class="menu-text">Đặt bàn cho khách</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/Order/CreateOrder" class="menu-link">
+                    <i class="fas fa-concierge-bell menu-icon"></i>
+                    <span class="menu-text">Đặt món cho khách</span>
+                </a>
+            </li>
 
-	<script>
+            <!-- Quản lý đơn hàng -->
+            <li class="menu-header">Quản lý đơn hàng</li>
 
-		// Sidebar Toggle Functionality
-		const menuToggle = document.getElementById('menuToggle');
-		const sidebar = document.getElementById('sidebar');
-		const mainContent = document.getElementById('mainContent');
-		const adminFooter = document.getElementById('adminFooter');
-		const sidebarOverlay = document.getElementById('sidebarOverlay');
+            <li class="menu-item">
+                <a href="/admin/CartManage/Index" class="menu-link">
+                    <i class="fas fa-clipboard-list menu-icon"></i>
+                    <span class="menu-text">Danh sách đơn món</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/OrdertableManage/Index" class="menu-link">
+                    <i class="fas fa-clipboard-check menu-icon"></i>
+                    <span class="menu-text">Danh sách đơn bàn</span>
+                </a>
+            </li>
 
-		function toggleSidebar() {
-			const isDesktop = window.innerWidth > 768;
+            <!-- Thanh toán -->
+            <li class="menu-header">Thanh toán</li>
 
-			if (isDesktop) {
-				sidebar.classList.toggle('collapsed');
-				mainContent.classList.toggle('expanded');
-				adminFooter.classList.toggle('expanded');
-			} else {
-				sidebar.classList.toggle('show');
-				sidebarOverlay.classList.toggle('show');
-			}
-		}
+            <li class="menu-item">
+                <a href="/admin/OrdertablePayment/Index" class="menu-link">
+                    <i class="fas fa-cash-register menu-icon"></i>
+                    <span class="menu-text">Thanh toán đơn bàn</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/CartPayment/Index" class="menu-link">
+                    <i class="fas fa-money-bill-wave menu-icon"></i>
+                    <span class="menu-text">Thanh toán đơn món</span>
+                </a>
+            </li>
 
-		menuToggle.addEventListener('click', toggleSidebar);
-		sidebarOverlay.addEventListener('click', toggleSidebar);
+            <!-- Lịch sử giao dịch -->
+            <li class="menu-header">Lịch sử giao dịch</li>
 
-		// Handle window resize
-		window.addEventListener('resize', function() {
-			const isDesktop = window.innerWidth > 768;
+            <li class="menu-item">
+                <a href="/admin/ShowOrdertablePaymentHistory/Index" class="menu-link">
+                    <i class="fas fa-history menu-icon"></i>
+                    <span class="menu-text">Lịch sử thanh toán bàn</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/ShowCartPaymentHistory/Index" class="menu-link">
+                    <i class="fas fa-history menu-icon"></i>
+                    <span class="menu-text">Lịch sử thanh toán món</span>
+                </a>
+            </li>
 
-			if (isDesktop) {
-				sidebar.classList.remove('show');
-				sidebarOverlay.classList.remove('show');
-			} else {
-				sidebar.classList.remove('collapsed');
-				mainContent.classList.remove('expanded');
-				adminFooter.classList.remove('expanded');
-			}
-		});
+            <!-- Liên hệ -->
+            <li class="menu-header">Khác</li>
 
-		// Active menu highlighting
-		function setActiveMenu() {
-			const currentPath = window.location.pathname;
-			const menuLinks = document.querySelectorAll('.menu-link');
+            <li class="menu-item">
+                <a href="/admin/Contact/Index" class="menu-link">
+                    <i class="fas fa-envelope menu-icon"></i>
+                    <span class="menu-text">Liên hệ khách hàng</span>
+                </a>
+            </li>
 
-			menuLinks.forEach(link => {
-				link.classList.remove('active');
-				if (link.getAttribute('href') === currentPath) {
-					link.classList.add('active');
-				}
-			});
-		}
+        </ul>
 
-		// Initialize
-		document.addEventListener('DOMContentLoaded', function() {
-			setActiveMenu();
-		});
+    </aside>
 
-		// Notification handling
-		function showNotification(message, type = 'info') {
-			const notification = document.createElement('div');
-			notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-			notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
-			notification.innerHTML = `
-				${message}
-				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-			`;
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-			document.body.appendChild(notification);
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Content Area -->
+        <div class="content-area">
+            @RenderBody()
+        </div>
+    </main>
 
-			setTimeout(() => {
-				notification.remove();
-			}, 5000);
-		}
+    <!-- Footer -->
+    <footer class="admin-footer" id="adminFooter">
+        <p>&copy; 2025 Restaurant Management System. Phát triển bởi <strong>Yummy. Restaurant</strong></p>
+    </footer>
 
-		function confirmLogout() {
-			const logoutModal = document.getElementById('logoutModal');
-			const modal = new bootstrap.Modal(logoutModal);
-			modal.show();
-		}
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
-		document.addEventListener('DOMContentLoaded', function() {
-			const logoutForm = document.getElementById('logoutForm');
-			const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+    <script>
 
-			if (confirmLogoutBtn) {
-				confirmLogoutBtn.addEventListener('click', function(e) {
-					e.preventDefault();
+        // Sidebar Toggle Functionality
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const adminFooter = document.getElementById('adminFooter');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-					confirmLogoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang đăng xuất...';
-					confirmLogoutBtn.disabled = true;
+        function toggleSidebar() {
+            const isDesktop = window.innerWidth > 768;
 
-					setTimeout(function() {
-						fetch(logoutForm.action, {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/x-www-form-urlencoded',
-								'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-							}
-						}).then(response => {
-							if (response.ok) {
-								window.location.href = '/admin/homeadmin/indexadminlogin';
-							} else {
-								console.error('Logout failed');
-								location.reload();
-							}
-						}).catch(error => {
-							console.error('Error:', error);
-							window.location.href = '/admin/homeadmin/indexadminlogin';
-						});
-					}, 500);
-				});
-			}
-		});
+            if (isDesktop) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                adminFooter.classList.toggle('expanded');
+            } else {
+                sidebar.classList.toggle('show');
+                sidebarOverlay.classList.toggle('show');
+            }
+        }
 
-		// Auto-hide dropdown when clicking outside
-		document.addEventListener('click', function(event) {
-			const userMenu = document.querySelector('.user-menu');
-			if (userMenu && !userMenu.contains(event.target)) {
-				// Optional: Add active state management if needed
-			}
-		});
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
 
-		// Export for use in other scripts
-		window.RestaurantAdmin = {
-			showNotification: showNotification,
-			toggleSidebar: toggleSidebar,
-			confirmLogout: confirmLogout
-		};
-		window.addEventListener("pageshow", function (event) {
-			if (event.persisted) {
-				// Nếu trang được load lại từ cache, reload lại để kiểm tra session
-				window.location.reload();
-			}
-		});
-	</script>
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const isDesktop = window.innerWidth > 768;
 
-	@RenderSection("Scripts", required: false)
+            if (isDesktop) {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                adminFooter.classList.remove('expanded');
+            }
+        });
+
+        // Active menu highlighting
+        function setActiveMenu() {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('.menu-link');
+
+            menuLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveMenu();
+        });
+
+        // Notification handling
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        function confirmLogout() {
+            const logoutModal = document.getElementById('logoutModal');
+            const modal = new bootstrap.Modal(logoutModal);
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutForm = document.getElementById('logoutForm');
+            const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+
+            if (confirmLogoutBtn) {
+                confirmLogoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    confirmLogoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang đăng xuất...';
+                    confirmLogoutBtn.disabled = true;
+
+                    setTimeout(function() {
+                        fetch(logoutForm.action, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                            }
+                        }).then(response => {
+                            if (response.ok) {
+                                window.location.href = '/admin/homeadmin/indexadminlogin';
+                            } else {
+                                console.error('Logout failed');
+                                location.reload();
+                            }
+                        }).catch(error => {
+                            console.error('Error:', error);
+                            window.location.href = '/admin/homeadmin/indexadminlogin';
+                        });
+                    }, 500);
+                });
+            }
+        });
+
+        // Auto-hide dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu && !userMenu.contains(event.target)) {
+                // Optional: Add active state management if needed
+            }
+        });
+
+        // Export for use in other scripts
+        window.RestaurantAdmin = {
+            showNotification: showNotification,
+            toggleSidebar: toggleSidebar,
+            confirmLogout: confirmLogout
+        };
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted) {
+                // Nếu trang được load lại từ cache, reload lại để kiểm tra session
+                window.location.reload();
+            }
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -128,7 +128,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var totalAmount = selectedDishes.Sum(d => d.Price * d.Quantity);
                 var customerInfo = string.IsNullOrEmpty(model.CustomerName) ? "Khách hàng" : model.CustomerName;
 
-                TempData["SuccessOrder"] = $"Đặt món thành công cho {customerInfo}! Tổng tiền: {totalAmount:N0} VNĐ";
+                TempData["SuccessOrder"] = $"Đặt món thành công cho {customerInfo}! Tổng tiền: {totalAmount:N0} VNĐ . Mã đơn đặt món ăn : {cartInfo.CartId.ToString()}";
                 return RedirectToAction("CreateOrder");
             }
             catch (Exception ex)

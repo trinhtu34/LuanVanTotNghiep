@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <Folder Include="Areas\admin\Data\" />
+    <Folder Include="Areas\admin\Views\View_Contact\" />
     <Folder Include="wwwroot\admin\" />
   </ItemGroup>
 

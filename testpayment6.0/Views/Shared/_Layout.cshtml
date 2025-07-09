@@ -494,12 +494,6 @@
                                 <i class="fas fa-list"></i> Đơn Của Tôi
                             </a>
                         </li>
-                        @* <li class="nav-item">
-                            <a class="nav-link @(currentController == "Cart" && currentAction == "Index" ? "active" : "")"
-                               asp-controller="Cart" asp-action="Index">
-                                <i class="fas fa-list"></i> Giỏ hàng
-                            </a>
-                        </li> *@
                         <li class="nav-item">
                             <a class="nav-link @(currentController == "Menu" && currentAction == "Index" ? "active" : "")"
                                asp-controller="Menu" asp-action="Index">Menu</a>
@@ -524,17 +518,6 @@
                                 </a>
                             </li>
                         }
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                More
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Services" asp-action="Index">Services</a></li>
-                                <li><a class="dropdown-item" asp-controller="Blog" asp-action="Index">Blog</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" asp-controller="Testimonials" asp-action="Index">Testimonials</a></li>
-                            </ul>
-                        </li>
                         <li class="nav-item">
                             <a class="nav-link @(currentController == "Contact" && currentAction == "Index" ? "active" : "")"
                                asp-controller="Contact" asp-action="Index">Contact</a>
@@ -547,12 +530,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     Xin chào, @userId
                                 </a>
-                                <ul class="dropdown-menu">
-                                    @* <li>
-                                        <a class="dropdown-item" href="@Url.Action("Index", "Order")">
-                                            <i class="fas fa-shopping-cart"></i> Đơn hàng của tôi
-                                        </a>
-                                    </li> *@            
+                                <ul class="dropdown-menu">       
                                     <li>
                                         <a class="dropdown-item" asp-action="Profile" asp-controller="Home">
                                             <i class="fas fa-user-edit"></i> Thông tin cá nhân

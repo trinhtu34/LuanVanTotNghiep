@@ -1,0 +1,622 @@
+﻿<!-- Areas/Admin/Views/CartManage/Index.cshtml -->
+@model testpayment6._0.Areas.admin.Models.CartViewModel_manage
+@{
+    ViewBag.Title = "Quản lý đơn đặt món ăn";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .cart-management {
+        padding: 20px;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-revenue .stat-number {
+        color: #28a745;
+    }
+
+    .stat-total .stat-number {
+        color: #007bff;
+    }
+
+    .stat-paid .stat-number {
+        color: #28a745;
+    }
+
+    .stat-unpaid .stat-number {
+        color: #dc3545;
+    }
+
+    .stat-cancelled .stat-number {
+        color: #6c757d;
+    }
+
+    .stat-finished .stat-number {
+        color: #17a2b8;
+    }
+    .stat-paid-unfinished .stat-number {
+        color: #20c997;
+    }
+
+    .stat-paid-finished .stat-number {
+        color: #6f42c1;
+    }
+
+    .stat-unpaid-revenue .stat-number {
+        color: #fd7e14;
+    }
+
+    .stat-paid-unfinished-revenue .stat-number {
+        color: #17a2b8;
+    }
+
+    .stat-paid-finished-revenue .stat-number {
+        color: #28a745;
+    }
+    .filter-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .filter-title {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 12px 30px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-decoration: none;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+    .orders-section {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .orders-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f3f4;
+    }
+
+    .orders-title {
+        font-size: 1.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .orders-count {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .orders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+    }
+
+    .order-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .order-id {
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .order-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-paid {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-unpaid {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-cancelled {
+        background: #f1f3f4;
+        color: #5f6368;
+    }
+
+    .status-finished {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .order-info {
+        margin-bottom: 15px;
+    }
+
+    .order-info-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        color: #666;
+    }
+
+    .order-info-label {
+        font-weight: 500;
+    }
+
+    .order-info-value {
+        color: #333;
+    }
+
+    .order-price {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #e74c3c;
+        text-align: right;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-action {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-details {
+        background: #007bff;
+        color: white;
+    }
+
+        .btn-details:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+
+    .btn-cancel {
+        background: #dc3545;
+        color: white;
+    }
+
+        .btn-cancel:hover {
+            background: #c82333;
+        }
+
+    .btn-finish {
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-finish:hover {
+            background: #218838;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+    }
+
+    @@media (max-width: 768px) {
+        .cart-management {
+            padding: 10px;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .orders-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-buttons {
+            flex-direction: column;
+        }
+
+        .orders-header {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .order-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="cart-management">
+    <div class="page-header">
+        <h1>🍽️ Quản lý đơn đặt món ăn</h1>
+        <p>Theo dõi và quản lý các đơn đặt món mang về</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            @ViewBag.ErrorMessage
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-total">
+            <div class="stat-number">@Model.TotalOrders</div>
+            <div class="stat-label">Tổng đơn hàng</div>
+        </div>
+        <div class="stat-card stat-revenue">
+            <div class="stat-number">@Model.TotalRevenue.ToString("N0") ₫</div>
+            <div class="stat-label">Tổng doanh thu</div>
+        </div>
+        @* ------------------------------ *@
+        <div class="stat-card stat-paid">
+            <div class="stat-number">@Model.PaidOrders</div>
+            <div class="stat-label">Đã thanh toán và chưa hủy</div>
+        </div>
+        <div class="stat-card stat-finished">
+            <div class="stat-number">@Model.FinishedOrders</div>
+            <div class="stat-label">Đã giao hàng</div>
+        </div>
+        @* ------------------------------ *@
+        <div class="stat-card stat-cancelled">
+            <div class="stat-number">@Model.CancelledOrders</div>
+            <div class="stat-label">Đã hủy</div>
+        </div>
+        @* ------------------------ *@
+        <div class="stat-card stat-unpaid">
+            <div class="stat-number">@Model.UnpaidOrders</div>
+            <div class="stat-label">Đơn chưa thanh toán</div>
+        </div>
+        <div class="stat-card stat-unpaid-revenue">
+            <div class="stat-number">@Model.UnpaidRevenue.ToString("N0") ₫</div>
+            <div class="stat-label">Doanh thu chưa thanh toán</div>
+        </div>
+        @* ---------------------------- đã thanh toán , chưa giao hàng , chưa hủy *@
+        <div class="stat-card stat-paid-unfinished">
+            <div class="stat-number">@Model.PaidUnfinishedOrders</div>
+            <div class="stat-label">Đơn đã thanh toán chưa giao hàng</div>
+        </div>
+        <div class="stat-card stat-paid-unfinished-revenue">
+            <div class="stat-number">@Model.PaidUnfinishedRevenue.ToString("N0") ₫</div>
+            <div class="stat-label">Doanh thu đã TT chưa giao hàng</div>
+        </div>
+        @* --------------------------------- *@
+        <div class="stat-card stat-paid-finished">
+            <div class="stat-number">@Model.PaidFinishedOrders</div>
+            <div class="stat-label">Đơn đã thanh toán và giao hàng</div>
+        </div>
+        <div class="stat-card stat-paid-finished-revenue">
+            <div class="stat-number">@Model.PaidFinishedRevenue.ToString("N0") ₫</div>
+            <div class="stat-label">Doanh thu đã TT và giao hàng</div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h3 class="filter-title">Bộ lọc hiển thị</h3>
+        <div class="filter-buttons">
+            <a href="@Url.Action("Index", new { filter = "current" })"
+               class="filter-btn @(Model.FilterType == "current" ? "active" : "")">
+                <i class="fas fa-clock"></i>
+                Đơn hàng gần đây (2 tiếng)
+            </a>
+            <!-- THÊM BUTTON MỚI -->
+            <a href="@Url.Action("Index", new { filter = "paid-unfinished" })"
+               class="filter-btn @(Model.FilterType == "paid-unfinished" ? "active" : "")">
+                <i class="fas fa-credit-card"></i>
+                Đã thanh toán chưa giao hàng
+            </a>
+            <a href="@Url.Action("Index", new { filter = "all" })"
+               class="filter-btn @(Model.FilterType == "all" ? "active" : "")">
+                <i class="fas fa-list"></i>
+                Tất cả đơn hàng
+            </a>
+        </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div class="orders-section">
+        <div class="orders-header">
+            <h2 class="orders-title">
+                @if (Model.FilterType == "current")
+                {
+                    <text>Đơn hàng gần đây</text>
+                }
+                else if (Model.FilterType == "paid-unfinished")
+                {
+                    <text>Đã thanh toán nhưng chưa giao hàng</text>
+                }
+                else
+                {
+                    <text>Tất cả đơn hàng</text>
+                }
+            </h2>
+            <div class="orders-count">@Model.TotalOrders đơn hàng</div>
+        </div>
+
+        @if (Model.Carts == null || !Model.Carts.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Không có đơn hàng nào</h3>
+                <p>Chưa có đơn đặt món ăn nào trong hệ thống.</p>
+            </div>
+        }
+        else
+        {
+            <div class="orders-grid">
+                @foreach (var cart in Model.Carts)
+                {
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="order-id">Đơn hàng #@cart.CartId</div>
+                            <div class="order-status @cart.StatusClass">@cart.StatusDisplay</div>
+                        </div>
+
+                        <div class="order-info">
+                            <div class="order-info-item">
+                                <span class="order-info-label">Khách hàng:</span>
+                                <span class="order-info-value">@cart.UserId</span>
+                            </div>
+                            <div class="order-info-item">
+                                <span class="order-info-label">Thời gian đặt:</span>
+                                <span class="order-info-value">@cart.OrderTime.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="order-info-item">
+                                <span class="order-info-label">Trạng thái thanh toán:</span>
+                                <span class="order-info-value">@(cart.IsPaid ? "Đã thanh toán" : "Chưa thanh toán")</span>
+                            </div>
+                        </div>
+
+                        <div class="order-price">
+                            @cart.TotalPrice.ToString("N0") ₫
+                        </div>
+
+                        <div class="order-actions">
+                            <a href="@Url.Action("Details", new { id = cart.CartId })" class="btn-action btn-details">
+                                <i class="fas fa-eye"></i>
+                                Chi tiết
+                            </a>
+
+                            @if (!cart.IsCancel && !cart.IsFinish)
+                            {
+                                <button class="btn-action btn-cancel" onclick="cancelOrder(@cart.CartId)">
+                                    <i class="fas fa-times"></i>
+                                    Hủy đơn
+                                </button>
+
+                                @if (cart.IsPaid)
+                                {
+                                    <button class="btn-action btn-finish" onclick="finishOrder(@cart.CartId)">
+                                        <i class="fas fa-check"></i>
+                                        Đã giao hàng
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    function cancelOrder(cartId) {
+        if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+            fetch('@Url.Action("CancelCart")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    CartId: cartId,
+                    Reason: 'Hủy từ admin'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Hủy đơn hàng thành công!');
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi hủy đơn hàng');
+            });
+        }
+    }
+
+    function finishOrder(cartId) {
+        if (confirm('Xác nhận đơn hàng đã giao hàng?')) {
+            fetch('@Url.Action("MarkAsFinished")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify(cartId)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Đánh dấu giao hàng thành công!');
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi cập nhật trạng thái');
+            });
+        }
+    }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>

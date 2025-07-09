@@ -1,0 +1,599 @@
+﻿<!-- Areas/Admin/Views/CartManage/Details.cshtml -->
+@model testpayment6._0.Areas.admin.Models.Cart_manage
+@{
+    ViewBag.Title = $"Chi tiết đơn hàng #{Model.CartId}";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .cart-details {
+        padding: 20px;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        margin-bottom: 10px;
+    }
+
+        .breadcrumb a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+        }
+
+            .breadcrumb a:hover {
+                color: white;
+                text-decoration: underline;
+            }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .info-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+        .info-card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        font-weight: 500;
+        color: #666;
+    }
+
+    .info-value {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-paid {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-unpaid {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-cancelled {
+        background: #f1f3f4;
+        color: #5f6368;
+    }
+
+    .status-finished {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .total-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e74c3c;
+    }
+
+    .items-section {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .items-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f3f4;
+    }
+
+    .items-title {
+        font-size: 1.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .items-count {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+        .items-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .items-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+            color: #666;
+        }
+
+        .items-table tr:hover {
+            background: #f8f9fa;
+        }
+
+    .item-id {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .item-quantity {
+        background: #e9ecef;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: #e74c3c;
+    }
+
+    .item-total {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .actions-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-top: 30px;
+    }
+
+    .actions-title {
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-back {
+        background: #6c757d;
+        color: white;
+    }
+
+        .btn-back:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+
+    .btn-cancel {
+        background: #dc3545;
+        color: white;
+    }
+
+        .btn-cancel:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+    .btn-finish {
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-finish:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+    .btn-print {
+        background: #17a2b8;
+        color: white;
+    }
+
+        .btn-print:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+    .empty-items {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+        .empty-items i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+
+        .summary-card h4 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+
+    @@media (max-width: 768px) {
+        .cart-details {
+            padding: 10px;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .items-table {
+            font-size: 0.9rem;
+        }
+
+            .items-table th,
+            .items-table td {
+                padding: 10px 8px;
+            }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="cart-details">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="@Url.Action("Index")">Quản lý đơn hàng</a>
+            <span> / Chi tiết đơn hàng #@Model.CartId</span>
+        </nav>
+        <h1>Chi tiết đơn hàng #@Model.CartId</h1>
+        <p>Thông tin chi tiết về đơn đặt món ăn</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            @ViewBag.ErrorMessage
+        </div>
+    }
+
+    <div class="details-grid">
+        <!-- Order Information -->
+        <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h3>
+            <div class="info-item">
+                <span class="info-label">Mã đơn hàng:</span>
+                <span class="info-value">#@Model.CartId</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Khách hàng:</span>
+                <span class="info-value">@Model.UserId</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Thời gian đặt:</span>
+                <span class="info-value">@Model.OrderTime.ToString("dd/MM/yyyy HH:mm:ss")</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Trạng thái:</span>
+                <span class="info-value">
+                    <span class="status-badge @Model.StatusClass">@Model.StatusDisplay</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="info-card">
+            <h3><i class="fas fa-credit-card"></i> Thông tin thanh toán</h3>
+            <div class="info-item">
+                <span class="info-label">Trạng thái thanh toán:</span>
+                <span class="info-value">
+                    <span class="status-badge @(Model.IsPaid ? "status-paid" : "status-unpaid")">
+                        @(Model.IsPaid ? "Đã thanh toán" : "Chưa thanh toán")
+                    </span>
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tổng tiền:</span>
+                <span class="info-value total-price">@Model.TotalPrice.ToString("N0") ₫</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Đã hủy:</span>
+                <span class="info-value">@(Model.IsCancel ? "Có" : "Không")</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Hoàn thành:</span>
+                <span class="info-value">@(Model.IsFinish ? "Có" : "Không")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="items-section">
+        <div class="items-header">
+            <h2 class="items-title"><i class="fas fa-utensils"></i> Món ăn đã đặt</h2>
+            <div class="items-count">@Model.CartDetails.Count món</div>
+        </div>
+
+        @if (Model.CartDetails == null || !Model.CartDetails.Any())
+        {
+            <div class="empty-items">
+                <i class="fas fa-utensils"></i>
+                <h4>Không có món ăn</h4>
+                <p>Đơn hàng này chưa có món ăn nào.</p>
+            </div>
+        }
+        else
+        {
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Mã món</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.CartDetails)
+                    {
+                        <tr>
+                            <td class="item-id">@item.DishId</td>
+                            <td>
+                                <span class="item-quantity">@item.Quantity</span>
+                            </td>
+                            <td class="item-price">@item.Price.ToString("N0") ₫</td>
+                            <td class="item-total">@item.TotalPrice.ToString("N0") ₫</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Summary -->
+            <div class="summary-card">
+                <h4><i class="fas fa-calculator"></i> Tóm tắt đơn hàng</h4>
+                <div class="summary-item">
+                    <span>Số lượng món:</span>
+                    <span>@Model.CartDetails.Count món</span>
+                </div>
+                <div class="summary-item">
+                    <span>Tổng số lượng:</span>
+                    <span>@Model.CartDetails.Sum(x => x.Quantity) phần</span>
+                </div>
+                <div class="summary-item">
+                    <span>Tổng tiền:</span>
+                    <span>@Model.TotalPrice.ToString("N0") ₫</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-section">
+        <h3 class="actions-title"><i class="fas fa-cogs"></i> Thao tác</h3>
+        <div class="action-buttons">
+            <a href="@Url.Action("Index")" class="btn-action btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Quay lại
+            </a>
+
+            <button class="btn-action btn-print" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                In đơn hàng
+            </button>
+
+            @if (!Model.IsCancel && !Model.IsFinish)
+            {
+                <button class="btn-action btn-cancel" onclick="cancelOrder(@Model.CartId)">
+                    <i class="fas fa-times"></i>
+                    Hủy đơn hàng
+                </button>
+
+                @if (Model.IsPaid)
+                {
+                    <button class="btn-action btn-finish" onclick="finishOrder(@Model.CartId)">
+                        <i class="fas fa-check"></i>
+                        Hoàn thành
+                    </button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function cancelOrder(cartId) {
+        if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+            fetch('@Url.Action("CancelCart")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    CartId: cartId,
+                    Reason: 'Hủy từ admin'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Hủy đơn hàng thành công!');
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi hủy đơn hàng');
+            });
+        }
+    }
+
+    function finishOrder(cartId) {
+        if (confirm('Xác nhận đơn hàng đã hoàn thành?')) {
+            fetch('@Url.Action("MarkAsFinished")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify(cartId)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Đánh dấu hoàn thành thành công!');
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi cập nhật trạng thái');
+            });
+        }
+    }
+
+    // Print styles
+    @@media print {
+        .actions-section,
+        .page-header .breadcrumb {
+            display: none;
+        }
+
+        .page-header {
+            background: white !important;
+            color: black !important;
+        }
+
+        .summary-card {
+            background: white !important;
+            color: black !important;
+            border: 1px solid #ccc;
+        }
+
+        .status-badge {
+            border: 1px solid #ccc;
+        }
+    }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>

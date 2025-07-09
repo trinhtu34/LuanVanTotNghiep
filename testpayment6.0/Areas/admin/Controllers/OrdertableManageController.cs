@@ -10,11 +10,12 @@ namespace RestaurantAdmin.Controllers
     public class OrdertableManageController : Controller
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "https://p7igzosmei.execute-api.ap-southeast-1.amazonaws.com/Prod/api";
+        private readonly string BASE_API_URL;
 
-        public OrdertableManageController(HttpClient httpClient)
+        public OrdertableManageController(HttpClient httpClient , IConfiguration configuration)
         {
             _httpClient = httpClient;
+            BASE_API_URL = configuration["BaseAPI"];
         }
 
         public async Task<IActionResult> Index(string filter = "current")
@@ -97,7 +98,7 @@ namespace RestaurantAdmin.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/ordertable/afterCurrentStartingTime");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();
@@ -121,7 +122,7 @@ namespace RestaurantAdmin.Controllers
             try
             {
                 //var response = await _httpClient.GetAsync($"{_baseUrl}/ordertable");
-                var response = await _httpClient.GetAsync($"{_baseUrl}/ordertable/paymentstatus");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/paymentstatus");
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();
@@ -144,7 +145,7 @@ namespace RestaurantAdmin.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/OrderTablesDetail/list/{orderTableId}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/OrderTablesDetail/list/{orderTableId}");
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();
@@ -167,7 +168,7 @@ namespace RestaurantAdmin.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/OrderFoodDetail/list/{orderTableId}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/OrderFoodDetail/list/{orderTableId}");
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();
@@ -221,7 +222,7 @@ namespace RestaurantAdmin.Controllers
                     "application/json"
                 );
 
-                var response = await _httpClient.PutAsync($"{_baseUrl}/OrderTable/state/{request.OrderTableId}", content);
+                var response = await _httpClient.PutAsync($"{BASE_API_URL}/OrderTable/state/{request.OrderTableId}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
