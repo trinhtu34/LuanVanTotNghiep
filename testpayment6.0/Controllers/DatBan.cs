@@ -26,7 +26,7 @@ namespace testpayment6._0.Controllers
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
-                TempData["Error"] = "Vui lòng đăng nhập để đặt bàn";
+                TempData["ErrorDB"] = "Vui lòng đăng nhập để đặt bàn";
                 return RedirectToAction("Login", "Home");
             }
 
@@ -64,12 +64,12 @@ namespace testpayment6._0.Controllers
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể tải danh sách bàn. Vui lòng thử lại sau.";
+                    TempData["ErrorDB"] = "Không thể tải danh sách bàn. Vui lòng thử lại sau.";
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách bàn";
+                TempData["ErrorDB"] = "Có lỗi xảy ra khi tải danh sách bàn";
             }
 
             return View();
@@ -435,7 +435,7 @@ namespace testpayment6._0.Controllers
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
-                TempData["Error"] = "Vui lòng đăng nhập để xem danh sách đặt bàn";
+                TempData["ErrorDSDB"] = "Vui lòng đăng nhập để xem danh sách đặt bàn";
                 return RedirectToAction("Login", "Home");
             }
 
@@ -454,12 +454,12 @@ namespace testpayment6._0.Controllers
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể tải danh sách đặt bàn";
+                    TempData["ErrorDSDB"] = "Không thể tải danh sách đặt bàn";
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách đặt bàn";
+                TempData["ErrorDSDB"] = "Có lỗi xảy ra khi tải danh sách đặt bàn";
             }
 
             return View(new List<OrderTableViewModel>());

@@ -42,7 +42,6 @@ namespace testpayment6._0.Areas.admin.Controllers
                 _logger.LogError(ex, "Error loading regions");
                 ViewBag.Error = "Không thể tải dữ liệu khu vực";
             }
-
             return View(model);
         }
 

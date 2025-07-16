@@ -63,14 +63,12 @@ namespace testpayment6._0.Controllers
                 }
                 else
                 {
-                    _logger.LogError($"Failed to get orders for user {userId}: {cartResponse.StatusCode}");
                     ViewBag.Error = "Không thể tải danh sách đơn hàng. Vui lòng thử lại.";
                     return View(new OrderListViewModel { UserId = userId, Statistics = statistics });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error getting orders for user {userId}");
                 ViewBag.Error = "Đã xảy ra lỗi khi tải danh sách đơn hàng. Vui lòng thử lại.";
                 return View(new OrderListViewModel { UserId = userId });
             }

@@ -6,12 +6,12 @@
 <div class="container mt-4">
 	<h2 class="text-center mb-4">Đặt Bàn Nhà Hàng</h2>
 
-@* 	@if (TempData["Error"] != null)
+	@if (TempData["ErrorDB"] != null)
 	{
 		<div class="alert alert-danger">
-			@TempData["Error"]
+			@TempData["ErrorDB"]
 		</div>
-	} *@
+	}
 
 	<!-- Danh sách bàn đã chọn -->
 	<div class="selected-tables-section mb-4" id="selectedTablesSection" style="display: none;">

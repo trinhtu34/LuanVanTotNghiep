@@ -8,11 +8,12 @@ namespace testpayment6._0.Areas.admin.Controllers
     public class ShowCartPaymentHistoryController : Controller
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiUrl = "https://p7igzosmei.execute-api.ap-southeast-1.amazonaws.com/Prod/api/payment/paymenthistory/cart";
+        private readonly string BASE_API_URL;
 
-        public ShowCartPaymentHistoryController(HttpClient httpClient)
+        public ShowCartPaymentHistoryController(HttpClient httpClient , IConfiguration configuration)
         {
             _httpClient = httpClient;
+            BASE_API_URL = configuration["BaseAPI"];
         }
 
         public async Task<IActionResult> Index(bool? filterBySuccess = null)
@@ -21,35 +22,42 @@ namespace testpayment6._0.Areas.admin.Controllers
             {
                 FilterBySuccess = filterBySuccess
             };
-
             try
             {
-                var response = await _httpClient.GetAsync(_apiUrl);
-
-                if (response.IsSuccessStatusCode)
+                var paymentHistory = await GetPaymentHistoryAsync();
+                // Áp dụng filter nếu có
+                if (filterBySuccess.HasValue)
                 {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    var paymentHistory = JsonConvert.DeserializeObject<List<PaymentHistoryModel_Cart>>(jsonContent);
-
-                    // Áp dụng filter nếu có
-                    if (filterBySuccess.HasValue)
-                    {
-                        paymentHistory = paymentHistory.Where(p => p.IsSuccess == filterBySuccess.Value).ToList();
-                    }
-
-                    viewModel.PaymentHistory = paymentHistory ?? new List<PaymentHistoryModel_Cart>();
+                    paymentHistory = paymentHistory.Where(p => p.IsSuccess == filterBySuccess.Value).ToList();
                 }
-                else
-                {
-                    ViewBag.ErrorMessage = "Không thể tải dữ liệu lịch sử thanh toán";
-                }
+                viewModel.PaymentHistory = paymentHistory;
             }
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = $"Có lỗi xảy ra: {ex.Message}";
             }
-
             return View(viewModel);
+        }
+
+        public async Task<List<PaymentHistoryModel_Cart>> GetPaymentHistoryAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/payment/paymenthistory/cart");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<List<PaymentHistoryModel_Cart>>(jsonContent) ?? new List<PaymentHistoryModel_Cart>();
+                }
+                else
+                {
+                    throw new Exception("Không thể tải dữ liệu lịch sử thanh toán");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Có lỗi xảy ra: {ex.Message}");
+            }
         }
     }
 }

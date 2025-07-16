@@ -31,12 +31,10 @@ namespace testpayment6._0.Areas.admin.Controllers
             return View(new OrdertablePaymentViewModel_adminPayment());
         }
 
-        // POST: Payment/Index
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(OrdertablePaymentViewModel_adminPayment model)
         {
-            // Kiểm tra đăng nhập
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
@@ -98,7 +96,6 @@ namespace testpayment6._0.Areas.admin.Controllers
             return View(model);
         }
 
-        // API endpoint để kiểm tra session
         [HttpGet]
         public IActionResult CheckSession()
         {
