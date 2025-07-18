@@ -121,7 +121,6 @@ namespace RestaurantAdmin.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting current order tables: {ex.Message}");
                 return new List<OrderTable_manage>();
             }
         }
