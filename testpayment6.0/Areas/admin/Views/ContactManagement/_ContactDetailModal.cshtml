@@ -1,0 +1,59 @@
+﻿@model testpayment6._0.Areas.admin.Models.ContactFormModel
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label fw-bold">Contact ID:</label>
+            <p class="form-control-plaintext">@Model.ContactId</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label fw-bold">User ID:</label>
+            <p class="form-control-plaintext">
+                <span class="badge bg-info">@Model.UserId</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label class="form-label fw-bold">Nội dung liên hệ:</label>
+            <div class="border rounded p-3 bg-light">
+                @Model.Content
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label fw-bold">Thời gian tạo:</label>
+            <p class="form-control-plaintext">
+                <i class="fas fa-clock me-2"></i>
+                @Model.CreateAt.ToString("dd/MM/yyyy HH:mm:ss")
+            </p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label fw-bold">Ngày tạo:</label>
+            <p class="form-control-plaintext">
+                <i class="fas fa-calendar me-2"></i>
+                @Model.CreateAt.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Thông tin:</strong> Đây là chi tiết liên hệ từ khách hàng. Bạn có thể xem đầy đủ nội dung và thông tin liên quan.
+        </div>
+    </div>
+</div>

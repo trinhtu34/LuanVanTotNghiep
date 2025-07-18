@@ -110,6 +110,14 @@
                                                        title="Chỉnh sửa món ăn">
                                                         <i class="fas fa-edit"></i> Sửa
                                                     </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteModal"
+                                                            data-menu-id="@item.DishId"
+                                                            data-menu-name="@item.DishName"
+                                                            title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -136,5 +144,51 @@
         </div>
     </div>
 </div>
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa món <strong id="menuNameToDelete"></strong> không?</p>
+                <p class="text-muted small">Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+<script>
+    // Xử lý modal xóa
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteForm = document.getElementById('deleteForm');
+        const menuNameSpan = document.getElementById('menuNameToDelete');
+
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const dishid = button.getAttribute('data-menu-id');
+            const dishname = button.getAttribute('data-menu-name');
+
+            // Cập nhật tên khu vực trong modal
+            menuNameSpan.textContent = dishname;
+
+            // Cập nhật action của form
+            deleteForm.action = '@Url.Action("Delete")' + '/' + dishid;
+        });
+    });
+</script>

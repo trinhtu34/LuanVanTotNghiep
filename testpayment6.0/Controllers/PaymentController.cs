@@ -86,7 +86,6 @@ namespace VnPayDemo.Controllers
                 }
                 else if (model.OrderTableId.HasValue && model.OrderTableId.Value > 0)
                 {
-                    // Encode OrderTableId vào PaymentId (giữ nguyên logic cũ)
                     paymentId = long.Parse($"1{timestamp}{model.OrderTableId.Value:D8}"); // prefix "1" cho OrderTable
 
                     // Lưu vào session
@@ -98,7 +97,7 @@ namespace VnPayDemo.Controllers
                     ModelState.AddModelError(string.Empty, "Không tìm thấy thông tin đơn hàng");
                     return View("Index", model);
                 }
-
+                // dùng prefix để nhận xem là đây là thanh toán cho giỏ hàng ( cart ) hay đơn đặt bàn ( order table ) 
                 var request = new PaymentRequest
                 {
                     PaymentId = paymentId,

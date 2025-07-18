@@ -23,6 +23,74 @@
 
             @if (Model.Orders != null && Model.Orders.Any())
             {
+                <div class="row mt-6">
+                    <div class="col-12">
+                        <div class="card statistics-card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-pie"></i> Thống Kê Tổng Quan</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-2 col-sm-6">
+                                        <div class="stat-item total">
+                                            <div class="stat-value">@Model.Statistics.TotalOrders</div>
+                                            <div class="stat-label">
+                                                <i class="fas fa-clipboard-list text-primary"></i>
+                                                Tổng Đơn Hàng
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-sm-6">
+                                        <div class="stat-item paid">
+                                            <div class="stat-value">@Model.Statistics.PaidOrders</div>
+                                            <div class="stat-label">
+                                                <i class="fas fa-check-circle text-success"></i>
+                                                Đã Thanh Toán
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-sm-6">
+                                        <div class="stat-item unpaid">
+                                            <div class="stat-value">@Model.Statistics.UnpaidOrders</div>
+                                            <div class="stat-label">
+                                                <i class="fas fa-exclamation-circle text-warning"></i>
+                                                Chưa Thanh Toán
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-sm-6">
+                                        <div class="stat-item money">
+                                            <div class="stat-value">@Model.Statistics.TotalAmount.ToString("N0")</div>
+                                            <div class="stat-label">
+                                                <i class="fas fa-money-bill-wave text-info"></i>
+                                                Tổng Tiền (VNĐ)
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-sm-6">
+                                        <div class="stat-item paid-money">
+                                            <div class="stat-value">@Model.Statistics.PaidAmount.ToString("N0")</div>
+                                            <div class="stat-label">
+                                                <i class="fas fa-dollar-sign text-success"></i>
+                                                Tiền Đã Thu (VNĐ)
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-sm-6">
+                                        <div class="stat-item unpaid-money">
+                                            <div class="stat-value">@Model.Statistics.UnpaidAmount.ToString("N0")</div>
+                                            <div class="stat-label">
+                                                <i class="fas fa-hourglass-half text-warning"></i>
+                                                Tiền Chưa Thu (VNĐ)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     @foreach (var order in Model.Orders.OrderByDescending(o => o.OrderTime))
                     {
@@ -102,42 +170,6 @@
                         </div>
                     }
                 </div>
-
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5><i class="fas fa-chart-pie"></i> Thống kê</h5>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <h4 class="text-primary">@Model.Orders.Count</h4>
-                                            <p class="text-muted">Tổng đơn hàng</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <h4 class="text-success">@Model.Orders.Where(o => o.PaymentStatus?.IsSuccess == true).Count()</h4>
-                                            <p class="text-muted">Đã thanh toán</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <h4 class="text-warning">@Model.Orders.Where(o => o.PaymentStatus?.IsSuccess != true).Count()</h4>
-                                            <p class="text-muted">Chưa thanh toán</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <h4 class="text-info">@Model.Orders.Sum(o => o.TotalPrice).ToString("N0")</h4>
-                                            <p class="text-muted">Tổng tiền (VNĐ)</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             }
             else
             {
@@ -154,7 +186,6 @@
     </div>
 </div>
 
-<!-- Anti-forgery token for payment form -->
 @Html.AntiForgeryToken()
 
 <script>
@@ -205,6 +236,172 @@
 </script>
 
 <style>
+
+    /* Styles cho thống kê */
+    .statistics-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border: none;
+        overflow: hidden;
+    }
+
+        .statistics-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            border: none;
+            padding: 20px;
+        }
+
+            .statistics-card .card-header h5 {
+                margin: 0;
+                font-weight: 600;
+                font-size: 1.3rem;
+            }
+
+            .statistics-card .card-header i {
+                margin-right: 10px;
+                font-size: 1.2rem;
+            }
+
+    .stat-item {
+        padding: 25px 15px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        margin: 10px 5px;
+        transition: all 0.4s ease;
+        border: 1px solid #dee2e6;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+        font-size: 0.95rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .stat-label i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+    /* Màu sắc cho từng loại thống kê */
+    .stat-item.total .stat-value {
+        color: #3498db;
+    }
+
+    .stat-item.paid .stat-value {
+        color: #27ae60;
+    }
+
+    .stat-item.unpaid .stat-value {
+        color: #f39c12;
+    }
+
+    .stat-item.money .stat-value {
+        color: #8e44ad;
+    }
+    .stat-item.paid-money .stat-value {
+        color: #27ae60;
+    }
+
+    .stat-item.unpaid-money .stat-value {
+        color: #e74c3c;
+    }
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .stat-value {
+            font-size: 2rem;
+        }
+
+        .stat-item {
+            margin-bottom: 15px;
+            padding: 20px 10px;
+        }
+
+        .statistics-card .card-header {
+            padding: 15px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .stat-value {
+            font-size: 1.8rem;
+        }
+    }
+
+    /* Animation khi load */
+    .stat-item {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+        .stat-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .stat-item:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .stat-item:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .stat-item:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+    @@keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .payment-btn {
         transition: all 0.3s ease;
     }

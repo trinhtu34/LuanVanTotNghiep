@@ -1,6 +1,6 @@
 ﻿namespace testpayment6._0.Areas.admin.Models
 {
-    // Model classes
+    // Model class dùng cho chức năng đặt bàn , được thao tác bởi nhân viên
     public class OrderViewModel
     {
         public string? CustomerName { get; set; }

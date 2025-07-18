@@ -1,0 +1,192 @@
+﻿@model testpayment6._0.Areas.admin.Models.OrderTableViewModel_manage
+@{
+    ViewData["Title"] = "Quản lý đơn đặt bàn";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý đơn đặt bàn</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Bộ lọc</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Loại hiển thị:</label>
+                                <select class="form-control" id="filterType" onchange="changeFilter()">
+                                    <option value="current" @(Model.FilterType == "current" ? "selected" : "")>
+                                        Đơn hiện tại (1 tiếng trước đến hiện tại)
+                                    </option>
+                                    <option value="all" @(Model.FilterType == "all" ? "selected" : "")>
+                                        Tất cả đơn đặt bàn
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h4 class="mb-0">@Model.TotalOrders</h4>
+                                                    <small>Tổng số đơn</small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-list fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h4 class="mb-0">@Model.TotalRevenue.ToString("N0") VNĐ</h4>
+                                                    <small>Tổng doanh thu</small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-money fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h4 class="mb-0">@Model.TotalRevenueUnpaid.ToString("N0") VNĐ</h4>
+                                                    <small>Tổng tiền chưa thanh toán và chưa hủy</small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-money fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h4 class="mb-0">@Model.TotalOrderUnpaid.ToString("N0") VNĐ</h4>
+                                                    <small>Tổng đơn chưa thanh toán và chưa hủy</small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-money fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách đơn đặt bàn</h3>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+
+                    <div id="orderTableList">
+                        @Html.Partial("_OrdertableManageList", Model.OrderTables)
+                        @* <partial name="_OrderTableManageList" model="Model.OrderTables" /> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function changeFilter() {
+        const filterType = document.getElementById('filterType').value;
+        window.location.href = '@Url.Action("Index")?filter=' + filterType;
+    }
+</script>
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        margin: 0;
+        color: #333;
+    }
+
+    .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .btn-view-details {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0.25rem;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+        .btn-view-details:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+</style>

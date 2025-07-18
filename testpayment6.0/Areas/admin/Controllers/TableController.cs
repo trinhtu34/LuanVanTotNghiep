@@ -88,7 +88,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                     var response = await _httpClient.PostAsync($"{BASE_API_URL}/table", jsonContent);
                     if (response.IsSuccessStatusCode)
                     {
-                        TempData["SuccessMessage"] = "Tạo bàn mới thành công!";
+                        TempData["SuccessTable"] = "Tạo bàn mới thành công!";
                         return RedirectToAction("Index");
                     }
                     ViewBag.Error = "Không thể tạo bàn mới";
@@ -142,10 +142,10 @@ namespace testpayment6._0.Areas.admin.Controllers
                     var response = await _httpClient.PutAsync($"{BASE_API_URL}/table/{table.TableId}", jsonContent);
                     if (response.IsSuccessStatusCode)
                     {
-                        TempData["SuccessMessage"] = "Cập nhật bàn thành công!";
+                        TempData["SuccessTable"] = "Cập nhật bàn thành công!";
                         return RedirectToAction("Index");
                     }
-                    ViewBag.Error = "Không thể cập nhật bàn";
+                    TempData["ErrorTable"] = "Không thể cập nhật bàn";
                 }
                 catch (Exception ex)
                 {
@@ -156,5 +156,26 @@ namespace testpayment6._0.Areas.admin.Controllers
             return View(table);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BASE_API_URL}/table/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessTable"] = "Xóa bàn thành công!";
+                    return RedirectToAction("Index");
+                }
+                TempData["ErrorTable"] = "Không thể xóa bàn. Vui lòng thử lại.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Lỗi: {ex.Message}";
+            }
+            return RedirectToAction("Index");
+        }
     }
 }

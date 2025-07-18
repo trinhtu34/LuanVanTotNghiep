@@ -97,11 +97,11 @@ namespace testpayment6._0.ResponseModels
 
     public class UserProfileResponse
     {
-        public string? UPassword { get; set; }
-        public string? CustomerName { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? Email { get; set; }
-        public string? Address { get; set; }
+        public string UserId { get; set; }
+        public string CustomerName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string Address { get; set; }
     }
     public class MenuItem
     {
@@ -113,5 +113,21 @@ namespace testpayment6._0.ResponseModels
         public int CategoryId { get; set; }
         public int RegionId { get; set; }
         public string Images { get; set; }
+    }
+    public class ChangePasswordViewModel
+    {
+        [Required(ErrorMessage = "Mật khẩu hiện tại là bắt buộc")]
+        [Display(Name = "Mật khẩu hiện tại")]
+        public string CurrentPassword { get; set; }
+
+        [Required(ErrorMessage = "Mật khẩu mới là bắt buộc")]
+        [StringLength(100, ErrorMessage = "Mật khẩu phải có ít nhất {2} ký tự", MinimumLength = 6)]
+        [Display(Name = "Mật khẩu mới")]
+        public string NewPassword { get; set; }
+
+        [Required(ErrorMessage = "Xác nhận mật khẩu mới là bắt buộc")]
+        [Compare("NewPassword", ErrorMessage = "Mật khẩu mới và xác nhận mật khẩu không khớp")]
+        [Display(Name = "Xác nhận mật khẩu mới")]
+        public string ConfirmPassword { get; set; }
     }
 }

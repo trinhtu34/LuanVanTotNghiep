@@ -1,8 +1,11 @@
 ﻿namespace testpayment6._0.ResponseModels
 {
-    public class CancelCartRequest
+    // Model cho trang danh sách đơn hàng
+    public class OrderListViewModel
     {
-        public long CartId { get; set; }
+        public string UserId { get; set; }
+        public List<CartViewModel> Orders { get; set; } = new List<CartViewModel>();
+        public StatisticsViewModel Statistics { get; set; } = new StatisticsViewModel(); 
     }
     // Model cho response từ API thanh toán
     public class PaymentStatusApiResponse
@@ -28,5 +31,14 @@
         public string Description { get; set; }
         public int CartId { get; set; }
         public int? OrderTableId { get; set; }
+    }
+    public class StatisticsViewModel
+    {
+        public int TotalOrders { get; set; }
+        public int PaidOrders { get; set; }
+        public int UnpaidOrders { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal PaidAmount { get; set; }     
+        public decimal UnpaidAmount { get; set; }  
     }
 }

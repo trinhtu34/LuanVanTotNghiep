@@ -1,5 +1,4 @@
-﻿// Controllers/CartController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
 using testpayment6._0.ResponseModels;
@@ -18,9 +17,6 @@ namespace testpayment6._0.Controllers
             _httpClient = httpClient;
             BASE_API_URL = configuration["BaseAPI"];
         }
-
-
-        // Sửa lại method Index trong CartController
         public IActionResult Index()
         {
             var cart = GetCartFromSession();
@@ -147,7 +143,6 @@ namespace testpayment6._0.Controllers
         }
 
         // Đặt hàng - Lưu vào database
-        // Sửa đổi method PlaceOrder trong CartController
         [HttpPost]
         public async Task<IActionResult> PlaceOrder()
         {
@@ -260,7 +255,7 @@ namespace testpayment6._0.Controllers
                 var request = new CreateCartRequest
                 {
                     UserId = userId,
-                    TotalPrice = totalPrice // Thêm TotalPrice vào request
+                    TotalPrice = totalPrice
                 };
 
                 var json = JsonSerializer.Serialize(request);

@@ -13,7 +13,7 @@ namespace testpayment6._0.Controllers
         private readonly ILogger<DatBan> _logger;
         private readonly string BASE_API_URL;
 
-        public DatBan(HttpClient httpClient, ILogger<DatBan> logger , IConfiguration configuration)
+        public DatBan(HttpClient httpClient, ILogger<DatBan> logger, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _logger = logger;
@@ -26,7 +26,7 @@ namespace testpayment6._0.Controllers
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
-                TempData["Error"] = "Vui lòng đăng nhập để đặt bàn";
+                TempData["ErrorDB"] = "Vui lòng đăng nhập để đặt bàn";
                 return RedirectToAction("Login", "Home");
             }
 
@@ -64,12 +64,12 @@ namespace testpayment6._0.Controllers
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể tải danh sách bàn. Vui lòng thử lại sau.";
+                    TempData["ErrorDB"] = "Không thể tải danh sách bàn. Vui lòng thử lại sau.";
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách bàn";
+                TempData["ErrorDB"] = "Có lỗi xảy ra khi tải danh sách bàn";
             }
 
             return View();
@@ -435,7 +435,7 @@ namespace testpayment6._0.Controllers
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
-                TempData["Error"] = "Vui lòng đăng nhập để xem danh sách đặt bàn";
+                TempData["ErrorDSDB"] = "Vui lòng đăng nhập để xem danh sách đặt bàn";
                 return RedirectToAction("Login", "Home");
             }
 
@@ -454,12 +454,12 @@ namespace testpayment6._0.Controllers
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể tải danh sách đặt bàn";
+                    TempData["ErrorDSDB"] = "Không thể tải danh sách đặt bàn";
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách đặt bàn";
+                TempData["ErrorDSDB"] = "Có lỗi xảy ra khi tải danh sách đặt bàn";
             }
 
             return View(new List<OrderTableViewModel>());
@@ -638,121 +638,26 @@ namespace testpayment6._0.Controllers
             try
             {
                 // Gọi API kiểm tra trạng thái thanh toán
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/Payment/ordertable/status/{orderTableId}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/payment/ordertable/juststatus/{orderTableId}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
 
-                    // Log để debug
                     _logger.LogInformation($"Payment API response for order {orderTableId}: {jsonContent}");
 
-                    // Kiểm tra nếu response rỗng hoặc là mảng rỗng
-                    if (string.IsNullOrWhiteSpace(jsonContent) || jsonContent.Trim() == "[]")
+                    bool isPaid = jsonContent.Trim().ToLower() == "true";
+
+                    return Json(new
                     {
-                        _logger.LogInformation($"Empty response for order {orderTableId} - assuming not paid");
-                        return Json(new
+                        success = true,
+                        data = new
                         {
-                            success = true,
-                            data = new
-                            {
-                                orderTableId = orderTableId,
-                                isSuccess = false,
-                                isPaid = false
-                            }
-                        });
-                    }
-
-                    try
-                    {
-                        var paymentStatus = JsonSerializer.Deserialize<List<dynamic>>(jsonContent, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-
-                        if (paymentStatus != null && paymentStatus.Any())
-                        {
-                            // Logic mới: Kiểm tra xem có bất kỳ payment nào thành công không
-                            bool hasSuccessfulPayment = paymentStatus.Any(payment =>
-                            {
-                                try
-                                {
-                                    return payment.GetProperty("isSuccess").GetBoolean();
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogWarning($"Error reading isSuccess property for order {orderTableId}: {ex.Message}");
-                                    return false;
-                                }
-                            });
-
-                            _logger.LogInformation($"Payment status for order {orderTableId}: hasSuccessfulPayment = {hasSuccessfulPayment}");
-
-                            return Json(new
-                            {
-                                success = true,
-                                data = new
-                                {
-                                    orderTableId = orderTableId,
-                                    isSuccess = hasSuccessfulPayment,
-                                    isPaid = hasSuccessfulPayment
-                                }
-                            });
+                            orderTableId = orderTableId,
+                            isSuccess = isPaid,
+                            isPaid = isPaid
                         }
-                        else
-                        {
-                            _logger.LogInformation($"No payment data found for order {orderTableId}");
-                            return Json(new
-                            {
-                                success = true,
-                                data = new
-                                {
-                                    orderTableId = orderTableId,
-                                    isSuccess = false,
-                                    isPaid = false
-                                }
-                            });
-                        }
-                    }
-                    catch (JsonException jsonEx)
-                    {
-                        _logger.LogError(jsonEx, $"JSON parsing error for order {orderTableId}. Raw response: {jsonContent}");
-
-                        // Thử parse như object đơn thay vì array
-                        try
-                        {
-                            var singlePayment = JsonSerializer.Deserialize<dynamic>(jsonContent, new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true
-                            });
-
-                            var isSuccess = singlePayment.GetProperty("isSuccess").GetBoolean();
-
-                            return Json(new
-                            {
-                                success = true,
-                                data = new
-                                {
-                                    orderTableId = orderTableId,
-                                    isSuccess = isSuccess,
-                                    isPaid = isSuccess
-                                }
-                            });
-                        }
-                        catch
-                        {
-                            return Json(new
-                            {
-                                success = true,
-                                data = new
-                                {
-                                    orderTableId = orderTableId,
-                                    isSuccess = false,
-                                    isPaid = false
-                                }
-                            });
-                        }
-                    }
+                    });
                 }
                 else
                 {
@@ -775,88 +680,6 @@ namespace testpayment6._0.Controllers
             }
         }
 
-        // 1. Phương thức lấy tổng số đơn đặt bàn
-        [HttpGet]
-        public async Task<IActionResult> GetTotalOrderCount()
-        {
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Json(new { success = false, message = "Chưa đăng nhập" });
-            }
-
-            try
-            {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/count/{userId}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var count = int.Parse(content);
-                    return Json(new { success = true, data = count });
-                }
-                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi hệ thống" });
-            }
-        }
-
-        // 2. Phương thức lấy số đơn đã thanh toán
-        [HttpGet]
-        public async Task<IActionResult> GetPaidOrderCount()
-        {
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Json(new { success = false, message = "Chưa đăng nhập" });
-            }
-
-            try
-            {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/paid/count/{userId}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var count = int.Parse(content);
-                    return Json(new { success = true, data = count });
-                }
-                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi hệ thống" });
-            }
-        }
-
-        // 3. Phương thức lấy số đơn chưa thanh toán
-        [HttpGet]
-        public async Task<IActionResult> GetUnpaidOrderCount()
-        {
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Json(new { success = false, message = "Chưa đăng nhập" });
-            }
-
-            try
-            {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/unpaid/count/{userId}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var count = int.Parse(content);
-                    return Json(new { success = true, data = count });
-                }
-                return Json(new { success = false, message = "Không thể lấy dữ liệu" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi hệ thống" });
-            }
-        }
-
-        // 4. Phương thức lấy tất cả thống kê cùng lúc
         [HttpGet]
         public async Task<IActionResult> GetOrderStatistics()
         {
@@ -868,22 +691,25 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Gọi 3 API cùng lúc
+
                 var totalTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/count/{userId}");
                 var paidTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/paid/count/{userId}");
                 var unpaidTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/unpaid/count/{userId}");
+                var canceledTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/canceled/{userId}");
 
-                await Task.WhenAll(totalTask, paidTask, unpaidTask);
+                await Task.WhenAll(totalTask, paidTask, unpaidTask, canceledTask);
 
                 var totalResponse = await totalTask;
                 var paidResponse = await paidTask;
                 var unpaidResponse = await unpaidTask;
+                var canceledResponse = await canceledTask;
 
-                if (totalResponse.IsSuccessStatusCode && paidResponse.IsSuccessStatusCode && unpaidResponse.IsSuccessStatusCode)
+                if (totalResponse.IsSuccessStatusCode && paidResponse.IsSuccessStatusCode && unpaidResponse.IsSuccessStatusCode && canceledResponse.IsSuccessStatusCode)
                 {
                     var totalCount = int.Parse(await totalResponse.Content.ReadAsStringAsync());
                     var paidCount = int.Parse(await paidResponse.Content.ReadAsStringAsync());
                     var unpaidCount = int.Parse(await unpaidResponse.Content.ReadAsStringAsync());
+                    var canceledCount = int.Parse(await canceledResponse.Content.ReadAsStringAsync());
 
                     return Json(new
                     {
@@ -892,7 +718,8 @@ namespace testpayment6._0.Controllers
                         {
                             total = totalCount,
                             paid = paidCount,
-                            unpaid = unpaidCount
+                            unpaid = unpaidCount,
+                            canceled = canceledCount
                         }
                     });
                 }
@@ -903,5 +730,6 @@ namespace testpayment6._0.Controllers
                 return Json(new { success = false, message = "Lỗi hệ thống" });
             }
         }
+
     }
 }

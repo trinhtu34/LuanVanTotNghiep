@@ -2,7 +2,12 @@
 @{
     ViewData["Title"] = "Danh Sách Đặt Bàn";
 }
-
+@if (TempData["ErrorDSDB"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorDSDB"]
+    </div>
+}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Danh Sách Đặt Bàn Của Tôi</h2>
@@ -10,19 +15,20 @@
             <i class="fas fa-plus"></i> Đặt Bàn Mới
         </a>
     </div>
-    <!--Section thống kê -->
+
+    <!--Section thống kê được cập nhật -->
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card statistics-card">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-chart-bar"></i> Thống Kê Đơn Đặt Bàn
+                        <i class="fas fa-chart-pie"></i> Thống Kê Tổng Quan
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="stat-item">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-item total">
                                 <div class="stat-value" id="totalOrderCount">
                                     <span class="spinner-border spinner-border-sm" role="status"></span>
                                     <span class="ms-2">Đang tải...</span>
@@ -33,8 +39,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-item paid">
                                 <div class="stat-value" id="paidOrderCount">
                                     <span class="spinner-border spinner-border-sm" role="status"></span>
                                     <span class="ms-2">Đang tải...</span>
@@ -45,8 +51,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-item unpaid">
                                 <div class="stat-value" id="unpaidOrderCount">
                                     <span class="spinner-border spinner-border-sm" role="status"></span>
                                     <span class="ms-2">Đang tải...</span>
@@ -54,6 +60,18 @@
                                 <div class="stat-label">
                                     <i class="fas fa-exclamation-circle text-warning"></i>
                                     Chưa Thanh Toán
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-item canceled">
+                                <div class="stat-value" id="canceled">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span class="ms-2">Đang tải...</span>
+                                </div>
+                                <div class="stat-label">
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                    Đã Bị Hủy
                                 </div>
                             </div>
                         </div>
@@ -68,6 +86,7 @@
         <div class="row">
             @foreach (var order in Model.OrderByDescending(o => o.orderDate))
             {
+                @* var timeUntilStart = order.startingTime - DateTime.Now; *@
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card order-card @(order.isCancel ? "cancelled" : "")">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -144,11 +163,21 @@
                                 </p>
                                 <!-- Hủy đơn đặt bàn -->
                                 <div class="info-item">
-                                    @if (!order.isCancel)
+                                    @{
+                                        var timeUntilStart = order.startingTime - DateTime.Now;
+                                        bool canCancel = !order.isCancel && timeUntilStart.TotalHours > 0;
+                                    }
+                                    @if (canCancel)
                                     {
                                         <button type="button" class="btn btn-danger btn-sm w-100 cancel-order-btn"
                                                 data-order-id="@order.orderTableId">
                                             <i class="fas fa-times"></i> Hủy Đơn Đặt Bàn
+                                        </button>
+                                    }
+                                    else if (!order.isCancel)
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                            <i class="fas fa-ban"></i> Không thể hủy (Đã qua giờ)
                                         </button>
                                     }
                                 </div>
@@ -157,7 +186,6 @@
                         <div class="card-footer text-muted text-center">
                             <small>
                                 @{
-                                    var timeUntilStart = order.startingTime - DateTime.Now;
                                     if (timeUntilStart.TotalHours > 0 && !order.isCancel)
                                     {
                                         <span class="text-info">
@@ -387,62 +415,162 @@
         .cancel-order-btn:active {
             transform: translateY(0);
         }
-    /* Styles cho thống kê */
+
+    @* css cho phần thống kê  *@
     .statistics-card {
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border: none;
+        overflow: hidden;
     }
 
-        .statistics-card .card-header {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            color: white;
-            border-radius: 10px 10px 0 0;
+    .statistics-card .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        border: none;
+        padding: 20px;
+    }
+
+        .statistics-card .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+
+        .statistics-card .card-header i {
+            margin-right: 10px;
+            font-size: 1.2rem;
         }
 
     .stat-item {
-        padding: 15px;
-        border-radius: 8px;
-        background: #f8f9fa;
-        margin: 5px;
-        transition: all 0.3s ease;
+        padding: 25px 15px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        margin: 10px 5px;
+        transition: all 0.4s ease;
+        border: 1px solid #dee2e6;
+        position: relative;
+        overflow: hidden;
     }
 
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover::before {
+            transform: scaleX(1);
+        }
+
         .stat-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
         }
 
     .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #495057;
-        margin-bottom: 5px;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .stat-label {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         color: #6c757d;
         font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
         .stat-label i {
-            margin-right: 5px;
+            margin-right: 8px;
+            font-size: 1.1rem;
         }
 
+    /* Màu sắc cho từng loại thống kê */
+    .stat-item.total .stat-value {
+        color: #3498db;
+    }
+
+    .stat-item.paid .stat-value {
+        color: #27ae60;
+    }
+
+    .stat-item.unpaid .stat-value {
+        color: #f39c12;
+    }
+
+    .stat-item.canceled .stat-value {
+        color: #e74c3c;
+    }
+
+    /* Responsive */
     @@media (max-width: 768px) {
         .stat-value {
-            font-size: 1.5rem;
+            font-size: 2rem;
         }
 
         .stat-item {
             margin-bottom: 15px;
+            padding: 20px 10px;
+        }
+
+        .statistics-card .card-header {
+            padding: 15px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .stat-value {
+            font-size: 1.8rem;
+        }
+    }
+
+    /* Animation khi load */
+    .stat-item {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+        .stat-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .stat-item:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+    @@keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function()
+    {
         // Tải tất cả thông tin cho mỗi đơn
         loadTableCounts();
         loadPaymentStatus();
@@ -458,7 +586,6 @@
                 handlePaymentClick(orderTableId, depositAmount);
             }
         });
-        // Thêm vào sau phần xử lý click button thanh toán
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('cancel-order-btn') || e.target.closest('.cancel-order-btn')) {
                 const button = e.target.classList.contains('cancel-order-btn') ? e.target : e.target.closest('.cancel-order-btn');
@@ -467,8 +594,8 @@
                 handleCancelOrder(orderTableId);
             }
         });
-    });
-    // load dashboard thống kê số liệu 
+    } );
+    // load dashboard thống kê số liệu
     function loadOrderStatistics() {
         // Gọi API để lấy thống kê
         fetch('@Url.Action("GetOrderStatistics", "DatBan")', {
@@ -498,6 +625,10 @@
                 // Cập nhật số đơn chưa thanh toán
                 document.getElementById('unpaidOrderCount').innerHTML =
                     `<span class="text-warning">${result.data.unpaid}</span>`;
+
+                // Cập nhật số đơn đã bị hủy
+                document.getElementById('canceled').innerHTML =
+                    `<span class="text-warning">${result.data.canceled}</span>`;
             } else {
                 // Hiển thị lỗi
                 document.getElementById('totalOrderCount').innerHTML =
@@ -505,6 +636,8 @@
                 document.getElementById('paidOrderCount').innerHTML =
                     '<span class="text-danger">Lỗi</span>';
                 document.getElementById('unpaidOrderCount').innerHTML =
+                    '<span class="text-danger">Lỗi</span>';
+                document.getElementById('canceled').innerHTML =
                     '<span class="text-danger">Lỗi</span>';
             }
         })
@@ -518,6 +651,67 @@
                 '<span class="text-danger">Lỗi tải</span>';
             document.getElementById('unpaidOrderCount').innerHTML =
                 '<span class="text-danger">Lỗi tải</span>';
+        });
+    }
+    // Hàm xử lý hủy đơn đặt bàn
+    function handleCancelOrder(orderTableId) {
+        // Hiển thị confirm dialog
+        if (!confirm('Bạn có chắc chắn muốn hủy đơn đặt bàn này không?')) {
+            return;
+        }
+
+        // Tìm button để thay đổi trạng thái
+        const cancelButton = document.querySelector(`.cancel-order-btn[data-order-id="${orderTableId}"]`);
+
+        if (cancelButton) {
+            // Disable button và hiển thị loading
+            cancelButton.disabled = true;
+            cancelButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Đang hủy...';
+        }
+
+        // Gửi request hủy đơn
+        fetch('@Url.Action("CancelOrder", "DatBan")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                OrderTableId: parseInt(orderTableId)
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('Cancel order result:', result);
+
+            if (result.success) {
+                // Thành công - reload trang để cập nhật UI
+                alert('Hủy đơn thành công!');
+                location.reload();
+            } else {
+                // Thất bại
+                alert('Lỗi: ' + (result.message || 'Không thể hủy đơn'));
+
+                // Restore button
+                if (cancelButton) {
+                    cancelButton.disabled = false;
+                    cancelButton.innerHTML = '<i class="fas fa-times"></i> Hủy Đơn Đặt Bàn';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error canceling order:', error);
+            alert('Có lỗi xảy ra khi hủy đơn: ' + error.message);
+
+            // Restore button
+            if (cancelButton) {
+                cancelButton.disabled = false;
+                cancelButton.innerHTML = '<i class="fas fa-times"></i> Hủy Đơn Đặt Bàn';
+            }
         });
     }
     // Hàm tải trạng thái thanh toán

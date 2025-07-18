@@ -6,14 +6,14 @@
 <div class="container mt-4">
 	<h2 class="text-center mb-4">Đặt Bàn Nhà Hàng</h2>
 
-@* 	@if (TempData["Error"] != null)
+	@if (TempData["ErrorDB"] != null)
 	{
 		<div class="alert alert-danger">
-			@TempData["Error"]
+			@TempData["ErrorDB"]
 		</div>
-	} *@
+	}
 
-	<!-- Danh sách bàn đã chọn -->
+	@* danh sách bàn đã chọn  *@
 	<div class="selected-tables-section mb-4" id="selectedTablesSection" style="display: none;">
 		<div class="card border-primary">
 			<div class="card-header bg-primary text-white">
@@ -42,7 +42,7 @@
 		</div>
 	</div>
 
-	<!-- Giỏ món ăn đã chọn -->
+	@* giỏ món ăn đã chọn  *@
 	<div class="selected-foods-section mb-4" id="selectedFoodsSection" style="display: none;">
 		<div class="card border-success">
 			<div class="card-header bg-success text-white">
@@ -75,7 +75,7 @@
 			<div class="region-section mb-5">
 				<h4 class="region-title mb-3">Khu vực @regionGroup.Key</h4>
 
-				<!-- Tab Navigation -->
+				@* navigation *@
 				<ul class="nav nav-tabs" id="region@(regionGroup.Key)Tabs" role="tablist">
 					<li class="nav-item" role="presentation">
 						<button class="nav-link active" id="tables-tab-@regionGroup.Key" data-bs-toggle="tab"
@@ -94,7 +94,8 @@
 
 				<!-- Tab Content -->
 				<div class="tab-content" id="region@(regionGroup.Key)TabContent">
-					<!-- Tables Tab -->
+					
+					@* thông tin bàn  *@
 					<div class="tab-pane fade show active" id="tables-@regionGroup.Key" role="tabpanel">
 						<div class="row mt-3">
 							@foreach (var table in regionGroup)
@@ -125,7 +126,7 @@
 						</div>
 					</div>
 
-					<!-- Menu Tab -->
+					@* thông tin menu  *@
 					<div class="tab-pane fade" id="menu-@regionGroup.Key" role="tabpanel">
 						<div class="row mt-3" id="menuContainer-@regionGroup.Key">
 							<div class="col-12 text-center">
@@ -137,6 +138,7 @@
 						</div>
 					</div>
 				</div>
+
 			</div>
 		}
 	}
@@ -148,7 +150,7 @@
 	}
 </div>
 
-<!-- Modal đặt bàn -->
+@* modal hiển thị thông tin bàn đã đặt , gọi lên bằng JS ,  *@
 <div class="modal fade" id="datBanModal" tabindex="-1" aria-labelledby="datBanModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-xl">
 		<div class="modal-content">
@@ -185,7 +187,7 @@
 				</div>
 				<div class="alert alert-warning">
 					<i class="fas fa-exclamation-triangle"></i>
-					<strong>Lưu ý:</strong> Bạn cần đặt cọc để xác nhận đặt bàn. Vui lòng đến nhà hàng đúng giờ đã đặt.
+                    <strong>Lưu ý:</strong> Sau khi xác nhận bạn sẽ được chuyển qua trang thanh toán tiền cọc để giữ bàn. Vui lòng kiểm tra kỹ thông tin trước khi xác nhận.
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -198,7 +200,7 @@
 	</div>
 </div>
 
-<!-- Modal Loading -->
+@* model loading khi chờ dữ liệu hiển thị lên  *@
 <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 	<div class="modal-dialog modal-sm">
 		<div class="modal-content">
@@ -369,7 +371,10 @@
 		this.elements = this.getElements();
 		this.init();
 	  }
-
+	  init() {
+		this.setupEventListeners();
+		this.setDefaultTime();
+	  }
 	  getElements() {
 		return {
 		  selectedSection: document.getElementById("selectedTablesSection"),
@@ -391,12 +396,8 @@
 		};
 	  }
 
-	  init() {
-		this.setupEventListeners();
-		this.setDefaultTime();
-	  }
 
-	setDefaultTime() {
+	  setDefaultTime() {
 	  // Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
 	  const now = new Date();
 	  const vietnamTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
@@ -461,7 +462,7 @@
 		}
 	  }
 
-	  // button chọn bàn , hủy chọn bàn ở đây
+	  // các thao tác về table sẽ ở đây  
 	  toggleTable(button) {
 		const tableData = this.getTableData(button);
 		const { tableId } = tableData;
@@ -526,7 +527,7 @@
 		);
 	  }
 
-	  // Food management methods
+	  // Các thao tác về món ăn sẽ nằm ở đây 
 	  toggleFood(button) {
 		const foodData = this.getFoodData(button);
 		const { dishId } = foodData;
@@ -614,7 +615,7 @@
 		this.updateFoodUI();
 	  }
 
-	  // UI update methods
+	  // UI update method , cập nhật giao diện khi có thao tác 
 	  updateTableUI() {
 		const { selectedSection, selectedList, selectedCount, totalDeposit } =
 		  this.elements;
@@ -631,7 +632,6 @@
 		selectedList.innerHTML = html;
 		totalDeposit.textContent = this.formatCurrency(total);
 	  }
-
 	  updateFoodUI() {
 		const {
 		  selectedFoodsSection,
@@ -653,6 +653,7 @@
 		totalFoodPrice.textContent = this.formatCurrency(total);
 	  }
 
+	  // generate method , để hiển thị modal của bàn và món ăn khi chọn , mục " Danh sách bàn đã chọn " hiển thị sau khi người dùng ấn tiến hành đặt bàn 
 	  generateSelectedTablesHTML() {
 		let html = "";
 		let total = 0;
@@ -670,41 +671,11 @@
 				<i class="fas fa-users"></i> ${table.capacity} người |
 				<i class="fas fa-money-bill-wave"></i> ${this.formatCurrency(
 				parseInt(table.deposit)
-				)}
+				)}	
 			</small>
 		</div>
 	</div>
 					`;
-		});
-
-		return { html, total };
-	  }
-	  generateModalTablesHTML() {
-		let html = "";
-		let total = 0;
-
-		this.selectedTables.forEach((table, tableId) => {
-		  total += parseInt(table.deposit);
-		  html += `
-	<div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
-		<div>
-			<strong>Bàn ${tableId}</strong>
-			<br><small class="text-muted">
-				<i class="fas fa-users"></i> ${table.capacity} người |
-				<i class="fas fa-money-bill-wave"></i> ${this.formatCurrency(
-				parseInt(table.deposit)
-				)}
-			</small>
-		</div>
-		<div class="text-end">
-			<strong class="text-primary">
-				${this.formatCurrency(
-				parseInt(table.deposit)
-				)}
-			</strong>
-		</div>
-	</div>
-						`;
 		});
 
 		return { html, total };
@@ -747,32 +718,37 @@
 		return { html, total };
 	  }
 
-	  // Menu loading
-	  async loadMenuForRegion(regionId) {
-		if (this.loadedMenus.has(regionId)) return;
+	  // generate method , để hiển thị modal của bàn và món ăn khi chọn , mục " Bàn đã chọn " hiển thị ở đầu trang ý
+	  generateModalTablesHTML() {
+		let html = "";
+		let total = 0;
 
-		const container = document.getElementById(`menuContainer-${regionId}`);
+		this.selectedTables.forEach((table, tableId) => {
+		  total += parseInt(table.deposit);
+		  html += `
+	<div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+		<div>
+			<strong>Bàn ${tableId}</strong>
+			<br><small class="text-muted">
+				<i class="fas fa-users"></i> ${table.capacity} người |
+				<i class="fas fa-money-bill-wave"></i> ${this.formatCurrency(
+				parseInt(table.deposit)
+				)}
+			</small>
+		</div>
+		<div class="text-end">
+			<strong class="text-primary">
+				${this.formatCurrency(
+				parseInt(table.deposit)
+				)}
+			</strong>
+		</div>
+	</div>
+						`;
+		});
 
-		try {
-		  const response = await fetch(
-			`/DatBan/GetMenuByRegion?regionId=${regionId}`
-		  );
-		  const result = await response.json();
-
-		  if (result.success && result.data) {
-			container.innerHTML = this.generateMenuHTML(result.data);
-			this.loadedMenus.add(regionId);
-		  } else {
-			container.innerHTML =
-			  '<div class="col-12 text-center"><p class="text-muted">Không có món ăn nào trong khu vực này</p></div>';
-		  }
-		} catch (error) {
-		  console.error("Error loading menu:", error);
-		  container.innerHTML =
-			'<div class="col-12 text-center"><p class="text-danger">Có lỗi xảy ra khi tải thực đơn</p></div>';
-		}
+		return { html, total };
 	  }
-
 	  generateMenuHTML(menuItems) {
 		return menuItems
 		  .map(
@@ -799,6 +775,32 @@
 				`
 		  )
 		  .join("");
+	  }
+
+	  // Menu loading
+	  async loadMenuForRegion(regionId) {
+		if (this.loadedMenus.has(regionId)) return;
+
+		const container = document.getElementById(`menuContainer-${regionId}`);
+
+		try {
+		  const response = await fetch(
+			`/DatBan/GetMenuByRegion?regionId=${regionId}`
+		  );
+		  const result = await response.json();
+
+		  if (result.success && result.data) {
+			container.innerHTML = this.generateMenuHTML(result.data);
+			this.loadedMenus.add(regionId);
+		  } else {
+			container.innerHTML =
+			  '<div class="col-12 text-center"><p class="text-muted">Không có món ăn nào trong khu vực này</p></div>';
+		  }
+		} catch (error) {
+		  console.error("Error loading menu:", error);
+		  container.innerHTML =
+			'<div class="col-12 text-center"><p class="text-danger">Có lỗi xảy ra khi tải thực đơn</p></div>';
+		}
 	  }
 
 	  // Booking methods
@@ -898,7 +900,7 @@
 	  return true;
 	}
 
-	  // Thay đổi trong method submitBooking
+	  // method để gửi dữ liệu vào controller , thêm từng đối tượng vào 1 Map , rồi gửi về controller 
 	  async submitBooking(startingTime) {
 		const formData = new FormData();
 		formData.append("startingTime", startingTime);
@@ -939,6 +941,7 @@
 		return response.json();
 	  }
 
+	  // gửi dữ liệu đến trang thanh toán 
 	  handleBookingResult(data)
 	  {
 		if (data.success) {
@@ -974,7 +977,7 @@
 		  orderIdInput.value = data.orderTableId;
 		  form.appendChild(orderIdInput);
 
-		  // Thêm anti-forgery token nếu có
+		  // anti-forgery token
 		  const token = document.querySelector(
 			'input[name="__RequestVerificationToken"]'
 		  )?.value;

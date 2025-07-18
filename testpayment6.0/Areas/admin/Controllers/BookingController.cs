@@ -32,7 +32,7 @@ namespace testpayment6._0.Areas.admin.Controllers
 
             var model = await LoadBookingData();
 
-            // Khởi tạo SelectedDishes rỗng - sẽ được populate bởi AJAX
+            // khởi tạo SelectedDishes , dùng cho chọn món ăn ở frontend 
             model.SelectedDishes = new List<SelectedDish>();
 
             _logger.LogInformation("Initialized empty SelectedDishes list");
@@ -346,7 +346,6 @@ namespace testpayment6._0.Areas.admin.Controllers
 
                 foreach (var order in activeOrders)
                 {
-                    // Sử dụng endpoint đúng: /OrderTablesDetail/list/{orderTableId}
                     var detailResponse = await _httpClient.GetAsync($"{BASE_API_URL}/OrderTablesDetail/list/{order.orderTableId}");
                     if (detailResponse.IsSuccessStatusCode)
                     {
