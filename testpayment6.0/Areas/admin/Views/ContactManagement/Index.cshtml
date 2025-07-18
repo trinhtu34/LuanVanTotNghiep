@@ -1,0 +1,457 @@
+﻿@model testpayment6._0.Areas.admin.Models.ContactFormViewModel
+
+@{
+    ViewData["Title"] = "Quản lý thông tin liên hệ";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+    .table th {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .content-cell {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+        .content-cell:hover {
+            white-space: normal;
+            overflow: visible;
+        }
+
+    .pagination-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+    }
+
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>
+                    Quản lý thông tin liên hệ từ khách hàng
+                </h2>
+            </div>
+
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMessageContact))
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @ViewBag.ErrorMessageContact
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(TempData["ErrorMessageContact"]?.ToString()))
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @TempData["ErrorMessageContact"]
+                </div>
+            }
+
+            <!-- Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form asp-action="Index" method="get">
+                        <div class="row align-items-end">
+                            <!-- Date Range Filter -->
+                            <div class="col-md-2">
+                                <label asp-for="FromDate" class="form-label">Từ ngày</label>
+                                <input asp-for="FromDate" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-2">
+                                <label asp-for="ToDate" class="form-label">Đến ngày</label>
+                                <input asp-for="ToDate" type="date" class="form-control" />
+                            </div>
+
+                            <!-- User ID Filter -->
+                            <div class="col-md-2">
+                                <label asp-for="UserId" class="form-label">User ID</label>
+                                <input asp-for="UserId" class="form-control" placeholder="Nhập User ID" />
+                            </div>
+
+                            <!-- Content Search -->
+                            <div class="col-md-2">
+                                <label asp-for="ContentSearch" class="form-label">Tìm kiếm nội dung</label>
+                                <input asp-for="ContentSearch" class="form-control" placeholder="Nhập nội dung" />
+                            </div>
+
+                            <!-- Search Type -->
+                            <div class="col-md-2">
+                                <label asp-for="SearchType" class="form-label">Kiểu tìm kiếm</label>
+                                <select asp-for="SearchType" class="form-select">
+                                    @foreach (var option in Model.SearchTypeOptions)
+                                    {
+                                        <option value="@option.Value">@option.Text</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Quick Date Filters -->
+                            <div class="col-md-2">
+                                <label asp-for="QuickDateFilter" class="form-label">Lọc nhanh</label>
+                                <select asp-for="QuickDateFilter" class="form-select" onchange="this.form.submit()">
+                                    @foreach (var option in Model.QuickDateFilterOptions)
+                                    {
+                                        <option value="@option.Value">@option.Text</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <!-- Case Sensitive -->
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input asp-for="CaseSensitive" class="form-check-input" type="checkbox">
+                                    <label asp-for="CaseSensitive" class="form-check-label">Phân biệt chữ hoa/thường</label>
+                                </div>
+                            </div>
+
+                            <!-- Sort Options -->
+                            <div class="col-md-2">
+                                <label asp-for="SortBy" class="form-label">Sắp xếp theo</label>
+                                <select asp-for="SortBy" class="form-select">
+                                    @foreach (var option in Model.SortByOptions)
+                                    {
+                                        <option value="@option.Value">@option.Text</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label asp-for="SortOrder" class="form-label">Thứ tự</label>
+                                <select asp-for="SortOrder" class="form-select">
+                                    @foreach (var option in Model.SortOrderOptions)
+                                    {
+                                        <option value="@option.Value">@option.Text</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Page Size -->
+                            <div class="col-md-2">
+                                <label asp-for="PageSize" class="form-label">Số lượng hiển thị</label>
+                                <select asp-for="PageSize" class="form-select">
+                                    @foreach (var option in Model.PageSizeOptions)
+                                    {
+                                        <option value="@option.Value">@option.Text</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-1"></i>
+                                    Tìm kiếm
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-times me-1"></i>
+                                    Xóa bộ lọc
+                                </a>
+                                <a asp-action="ExportToExcel"
+                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-userId="@Model.UserId"
+                                   asp-route-contentSearch="@Model.ContentSearch"
+                                   asp-route-searchType="@Model.SearchType"
+                                   asp-route-caseSensitive="@Model.CaseSensitive"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @* kết quả in ra ở đây , nếu mà không dùng bộ lọc thì cho mấy cái thuộc tính null hết , backend cho phép null  *@
+            @if (Model.ContactForms.Any() || Model.HasFilters)
+            {
+                <div class="mb-3">
+                    <small class="text-muted">
+                        Tìm thấy <strong>@Model.TotalRecords</strong> liên hệ
+                        @if (Model.FromDate.HasValue || Model.ToDate.HasValue)
+                        {
+                            <span class="badge bg-info ms-2">
+                                @if (Model.FromDate.HasValue && Model.ToDate.HasValue)
+                                {
+                                    @($"{Model.FromDate.Value:dd/MM/yyyy} - {Model.ToDate.Value:dd/MM/yyyy}")
+                                }
+                                else if (Model.FromDate.HasValue)
+                                {
+                                    @($"Từ {Model.FromDate.Value:dd/MM/yyyy}")
+                                }
+                                else if (Model.ToDate.HasValue)
+                                {
+                                    @($"Đến {Model.ToDate.Value:dd/MM/yyyy}")
+                                }
+                            </span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.UserId))
+                        {
+                            <span class="badge bg-success ms-2">User: @Model.UserId</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ContentSearch))
+                        {
+                            <span class="badge bg-warning ms-2">Nội dung: @Model.ContentSearch</span>
+                        }
+                    </small>
+                </div>
+            }
+
+            <!-- Contact Forms Table -->
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.ContactForms.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Contact ID</th>
+                                        <th>User ID</th>
+                                        <th>Nội dung</th>
+                                        <th>Thời gian tạo</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var contact in Model.ContactForms)
+                                    {
+                                        <tr>
+                                            <td>@contact.ContactId</td>
+                                            <td><span class="badge bg-info">@contact.UserId</span></td>
+                                            <td>
+                                                <div class="content-cell" title="@contact.Content">
+                                                    @contact.Content
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small>@contact.CreateAt.ToString("dd/MM/yyyy HH:mm:ss")</small>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                        onclick="showContactDetail('@contact.ContactId')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @* phân trang  *@
+                        @if (Model.TotalPages > 1)
+                        {
+                            <div class="pagination-info">
+                                <div class="page-size-selector">
+                                    <span>Hiển thị @Model.PageSize kết quả</span>
+                                </div>
+
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        @if (Model.HasPreviousPage)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                   asp-action="Index"
+                                                   asp-route-pageNumber="@Model.PreviousPage"
+                                                   asp-route-pageSize="@Model.PageSize"
+                                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                                   asp-route-userId="@Model.UserId"
+                                                   asp-route-contentSearch="@Model.ContentSearch"
+                                                   asp-route-searchType="@Model.SearchType"
+                                                   asp-route-caseSensitive="@Model.CaseSensitive"
+                                                   asp-route-sortBy="@Model.SortBy"
+                                                   asp-route-sortOrder="@Model.SortOrder">
+                                                    Trước
+                                                </a>
+                                            </li>
+                                        }
+
+                                        @for (int i = 1; i <= Model.TotalPages; i++)
+                                        {
+                                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                                <a class="page-link"
+                                                   asp-action="Index"
+                                                   asp-route-pageNumber="@i"
+                                                   asp-route-pageSize="@Model.PageSize"
+                                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                                   asp-route-userId="@Model.UserId"
+                                                   asp-route-contentSearch="@Model.ContentSearch"
+                                                   asp-route-searchType="@Model.SearchType"
+                                                   asp-route-caseSensitive="@Model.CaseSensitive"
+                                                   asp-route-sortBy="@Model.SortBy"
+                                                   asp-route-sortOrder="@Model.SortOrder">
+                                                    @i
+                                                </a>
+                                            </li>
+                                        }
+
+                                        @if (Model.HasNextPage)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                   asp-action="Index"
+                                                   asp-route-pageNumber="@Model.NextPage"
+                                                   asp-route-pageSize="@Model.PageSize"
+                                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                                   asp-route-userId="@Model.UserId"
+                                                   asp-route-contentSearch="@Model.ContentSearch"
+                                                   asp-route-searchType="@Model.SearchType"
+                                                   asp-route-caseSensitive="@Model.CaseSensitive"
+                                                   asp-route-sortBy="@Model.SortBy"
+                                                   asp-route-sortOrder="@Model.SortOrder">
+                                                    Sau
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </nav>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h4>Không có dữ liệu</h4>
+                            <p class="text-muted">
+                                @if (Model.HasFilters)
+                                {
+                                    <span>Không tìm thấy liên hệ nào phù hợp với điều kiện tìm kiếm.</span>
+                                }
+                                else
+                                {
+                                    <span>Chưa có liên hệ nào từ khách hàng.</span>
+                                }
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Contact Detail -->
+<div class="modal fade" id="contactDetailModal" tabindex="-1" aria-labelledby="contactDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactDetailModalLabel">
+                    <i class="fas fa-envelope me-2"></i>
+                    Chi tiết liên hệ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contactDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+    function showContactDetail(contactId) {
+        // Show loading spinner
+        document.getElementById('contactDetailContent').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        `;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('contactDetailModal'));
+        modal.show();
+
+        // Load contact detail - FIX: Đảm bảo parameter name đúng
+        fetch(`/admin/ContactManagement/GetContactDetail?ContactId=${contactId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById('contactDetailContent').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error); // Thêm logging để debug
+                document.getElementById('contactDetailContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Có lỗi xảy ra khi tải thông tin liên hệ: ${error.message}
+                    </div>
+                `;
+            });
+    }
+
+    // Auto-submit form when quick date filter changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const quickDateFilter = document.querySelector('select[name="QuickDateFilter"]');
+        if (quickDateFilter) {
+            quickDateFilter.addEventListener('change', function() {
+                if (this.value) {
+                    this.form.submit();
+                }
+            });
+        }
+    });
+</script>

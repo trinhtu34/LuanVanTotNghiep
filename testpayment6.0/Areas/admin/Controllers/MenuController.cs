@@ -62,7 +62,9 @@ namespace testpayment6._0.Areas.admin.Controllers
 
         public async Task<IActionResult> Create()
         {
-            await LoadDropdownData();
+            //await LoadDropdownData(); nếu làm thế này thì trong phần view sẽ phải đặt testpayment6._0.Areas.admin.Model List<T> thì mới có thể sử dụng được
+            ViewBag.Regions = await LoadRegions();
+            ViewBag.Categories = await LoadCategories();
             return View();
         }
 
@@ -70,7 +72,7 @@ namespace testpayment6._0.Areas.admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MenuAdmin menu)
         {
-            // Kiểm tra validation
+            // validation dữ liệu được nhập trước khi mà gửi lên API
             var errors = new List<string>();
 
             if (string.IsNullOrWhiteSpace(menu.DishId))
@@ -90,7 +92,7 @@ namespace testpayment6._0.Areas.admin.Controllers
 
             if (errors.Any())
             {
-                ViewBag.Error = "Lỗi validation: " + string.Join(", ", errors);
+                ViewBag.ErrorMenu = "Lỗi validation: " + string.Join(", ", errors);
                 await LoadDropdownData();
                 return View(menu);
             }
@@ -101,18 +103,18 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var response = await _httpClient.PostAsync($"{BASE_API_URL}/menu", content);
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["Success"] = "Thêm món ăn thành công!";
+                    TempData["SuccessMenu"] = "Thêm món ăn thành công!";
                     return RedirectToAction("Index");
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                ViewBag.Error = $"Không thể tạo món ăn mới. API Error: {errorContent}";
+                ViewBag.ErrorMenu = $"Không thể tạo món ăn mới. API Error: {errorContent}";
                 await LoadDropdownData();
                 return View(menu);
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"Lỗi: {ex.Message}";
+                ViewBag.ErrorMenu = $"Lỗi: {ex.Message}";
                 await LoadDropdownData();
                 return View(menu);
             }
@@ -121,7 +123,7 @@ namespace testpayment6._0.Areas.admin.Controllers
         {
             if (string.IsNullOrWhiteSpace(id))
             {
-                TempData["Error"] = "Mã món ăn không hợp lệ";
+                TempData["ErrorMenu"] = "Mã món ăn không hợp lệ";
                 return RedirectToAction("Index");
             }
 
@@ -164,7 +166,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Lỗi: {ex.Message}";
+                TempData["ErrorMenu"] = $"Lỗi: {ex.Message}";
                 return RedirectToAction("Index");
             }
         }
@@ -191,7 +193,7 @@ namespace testpayment6._0.Areas.admin.Controllers
 
             if (errors.Any())
             {
-                ViewBag.Error = "Lỗi validation: " + string.Join(", ", errors);
+                ViewBag.ErrorMenu = "Lỗi validation: " + string.Join(", ", errors);
                 await LoadDropdownData();
                 return View(menu);
             }
@@ -202,18 +204,18 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var response = await _httpClient.PutAsync($"{BASE_API_URL}/menu/admin/{menu.DishId}", content);
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["Success"] = "Cập nhật món ăn thành công!";
+                    TempData["SuccessMenu"] = "Cập nhật món ăn thành công!";
                     return RedirectToAction("Index");
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                ViewBag.Error = $"Không thể cập nhật món ăn. API Error: {errorContent}";
+                ViewBag.ErrorMenu = $"Không thể cập nhật món ăn. API Error: {errorContent}";
                 await LoadDropdownData();
                 return View(menu);
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"Lỗi: {ex.Message}";
+                ViewBag.ErrorMenu = $"Lỗi: {ex.Message}";
                 await LoadDropdownData();
                 return View(menu);
             }
@@ -240,7 +242,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
             catch (Exception)
             {
-                // Log error if needed
+
             }
             return new List<RegionAdmin>();
         }
@@ -261,7 +263,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
             catch (Exception)
             {
-                // Log error if needed
+
             }
             return new List<CategoryAdmin>();
         }
@@ -275,19 +277,19 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var response = await _httpClient.DeleteAsync($"{BASE_API_URL}/menu/{id}");
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["Success"] = "Xóa món ăn thành công!";
+                    TempData["SuccessMenu"] = "Xóa món ăn thành công!";
                     return RedirectToAction("Index");
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    TempData["Error"] = $"Không thể xóa món ăn. API Error: {errorContent}";
+                    TempData["ErrorMenu"] = $"Không thể xóa món ăn. API Error: {errorContent}";
                     return RedirectToAction("Index");
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Lỗi: {ex.Message}";
+                TempData["ErrorMenu"] = $"Lỗi: {ex.Message}";
                 return RedirectToAction("Index");
             }
         }

@@ -136,7 +136,7 @@
     </div>
 
     <!-- Summary Section -->
-    <div class="row mt-4">
+    @* <div class="row mt-4">
         <div class="col-md-4">
             <div class="card border-0 bg-light">
                 <div class="card-body text-center">
@@ -168,7 +168,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> *@
 }
 else
 {
@@ -327,7 +327,7 @@ else
 
             if (result.success) {
                 // Thành công
-                alert('✅ Hủy đơn thành công!');
+                alert('Hủy đơn thành công!');
 
                 // Smooth reload hoặc update UI
                 setTimeout(() => {
@@ -335,13 +335,13 @@ else
                 }, 500);
             } else {
                 // Thất bại
-                alert('❌ Lỗi: ' + (result.message || 'Không thể hủy đơn'));
+                alert('Lỗi: ' + (result.message || 'Không thể hủy đơn'));
                 restoreButton(cancelButton);
             }
         })
         .catch(error => {
             console.error('Error canceling order:', error);
-            alert('❌ Có lỗi xảy ra khi hủy đơn: ' + error.message);
+            alert('Có lỗi xảy ra khi hủy đơn: ' + error.message);
             restoreButton(cancelButton);
         });
     }

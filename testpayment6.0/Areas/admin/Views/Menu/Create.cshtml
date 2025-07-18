@@ -68,7 +68,7 @@
                                         <option value="">-- Chọn danh mục --</option>
                                         @if (ViewBag.Categories != null)
                                         {
-                                            @foreach (var category in (List<testpayment6._0.Areas.admin.Models.CategoryAdmin>)ViewBag.Categories)
+                                            @foreach (var category in ViewBag.Categories)
                                             {
                                                 <option value="@category.CategoryId">@category.CategoryName</option>
                                             }
@@ -87,7 +87,7 @@
                                         <option value="">-- Chọn khu vực --</option>
                                         @if (ViewBag.Regions != null)
                                         {
-                                            @foreach (var region in (List<testpayment6._0.Areas.admin.Models.RegionAdmin>)ViewBag.Regions)
+                                            @foreach (var region in ViewBag.Regions)
                                             {
                                                 <option value="@region.RegionId">@region.RegionName</option>
                                             }

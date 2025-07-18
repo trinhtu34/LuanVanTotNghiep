@@ -10,40 +10,58 @@ namespace testpayment6._0.Areas.admin.Controllers
         private readonly HttpClient _httpClient;
         private readonly string BASE_API_URL;
 
-        public ShowCartPaymentHistoryController(HttpClient httpClient , IConfiguration configuration)
+        public ShowCartPaymentHistoryController(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             BASE_API_URL = configuration["BaseAPI"];
         }
 
-        public async Task<IActionResult> Index(bool? filterBySuccess = null)
+        public async Task<IActionResult> Index(bool? filterBySuccess = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var viewModel = new PaymentHistoryViewModel_Cart
             {
-                FilterBySuccess = filterBySuccess
+                FilterBySuccess = filterBySuccess,
+                FromDate = fromDate,
+                ToDate = toDate
             };
+
             try
             {
-                var paymentHistory = await GetPaymentHistoryAsync();
-                // Áp dụng filter nếu có
-                if (filterBySuccess.HasValue)
-                {
-                    paymentHistory = paymentHistory.Where(p => p.IsSuccess == filterBySuccess.Value).ToList();
-                }
+                // Luôn gọi API filter với các tham số (có thể null)
+                var paymentHistory = await GetPaymentHistoryWithFiltersAsync(fromDate, toDate, filterBySuccess);
                 viewModel.PaymentHistory = paymentHistory;
             }
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = $"Có lỗi xảy ra: {ex.Message}";
             }
+
             return View(viewModel);
         }
 
-        public async Task<List<PaymentHistoryModel_Cart>> GetPaymentHistoryAsync()
+        // API duy nhất xử lý tất cả filter
+        public async Task<List<PaymentHistoryModel_Cart>> GetPaymentHistoryWithFiltersAsync(
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            bool? filterBySuccess = null)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/payment/paymenthistory/cart");
+                var queryParams = new List<string>();
+
+                if (fromDate.HasValue)
+                    queryParams.Add($"fromDate={fromDate.Value:yyyy-MM-dd}");
+
+                if (toDate.HasValue)
+                    queryParams.Add($"toDate={toDate.Value:yyyy-MM-dd}");
+
+                if (filterBySuccess.HasValue)
+                    queryParams.Add($"filterBySuccess={filterBySuccess.Value}");
+
+                var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/payment/paymenthistory/cart/filter{queryString}");
+
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();

@@ -20,26 +20,58 @@
                 <div class="card-body">
                     <form method="get" action="@Url.Action("Index", "ShowCartPaymentHistory")">
                         <div class="row align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label">Trạng thái giao dịch</label>
+                            <!-- Date Range Filter -->
+                            <div class="col-md-2">
+                                <label class="form-label">Từ ngày</label>
+                                <input type="date" name="fromDate" class="form-control"
+                                       value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Đến ngày</label>
+                                <input type="date" name="toDate" class="form-control"
+                                       value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+                            </div>
+
+                            <!-- Success Filter -->
+                            <div class="col-md-2">
+                                <label class="form-label">Trạng thái</label>
                                 <select name="filterBySuccess" class="form-select">
                                     <option value="">Tất cả</option>
                                     <option value="true" @(Model.FilterBySuccess == true ? "selected" : "")>Thành công</option>
                                     <option value="false" @(Model.FilterBySuccess == false ? "selected" : "")>Thất bại</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
 
-                                <button type="submit" class="btn btn-primary">
+                            <!-- Quick Date Filters -->
+                            <div class="col-md-2">
+                                <label class="form-label">Lọc nhanh</label>
+                                <select id="quickDateFilter" class="form-select">
+                                    <option value="">Chọn khoảng thời gian</option>
+                                    <option value="today">Hôm nay</option>
+                                    <option value="yesterday">Hôm qua</option>
+                                    <option value="thisWeek">Tuần này</option>
+                                    <option value="lastWeek">Tuần trước</option>
+                                    <option value="thisMonth">Tháng này</option>
+                                    <option value="lastMonth">Tháng trước</option>
+                                    <option value="thisYear">Năm Nay</option>
+                                    <option value="lastYear">Năm trước</option>
+                                </select>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary me-2">
                                     <i class="fas fa-filter me-1"></i>
                                     Lọc
                                 </button>
-                            </div>
-                            <div class="col-md-2">
-                                <a href="@Url.Action("Index", "ShowCartPaymentHistory")" class="btn btn-outline-secondary">
+                                <a href="@Url.Action("Index", "ShowCartPaymentHistory")" class="btn btn-outline-secondary me-2">
                                     <i class="fas fa-times me-1"></i>
                                     Xóa bộ lọc
                                 </a>
+                                <button type="button" class="btn btn-success" onclick="exportData()">
+                                    <i class="fas fa-download me-1"></i>
+                                    Xuất Excel
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -58,6 +90,25 @@
             <div class="mb-3">
                 <small class="text-muted">
                     Tìm thấy <strong>@Model.PaymentHistory.Count</strong> giao dịch
+
+                    @if (Model.FromDate.HasValue || Model.ToDate.HasValue)
+                    {
+                        <span class="badge bg-info ms-2">
+                            @if (Model.FromDate.HasValue && Model.ToDate.HasValue)
+                            {
+                                <span>@Model.FromDate.Value.ToString("dd/MM/yyyy") - @Model.ToDate.Value.ToString("dd/MM/yyyy")</span>
+                            }
+                            else if (Model.FromDate.HasValue)
+                            {
+                                <span>Từ @Model.FromDate.Value.ToString("dd/MM/yyyy")</span>
+                            }
+                            else if (Model.ToDate.HasValue)
+                            {
+                                <span>Đến @Model.ToDate.Value.ToString("dd/MM/yyyy")</span>
+                            }
+                        </span>
+                    }
+
                     @if (Model.FilterBySuccess.HasValue)
                     {
                         <span class="badge bg-@(Model.FilterBySuccess.Value ? "success" : "danger") ms-2">
@@ -141,7 +192,7 @@
                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">Không có dữ liệu lịch sử thanh toán</h5>
                             <p class="text-muted">
-                                @if (Model.FilterBySuccess.HasValue)
+                                @if (Model.FilterBySuccess.HasValue || Model.FromDate.HasValue || Model.ToDate.HasValue)
                                 {
                                     <span>Thử thay đổi bộ lọc để xem thêm kết quả</span>
                                 }
@@ -188,7 +239,77 @@
         font-size: 0.9rem;
     }
 
-    .form-select {
+    .form-select, .form-control {
         font-size: 0.9rem;
     }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
 </style>
+
+<script>
+    // Quick date filter functionality
+    document.getElementById('quickDateFilter').addEventListener('change', function() {
+        const value = this.value;
+        const fromDateInput = document.querySelector('input[name="fromDate"]');
+        const toDateInput = document.querySelector('input[name="toDate"]');
+
+        if (!value) return;
+
+        const today = new Date();
+        let fromDate, toDate;
+
+        switch(value) {
+            case 'today':
+                fromDate = toDate = today;
+                break;
+            case 'yesterday':
+                fromDate = toDate = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+                break;
+            case 'thisWeek':
+                const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+                fromDate = startOfWeek;
+                toDate = new Date();
+                break;
+            case 'lastWeek':
+                const lastWeekStart = new Date(today.setDate(today.getDate() - today.getDay() - 7));
+                const lastWeekEnd = new Date(today.setDate(today.getDate() - today.getDay() - 1));
+                fromDate = lastWeekStart;
+                toDate = lastWeekEnd;
+                break;
+            case 'thisMonth':
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                toDate = new Date();
+                break;
+            case 'lastMonth':
+                fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case 'thisYear':
+                fromDate = new Date(today.getFullYear(), 0, 1); // 1 tháng 1 của năm hiện tại
+                toDate = new Date(); // Ngày hiện tại
+                break;
+            case 'lastYear':
+                fromDate = new Date(today.getFullYear() - 1, 0, 1); // 1 tháng 1 của năm trước
+                toDate = new Date(today.getFullYear() - 1, 11, 31); // 31 tháng 12 của năm trước
+                break;
+        }
+
+        if (fromDate && toDate) {
+            fromDateInput.value = fromDate.toISOString().split('T')[0];
+            toDateInput.value = toDate.toISOString().split('T')[0];
+        }
+    });
+
+    // Export function
+    function exportData() {
+        const form = document.querySelector('form');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+
+        // Redirect to export endpoint
+        window.location.href = '@Url.Action("ExportExcel", "ShowCartPaymentHistory")?' + params.toString();
+    }
+</script>

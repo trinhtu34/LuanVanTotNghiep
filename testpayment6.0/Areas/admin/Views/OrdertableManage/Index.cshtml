@@ -67,6 +67,36 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-6 mt-2">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h4 class="mb-0">@Model.TotalRevenueUnpaid.ToString("N0") VNĐ</h4>
+                                                    <small>Tổng tiền chưa thanh toán và chưa hủy</small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-money fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h4 class="mb-0">@Model.TotalOrderUnpaid.ToString("N0") VNĐ</h4>
+                                                    <small>Tổng đơn chưa thanh toán và chưa hủy</small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-money fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -92,6 +122,7 @@
 
                     <div id="orderTableList">
                         @Html.Partial("_OrdertableManageList", Model.OrderTables)
+                        @* <partial name="_OrderTableManageList" model="Model.OrderTables" /> *@
                     </div>
                 </div>
             </div>

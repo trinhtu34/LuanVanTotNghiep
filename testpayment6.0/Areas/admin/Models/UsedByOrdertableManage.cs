@@ -41,5 +41,7 @@ namespace testpayment6._0.Areas.admin.Models
         public string FilterType { get; set; } = "current"; // "current" or "all"
         public int TotalOrders { get; set; }
         public decimal TotalRevenue { get; set; }
+        public decimal TotalRevenueUnpaid { get; set; } // Tổng doanh thu chưa thanh toán
+        public decimal TotalOrderUnpaid { get; set; } // Tổng đơn chưa thanh toán và chưa hủy 
     }
 }

@@ -17,5 +17,7 @@
     {
         public List<PaymentHistoryModel_Cart> PaymentHistory { get; set; } = new List<PaymentHistoryModel_Cart>();
         public bool? FilterBySuccess { get; set; } // null = tất cả, true = thành công, false = thất bại
+        public DateTime? FromDate { get; set; } // Thêm trường để lọc theo ngày bắt đầu
+        public DateTime? ToDate { get; set; } // Thêm trường để lọc theo ngày kết thúc
     }
 }

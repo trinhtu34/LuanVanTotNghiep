@@ -38,8 +38,18 @@ namespace RestaurantAdmin.Controllers
                 }
 
                 // Calculate statistics
-                viewModel.TotalOrders = viewModel.OrderTables.Count;
+                viewModel.TotalOrders = viewModel.OrderTables.Count();
                 viewModel.TotalRevenue = viewModel.OrderTables.Sum(o => o.TotalPrice + o.TotalDeposit);
+
+                // Tính tổng doanh thu chưa thanh toán và chưa hủy 
+                viewModel.TotalRevenueUnpaid = viewModel.OrderTables
+                    .Where(c => !c.IsPaid && !c.IsCancel)
+                    .Sum(o => o.TotalPrice + o.TotalDeposit);
+
+                // Tính tổng đơn chưa thanh toán và chưa hủy 
+                viewModel.TotalOrderUnpaid = viewModel.OrderTables
+                    .Where(c => !c.IsPaid && !c.IsCancel)
+                    .Count();
 
                 return View(viewModel);
             }
