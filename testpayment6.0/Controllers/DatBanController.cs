@@ -7,13 +7,13 @@ using testpayment6._0.ResponseModels;
 
 namespace testpayment6._0.Controllers
 {
-    public class DatBan : Controller
+    public class DatBanController : Controller
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<DatBan> _logger;
+        private readonly ILogger<DatBanController> _logger;
         private readonly string BASE_API_URL;
 
-        public DatBan(HttpClient httpClient, ILogger<DatBan> logger, IConfiguration configuration)
+        public DatBanController(HttpClient httpClient, ILogger<DatBanController> logger, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _logger = logger;
@@ -83,7 +83,7 @@ namespace testpayment6._0.Controllers
             try
             {
                 // Lấy tất cả đơn đặt bàn
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime3HoursAgo");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -441,7 +441,7 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/{userId}");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/includepaymentstatus/{userId}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -629,53 +629,6 @@ namespace testpayment6._0.Controllers
                 {
                     success = false,
                     message = "Có lỗi không mong muốn xảy ra khi hủy đơn"
-                });
-            }
-        }
-        [HttpGet]
-        public async Task<IActionResult> GetPaymentStatus(long orderTableId)
-        {
-            try
-            {
-                // Gọi API kiểm tra trạng thái thanh toán
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/payment/ordertable/juststatus/{orderTableId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-
-                    _logger.LogInformation($"Payment API response for order {orderTableId}: {jsonContent}");
-
-                    bool isPaid = jsonContent.Trim().ToLower() == "true";
-
-                    return Json(new
-                    {
-                        success = true,
-                        data = new
-                        {
-                            orderTableId = orderTableId,
-                            isSuccess = isPaid,
-                            isPaid = isPaid
-                        }
-                    });
-                }
-                else
-                {
-                    _logger.LogWarning($"API call failed for order {orderTableId}. Status: {response.StatusCode}");
-                    return Json(new
-                    {
-                        success = false,
-                        message = $"API trả về status code: {response.StatusCode}"
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting payment status for order {orderTableId}");
-                return Json(new
-                {
-                    success = false,
-                    message = "Có lỗi không mong muốn xảy ra khi kiểm tra trạng thái thanh toán"
                 });
             }
         }

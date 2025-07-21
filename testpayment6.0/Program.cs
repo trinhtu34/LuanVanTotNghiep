@@ -1,5 +1,4 @@
-﻿
-using VNPAY.NET;
+﻿using VNPAY.NET;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +31,10 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "RequestVerificationToken";
     options.SuppressXFrameOptionsHeader = false;
 });
-
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(80);
+});
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

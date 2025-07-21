@@ -123,25 +123,37 @@
                                     <strong>Tiền cọc:</strong><br>
                                     <span class="ms-3">@string.Format("{0:N0}", order.totalDeposit) VNĐ</span>
                                 </p>
-
                                 <!-- Trạng thái thanh toán tiền cọc -->
                                 <p class="info-item">
                                     <i class="fas fa-credit-card text-info"></i>
                                     <strong>Trạng thái thanh toán:</strong><br>
-                                    <span class="ms-3 payment-status-placeholder" data-order-id="@order.orderTableId">
-                                        <span class="spinner-border spinner-border-sm" role="status"></span>
-                                        Đang kiểm tra...
+                                    <span class="ms-3">
+                                        @if (order.IsPaid)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Đã thanh toán
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock"></i> Chưa thanh toán
+                                            </span>
+                                        }
                                     </span>
                                 </p>
 
                                 <!-- Button thanh toán - chỉ hiện khi chưa thanh toán -->
-                                <div class="payment-button-container" data-order-id="@order.orderTableId" style="display: none;">
-                                    <button type="button" class="btn btn-warning btn-sm w-100 payment-btn"
-                                            data-order-id="@order.orderTableId"
-                                            data-deposit="@order.totalDeposit">
-                                        <i class="fas fa-credit-card"></i> Thanh Toán Tiền Cọc
-                                    </button>
-                                </div>
+                                @if (!order.IsPaid)
+                                {
+                                    <div class="payment-button-container">
+                                        <button type="button" class="btn btn-warning btn-sm w-100 payment-btn"
+                                                data-order-id="@order.orderTableId"
+                                                data-deposit="@order.totalDeposit">
+                                            <i class="fas fa-credit-card"></i> Thanh Toán Tiền Cọc
+                                        </button>
+                                    </div>
+                                }
 
                                 <!-- Thông tin số bàn -->
                                 <p class="info-item">
@@ -573,7 +585,6 @@
     {
         // Tải tất cả thông tin cho mỗi đơn
         loadTableCounts();
-        loadPaymentStatus();
         loadOrderStatistics();
 
         // Xử lý click button thanh toán
@@ -714,97 +725,6 @@
             }
         });
     }
-    // Hàm tải trạng thái thanh toán
-    function loadPaymentStatus() {
-        document.querySelectorAll('.payment-status-placeholder').forEach(function(element) {
-            const orderTableId = element.getAttribute('data-order-id');
-            const paymentButtonContainer = document.querySelector(`.payment-button-container[data-order-id="${orderTableId}"]`);
-
-            fetch(`@Url.Action("GetPaymentStatus", "DatBan")?orderTableId=${orderTableId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                console.log(`Payment status response for order ${orderTableId}:`, response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log(`Payment status result for order ${orderTableId}:`, result);
-
-                if (result.success && result.data) {
-                    const isPaid = result.data.isPaid;
-                    console.log(`Order ${orderTableId} - isPaid:`, isPaid);
-
-                    if (isPaid === true) {
-                        element.innerHTML = `
-                            <span class="payment-status paid">
-                                <i class="fas fa-check-circle"></i>
-                                Đã thanh toán
-                            </span>
-                        `;
-                        // Ẩn button thanh toán khi đã thanh toán
-                        if (paymentButtonContainer) {
-                            paymentButtonContainer.style.display = 'none';
-                        }
-                    } else if (isPaid === false) {
-                        element.innerHTML = `
-                            <span class="payment-status unpaid">
-                                <i class="fas fa-exclamation-circle"></i>
-                                Chưa thanh toán
-                            </span>
-                        `;
-                        // Hiện button thanh toán khi chưa thanh toán
-                        if (paymentButtonContainer) {
-                            paymentButtonContainer.style.display = 'block';
-                        }
-                    } else {
-                        console.log(`Order ${orderTableId} - isPaid is neither true nor false:`, isPaid, typeof isPaid);
-                        element.innerHTML = `
-                            <span class="payment-status error">
-                                <i class="fas fa-question-circle"></i>
-                                Chưa thanh toán (${isPaid})
-                            </span>
-                        `;
-                        // Hiện button thanh toán khi không xác định được trạng thái
-                        if (paymentButtonContainer) {
-                            paymentButtonContainer.style.display = 'block';
-                        }
-                    }
-                } else {
-                    console.log(`Order ${orderTableId} - result.success:`, result.success, 'result.data:', result.data);
-                    element.innerHTML = `
-                        <span class="payment-status error">
-                            <i class="fas fa-question-circle"></i>
-                            Chưa thanh toán
-                        </span>
-                    `;
-                    // Hiện button thanh toán khi có lỗi
-                    if (paymentButtonContainer) {
-                        paymentButtonContainer.style.display = 'block';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading payment status for order', orderTableId, ':', error);
-                element.innerHTML = `
-                    <span class="payment-status error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Lỗi tải dữ liệu
-                    </span>
-                `;
-                // Hiện button thanh toán khi có lỗi
-                if (paymentButtonContainer) {
-                    paymentButtonContainer.style.display = 'block';
-                }
-            });
-        });
-    }
-
     // Hàm xử lý khi click button thanh toán
     function handlePaymentClick(orderTableId, depositAmount) {
         // Tạo form ẩn để gửi dữ liệu đến trang thanh toán

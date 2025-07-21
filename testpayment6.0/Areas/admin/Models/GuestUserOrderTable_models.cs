@@ -40,8 +40,6 @@ namespace testpayment6._0.Areas.admin.Models
     {
         public string CustomerName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-
-        // Thay đổi từ int sang List<int> để chọn nhiều bàn
         public List<int> SelectedTableIds { get; set; } = new List<int>();
         public List<RegionViewModel>? Regions { get; set; }
         public List<TableModel>? Tables { get; set; }
@@ -58,7 +56,7 @@ namespace testpayment6._0.Areas.admin.Models
         public int Capacity { get; set; }
         public string Description { get; set; } = string.Empty;
     }
-    // Model cho table detail từ API
+
     public class OrderTableDetailApiResponse
     {
         public int orderTablesDetailsId { get; set; }
