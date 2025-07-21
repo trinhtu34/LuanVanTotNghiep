@@ -110,233 +110,144 @@
 
 <script>
     $(document).ready(function() {
-        console.log('Document ready - Cart page loaded');
-
-        // Kiểm tra jQuery có load không
+        // Kiểm tra jQuery và khởi tạo biến
         if (typeof $ === 'undefined') {
-            console.error('jQuery is not loaded!');
             alert('jQuery chưa được load. Vui lòng kiểm tra lại!');
             return;
         }
 
-        // Lấy thông tin user từ server
-        var userId = '@(ViewBag.UserId ?? "")';
-        var isLoggedIn = @Html.Raw((ViewBag.IsLoggedIn ?? false).ToString().ToLower());
+        const userId = '@(ViewBag.UserId ?? "")';
+        const isLoggedIn = @Html.Raw((ViewBag.IsLoggedIn ?? false).ToString().ToLower());
 
-        console.log('User ID:', userId);
-        console.log('Is logged in:', isLoggedIn);
+        // Utility functions
+        const showMessage = (message) => alert(message);
+        const updateUI = (selector, value) => $(selector).text(value);
+        const toggleButton = (btn, disabled, html) => btn.prop('disabled', disabled).html(html);
 
-        // Xử lý nút đặt mua
-        $('#placeOrderBtn').off('click').on('click', function(e) {
-            e.preventDefault();
-            console.log('=== PLACE ORDER BUTTON CLICKED ===');
+        const updateCartBadge = (count) => {
+            const badge = $('#cartBadge');
+            count > 0 ? badge.text(count).show() : badge.hide();
+        };
 
-            // Kiểm tra đăng nhập
-            if (!isLoggedIn || userId === '') {
-                alert('Vui lòng đăng nhập trước khi đặt hàng');
-                return;
-            }
+        const makeRequest = (url, data, successCallback, errorMessage = 'Có lỗi xảy ra') => {
+            $.post(url, data)
+                .done(successCallback)
+                .fail(() => showMessage(errorMessage));
+        };
 
-            if (confirm('Xác nhận đặt hàng và chuyển đến trang thanh toán?')) {
-                console.log('User confirmed order - calling placeOrder()');
-                placeOrder();
-            } else {
-                console.log('User cancelled order');
-            }
-        });
-
-        // Function đặt hàng
-        function placeOrder() {
-            console.log('=== PLACE ORDER FUNCTION STARTED ===');
-
-            var btn = $('#placeOrderBtn');
-
-            // Disable button
-            btn.prop('disabled', true);
-            btn.html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+        // Đặt hàng
+        const placeOrder = () => {
+            const btn = $('#placeOrderBtn');
+            toggleButton(btn, true, '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
 
             $.ajax({
                 url: '@Url.Action("PlaceOrder", "Cart")',
                 type: 'POST',
                 dataType: 'json',
                 timeout: 30000,
-                beforeSend: function() {
-                    console.log('AJAX request starting...');
-                },
-                success: function(response) {
-                    console.log('=== AJAX SUCCESS ===');
-                    console.log('Response:', response);
-
-                    if (response && response.success) {
-                        console.log('Order placed successfully');
-
-                        // Kiểm tra xem có cần redirect đến thanh toán không
+                success: (response) => {
+                    if (response?.success) {
                         if (response.redirectToPayment && response.cartId && response.totalPrice) {
-                            console.log('Redirecting to payment with CartId:', response.cartId, 'TotalPrice:', response.totalPrice);
-
-                            // Tạo form ẩn để gửi dữ liệu sang trang thanh toán
-                            var form = $('<form>', {
+                            // Tạo form để redirect đến trang thanh toán
+                            $('<form>', {
                                 method: 'POST',
                                 action: '@Url.Action("Index", "Payment")'
-                            });
-
-                            // Thêm các input ẩn
-                            form.append($('<input>', {
-                                type: 'hidden',
-                                name: 'CartId',
-                                value: response.cartId
-                            }));
-
-                            form.append($('<input>', {
-                                type: 'hidden',
-                                name: 'Amount',
-                                value: response.totalPrice
-                            }));
-
-                            form.append($('<input>', {
-                                type: 'hidden',
-                                name: 'Description',
-                                value: 'Thanh toán đơn hàng #' + response.cartId
-                            }));
-
-                            // Append form to body và submit
-                            $('body').append(form);
-                            form.submit();
+                            }).append(
+                                $('<input>', { type: 'hidden', name: 'CartId', value: response.cartId }),
+                                $('<input>', { type: 'hidden', name: 'Amount', value: response.totalPrice }),
+                                $('<input>', { type: 'hidden', name: 'Description', value: `Thanh toán đơn hàng #${response.cartId}` })
+                            ).appendTo('body').submit();
                         } else {
-                            // Fallback: redirect về menu nếu không có thông tin thanh toán
-                            alert(response.message || 'Đặt hàng thành công!');
+                            showMessage(response.message || 'Đặt hàng thành công!');
                             window.location.href = '@Url.Action("Index", "Menu")';
                         }
                     } else {
-                        console.error('Order failed:', response);
-                        alert(response.message || 'Có lỗi xảy ra khi đặt hàng');
-
-                        // Re-enable button
-                        btn.prop('disabled', false);
-                        btn.html('<i class="fas fa-check"></i> Đặt mua');
+                        showMessage(response.message || 'Có lỗi xảy ra khi đặt hàng');
+                        toggleButton(btn, false, '<i class="fas fa-check"></i> Đặt mua');
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.log('=== AJAX ERROR ===');
-                    console.error('XHR:', xhr);
-                    console.error('Status:', status);
-                    console.error('Error:', error);
-                    console.error('Response Text:', xhr.responseText);
+                error: (xhr, status) => {
+                    const errorMessages = {
+                        0: 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+                        404: 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.',
+                        500: 'Lỗi server. Vui lòng thử lại sau.',
+                        timeout: 'Yêu cầu hết thời gian chờ. Vui lòng thử lại.'
+                    };
 
-                    var errorMessage = 'Có lỗi xảy ra khi đặt hàng';
-
-                    if (xhr.status === 0) {
-                        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
-                    } else if (xhr.status === 404) {
-                        errorMessage = 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.';
-                    } else if (xhr.status === 500) {
-                        errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
-                    } else if (status === 'timeout') {
-                        errorMessage = 'Yêu cầu hết thời gian chờ. Vui lòng thử lại.';
-                    }
-
-                    alert(errorMessage);
-
-                    // Re-enable button
-                    btn.prop('disabled', false);
-                    btn.html('<i class="fas fa-check"></i> Đặt mua');
+                    showMessage(errorMessages[xhr.status] || errorMessages[status] || 'Có lỗi xảy ra khi đặt hàng');
+                    toggleButton(btn, false, '<i class="fas fa-check"></i> Đặt mua');
                 }
             });
-        }
+        };
 
-        // Xử lý thay đổi số lượng
-        $('.quantity-btn').off('click').on('click', function() {
-            var action = $(this).data('action');
-            var dishId = $(this).data('dish-id');
-            var input = $(`input[data-dish-id="${dishId}"]`);
-            var currentValue = parseInt(input.val());
+        const updateQuantity = (dishId, quantity) => {
+            makeRequest('@Url.Action("UpdateQuantity", "Cart")', { dishId, quantity }, (response) => {
+                if (response.success) {
+                    const row = $(`tr[data-dish-id="${dishId}"]`);
+                    const price = parseFloat(row.find('.fw-bold').first().text().replace(/[^\d]/g, ''));
+                    const itemTotal = price * quantity;
 
-            if (action === 'increase') {
-                input.val(currentValue + 1);
-            } else if (action === 'decrease' && currentValue > 1) {
-                input.val(currentValue - 1);
+                    row.find('.item-total').text(itemTotal.toLocaleString() + ' VNĐ');
+                    updateUI('#totalAmount', response.total.toLocaleString() + ' VNĐ');
+                    updateCartBadge(response.cartCount);
+                } else {
+                    showMessage(response.message || 'Có lỗi xảy ra');
+                }
+            }, 'Có lỗi xảy ra khi cập nhật giỏ hàng');
+        };
+
+        const removeFromCart = (dishId) => {
+            makeRequest('@Url.Action("RemoveFromCart", "Cart")', { dishId }, (response) => {
+                if (response.success) {
+                    $(`tr[data-dish-id="${dishId}"]`).fadeOut(300, function() {
+                        $(this).remove();
+                        response.cartCount === 0 ? location.reload() : updateUI('#totalAmount', response.total.toLocaleString() + ' VNĐ');
+                    });
+                    updateCartBadge(response.cartCount);
+                } else {
+                    showMessage(response.message || 'Có lỗi xảy ra');
+                }
+            }, 'Có lỗi xảy ra khi xóa món');
+        };
+
+        // Event handlers
+        $('#placeOrderBtn').on('click', function(e) {
+            e.preventDefault();
+            if (!isLoggedIn || userId === '') {
+                showMessage('Vui lòng đăng nhập trước khi đặt hàng');
+                return;
             }
-
-            updateQuantity(dishId, parseInt(input.val()));
+            confirm('Xác nhận đặt hàng và chuyển đến trang thanh toán?') && placeOrder();
         });
 
-        // Xử lý khi thay đổi trực tiếp input
-        $('.quantity-input').off('change').on('change', function() {
-            var dishId = $(this).data('dish-id');
-            var quantity = parseInt($(this).val());
+        $('.quantity-btn').on('click', function() {
+            const action = $(this).data('action');
+            const dishId = $(this).data('dish-id');
+            const input = $(`input[data-dish-id="${dishId}"]`);
+            const currentValue = parseInt(input.val());
+
+            let newValue = currentValue;
+            if (action === 'increase') newValue++;
+            else if (action === 'decrease' && currentValue > 1) newValue--;
+
+            input.val(newValue);
+            updateQuantity(dishId, newValue);
+        });
+
+        $('.quantity-input').on('change', function() {
+            const dishId = $(this).data('dish-id');
+            let quantity = parseInt($(this).val());
 
             if (quantity < 1) {
-                $(this).val(1);
                 quantity = 1;
+                $(this).val(1);
             }
 
             updateQuantity(dishId, quantity);
         });
 
-        // Xử lý xóa món
-        $('.remove-btn').off('click').on('click', function() {
-            var dishId = $(this).data('dish-id');
-
-            if (confirm('Bạn có chắc muốn xóa món này khỏi giỏ hàng?')) {
-                removeFromCart(dishId);
-            }
+        $('.remove-btn').on('click', function() {
+            const dishId = $(this).data('dish-id');
+            confirm('Bạn có chắc muốn xóa món này khỏi giỏ hàng?') && removeFromCart(dishId);
         });
-
-        function updateQuantity(dishId, quantity) {
-            $.post('@Url.Action("UpdateQuantity", "Cart")', {
-                dishId: dishId,
-                quantity: quantity
-            }, function(response) {
-                if (response.success) {
-                    // Cập nhật UI
-                    var row = $(`tr[data-dish-id="${dishId}"]`);
-                    var price = parseFloat(row.find('.fw-bold').first().text().replace(/[^\d]/g, ''));
-                    var itemTotal = price * quantity;
-
-                    row.find('.item-total').text(itemTotal.toLocaleString() + ' VNĐ');
-                    $('#totalAmount').text(response.total.toLocaleString() + ' VNĐ');
-                    updateCartBadge(response.cartCount);
-                } else {
-                    alert(response.message || 'Có lỗi xảy ra');
-                }
-            }).fail(function() {
-                alert('Có lỗi xảy ra khi cập nhật giỏ hàng');
-            });
-        }
-
-        function removeFromCart(dishId) {
-            $.post('@Url.Action("RemoveFromCart", "Cart")', {
-                dishId: dishId
-            }, function(response) {
-                if (response.success) {
-                    $(`tr[data-dish-id="${dishId}"]`).fadeOut(300, function() {
-                        $(this).remove();
-
-                        // Kiểm tra nếu giỏ hàng trống thì reload trang
-                        if (response.cartCount === 0) {
-                            location.reload();
-                        } else {
-                            $('#totalAmount').text(response.total.toLocaleString() + ' VNĐ');
-                        }
-                    });
-                    updateCartBadge(response.cartCount);
-                } else {
-                    alert(response.message || 'Có lỗi xảy ra');
-                }
-            }).fail(function() {
-                alert('Có lỗi xảy ra khi xóa món');
-            });
-        }
-
-        function updateCartBadge(count) {
-            var badge = $('#cartBadge');
-            if (badge.length > 0) {
-                if (count > 0) {
-                    badge.text(count).show();
-                } else {
-                    badge.hide();
-                }
-            }
-        }
-    });
-</script>
+    });</script>

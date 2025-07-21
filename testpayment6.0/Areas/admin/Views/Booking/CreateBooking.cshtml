@@ -8,24 +8,24 @@
 <div class="container-fluid">
     <h2>Đặt bàn cho khách hàng</h2>
 
-    @if (TempData["Success"] != null)
+    @if (TempData["SuccessCB"] != null)
     {
         <div class="alert alert-success">
-            @TempData["Success"]
+            @TempData["SuccessCB"]
         </div>
     }
 
-    @if (TempData["Error"] != null)
+    @if (TempData["ErrorCB"] != null)
     {
         <div class="alert alert-danger">
-            @TempData["Error"]
+            @TempData["ErrorCB"]
         </div>
     }
 
-    @if (ViewBag.Error != null)
+    @if (ViewBag.ErrorCB != null)
     {
         <div class="alert alert-danger">
-            @ViewBag.Error
+            @ViewBag.ErrorCB
         </div>
     }
 

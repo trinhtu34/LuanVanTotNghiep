@@ -70,7 +70,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             // Kiểm tra có bàn nào được chọn không
             if (model.SelectedTableIds == null || !model.SelectedTableIds.Any())
             {
-                TempData["Error"] = "Vui lòng chọn ít nhất một bàn!";
+                TempData["ErrorCB"] = "Vui lòng chọn ít nhất một bàn!";
                 var reloadModel = await LoadBookingData();
                 reloadModel.CustomerName = model.CustomerName;
                 reloadModel.PhoneNumber = model.PhoneNumber;
@@ -87,7 +87,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
                 if (!DateTime.TryParse(model.startingTime.ToString(), out DateTime parsedStartTime))
                 {
-                    TempData["Error"] = "Thời gian không hợp lệ";
+                    TempData["ErrorCB"] = "Thời gian không hợp lệ";
                     var reloadModel = await LoadBookingData();
                     reloadModel.CustomerName = model.CustomerName;
                     reloadModel.PhoneNumber = model.PhoneNumber;
@@ -98,7 +98,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 DateTime nowInVietnam = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
                 if (parsedStartTime <= nowInVietnam)
                 {
-                    TempData["Error"] = "Thời gian phải trong tương lai";
+                    TempData["ErrorCB"] = "Thời gian phải trong tương lai";
                     var reloadModel = await LoadBookingData();
                     reloadModel.CustomerName = model.CustomerName;
                     reloadModel.PhoneNumber = model.PhoneNumber;
@@ -110,7 +110,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 var conflictResult = await CheckTableAvailability(model.SelectedTableIds, parsedStartTime);
                 if (!conflictResult.IsAvailable)
                 {
-                    TempData["Error"] = conflictResult.ErrorMessage;
+                    TempData["ErrorCB"] = conflictResult.ErrorMessage;
                     var reloadModel = await LoadBookingData();
                     reloadModel.CustomerName = model.CustomerName;
                     reloadModel.PhoneNumber = model.PhoneNumber;
@@ -138,7 +138,7 @@ namespace testpayment6._0.Areas.admin.Controllers
 
                 if (!signupResponse.IsSuccessStatusCode)
                 {
-                    TempData["Error"] = "Không thể tạo tài khoản khách hàng";
+                    TempData["ErrorCB"] = "Không thể tạo tài khoản khách hàng";
                     return RedirectToAction("CreateBooking");
                 }
 
@@ -172,7 +172,7 @@ namespace testpayment6._0.Areas.admin.Controllers
 
                 if (!orderResponse.IsSuccessStatusCode)
                 {
-                    TempData["Error"] = "Không thể tạo đơn đặt bàn";
+                    TempData["ErrorCB"] = "Không thể tạo đơn đặt bàn";
                     return RedirectToAction("CreateBooking");
                 }
 
@@ -236,13 +236,13 @@ namespace testpayment6._0.Areas.admin.Controllers
                     ? $" và {selectedDishes.Count} món ăn"
                     : "";
 
-                TempData["Success"] = $"Đặt bàn thành công cho khách hàng {model.CustomerName}! Các bàn: {tableNames}{dishSummary}";
+                TempData["SuccessCB"] = $"Đặt bàn thành công cho khách hàng {model.CustomerName}! Các bàn: {tableNames}{dishSummary}";
                 return RedirectToAction("CreateBooking");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating booking");
-                TempData["Error"] = "Có lỗi xảy ra khi đặt bàn: " + ex.Message;
+                TempData["ErrorCB"] = "Có lỗi xảy ra khi đặt bàn: " + ex.Message;
                 return RedirectToAction("CreateBooking");
             }
         }
@@ -466,7 +466,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading booking data");
-                ViewBag.Error = "Không thể tải dữ liệu: " + ex.Message;
+                ViewBag.ErrorCB = "Không thể tải dữ liệu: " + ex.Message;
             }
 
             return model;

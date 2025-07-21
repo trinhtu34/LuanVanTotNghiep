@@ -312,9 +312,6 @@ namespace testpayment6._0.Controllers
                 _logger.LogInformation("CartDetail Request JSON: {Json}", json);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                //var apiUrl = $"{BASE_API_URL}/CartDetail";
-
-                //_logger.LogInformation("Making POST request to: {ApiUrl}", apiUrl);
 
                 var response = await _httpClient.PostAsync($"{BASE_API_URL}/CartDetail", content);
 

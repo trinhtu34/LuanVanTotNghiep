@@ -77,6 +77,7 @@ namespace testpayment6._0.ResponseModels
         public decimal? totalPrice { get; set; }
         public decimal? totalDeposit { get; set; }
         public DateTime orderDate { get; set; }
+        public bool IsPaid { get; set; }
     }
     public class OrderTableDetailViewModel
     {

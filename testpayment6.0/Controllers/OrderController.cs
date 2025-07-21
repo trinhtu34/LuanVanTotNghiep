@@ -36,7 +36,7 @@ namespace testpayment6._0.Controllers
                 var statistics = await GetStatisticsAsync(userId);
 
                 // Lấy danh sách đơn hàng từ API
-                var cartResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/{userId}");
+                var cartResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/includepaymentandfinish/{userId}");
 
                 if (cartResponse.IsSuccessStatusCode)
                 {
@@ -45,12 +45,6 @@ namespace testpayment6._0.Controllers
                     {
                         PropertyNameCaseInsensitive = true
                     });
-
-                    // Lấy thông tin thanh toán cho từng đơn hàng
-                    foreach (var cart in carts)
-                    {
-                        cart.PaymentStatus = await GetPaymentStatusAsync(cart.CartId);
-                    }
 
                     var model = new OrderListViewModel
                     {
@@ -73,7 +67,7 @@ namespace testpayment6._0.Controllers
                 return View(new OrderListViewModel { UserId = userId });
             }
         }
-
+        // số liệu thống kê 
         private async Task<StatisticsViewModel> GetStatisticsAsync(string userId)
         {
             var statistics = new StatisticsViewModel();
@@ -195,7 +189,7 @@ namespace testpayment6._0.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error getting order details for cart {cartId}");
-                ViewBag.Error = "Đã xảy ra lỗi khi tải chi tiết đơn hàng. Vui lòng thử lại.";
+                ViewBag.ErrorOrderdetail = "Đã xảy ra lỗi khi tải chi tiết đơn hàng. Vui lòng thử lại.";
                 return View(new OrderDetailViewModel());
             }
         }

@@ -10,8 +10,9 @@ namespace testpayment6._0.ResponseModels
         public DateTime OrderTime { get; set; }
         public decimal TotalPrice { get; set; }
         public bool IsCancel { get; set; }
+        public bool IsPaid { get; set; } = false; // vừa thêm 07/19
+        public bool? IsFinish { get; set; }  // vừa thêm 07/19, dùng tối ưu api thêm chút thôi , để đỡ phải query lại từ db , đỡ call api nhiều 
         public List<CartDetailViewModel> CartDetails { get; set; } = new List<CartDetailViewModel>();
-        public PaymentStatusViewModel PaymentStatus { get; set; }
     }
 
     // Model cho CartDetail (chi tiết đơn hàng)
