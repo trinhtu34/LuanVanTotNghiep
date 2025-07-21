@@ -641,15 +641,15 @@
                 document.getElementById('canceled').innerHTML =
                     `<span class="text-warning">${result.data.canceled}</span>`;
             } else {
-                // Hiển thị lỗi
+                // Hiển thị khi bị lỗi hoặc không có dữ liệu 
                 document.getElementById('totalOrderCount').innerHTML =
-                    '<span class="text-danger">Lỗi</span>';
+                    '<span class="text-danger">0</span>';
                 document.getElementById('paidOrderCount').innerHTML =
-                    '<span class="text-danger">Lỗi</span>';
+                    '<span class="text-danger">0</span>';
                 document.getElementById('unpaidOrderCount').innerHTML =
-                    '<span class="text-danger">Lỗi</span>';
+                    '<span class="text-danger">0</span>';
                 document.getElementById('canceled').innerHTML =
-                    '<span class="text-danger">Lỗi</span>';
+                    '<span class="text-danger">0</span>';
             }
         })
         .catch(error => {
