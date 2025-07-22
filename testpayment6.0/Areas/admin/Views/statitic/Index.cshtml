@@ -1,0 +1,32 @@
+﻿@model testpayment6._0.Areas.admin.Models.highest_revenue_table
+@{
+    ViewData["Title"] = "Thống kê doanh thu";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+
+            <th>Mã bàn </th>
+            <th>Sức chứa ban đầu</th>
+            <th>Mô tả về bàn </th>
+            <th>Mã khu vục</th>
+            <th>Tên khu vực</th>
+            <th>tổng doanh thu của bàn này </th>
+            <th>Tổng số đơn đặt của bàn</th>
+        </tr>
+    </thead>
+    <tr>
+
+        <td>@Model.tableId</td>
+        <td>@Model.capacity</td>
+        <td>@Model.description</td>
+        <td>@Model.regionId</td>
+        <td>@Model.regionName</td>
+        <td>@Model.totalRevenue</td>
+        <td>@Model.orderCount</td>
+    </tr>
+    <tbody>
+    </tbody>
+</table>

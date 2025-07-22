@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Amazon.S3.Model;
+using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.X509;
 using System.Text;
 using System.Text.Json;
@@ -82,6 +83,7 @@ namespace testpayment6._0.Controllers
             try
             {
                 // Lấy tất cả đơn đặt bàn
+                //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
                 var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
 
                 if (!response.IsSuccessStatusCode)
@@ -102,7 +104,7 @@ namespace testpayment6._0.Controllers
 
                 // Lọc các đơn chưa hủy và trong khung thời gian xung đột ( khoảng 2 giờ)
                 var conflictingOrders = allOrders.Where(order =>
-                    !order.IsCancel && // Đơn chưa bị hủy
+                    !order.IsCancel &&
                     DateTime.TryParse(order.StartingTime, out DateTime orderStartTime) &&
                     Math.Abs((orderStartTime - startingTime).TotalHours) <= 2
                 ).ToList();
@@ -432,7 +434,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();

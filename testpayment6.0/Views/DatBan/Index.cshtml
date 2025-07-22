@@ -1094,7 +1094,7 @@
 
 			  if (!card.querySelector('.booked-indicator')) {
 				const indicator = document.createElement('div');
-				indicator.className = 'booked-indicator';
+				indicator.className = 'booked-indicator'; 
 				indicator.innerHTML = 'ĐÃ ĐẶT';
 				card.style.position = 'relative';
 				card.appendChild(indicator);
@@ -1112,7 +1112,8 @@
 		  });
 		}
 
-		startBookedTablesCheck() {
+		startBookedTablesCheck() 
+		{
 		  this.checkBookedTables();
 
 		  this.checkBookedTablesInterval = setInterval(() => {
@@ -1146,4 +1147,7 @@
 	document.addEventListener("DOMContentLoaded", () => {
 	  window.bookingManager = new RestaurantBookingManager();
 	});
+	setInterval(() => {
+	  location.reload();
+	}, 30000);
 </script>

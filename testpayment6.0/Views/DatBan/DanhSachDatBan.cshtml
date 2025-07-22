@@ -583,9 +583,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function()
     {
-        // Tải tất cả thông tin cho mỗi đơn
-        loadTableCounts();
         loadOrderStatistics();
+        loadTableCounts();
 
         // Xử lý click button thanh toán
         document.addEventListener('click', function(e) {
@@ -597,6 +596,7 @@
                 handlePaymentClick(orderTableId, depositAmount);
             }
         });
+        // xử lý hủy đơn đặt bàn 
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('cancel-order-btn') || e.target.closest('.cancel-order-btn')) {
                 const button = e.target.classList.contains('cancel-order-btn') ? e.target : e.target.closest('.cancel-order-btn');
@@ -707,7 +707,6 @@
                 // Thất bại
                 alert('Lỗi: ' + (result.message || 'Không thể hủy đơn'));
 
-                // Restore button
                 if (cancelButton) {
                     cancelButton.disabled = false;
                     cancelButton.innerHTML = '<i class="fas fa-times"></i> Hủy Đơn Đặt Bàn';
@@ -771,7 +770,6 @@
         {
             const orderTableId = element.getAttribute('data-order-id');
 
-            // Gọi API thông qua Controller , ko gọi từ frontend được vì là API Gateway không cho gọi
             fetch(`@Url.Action("GetOrderTableDetails", "DatBan")?orderTableId=${orderTableId}`, {
                 method: 'GET',
                 headers: {
