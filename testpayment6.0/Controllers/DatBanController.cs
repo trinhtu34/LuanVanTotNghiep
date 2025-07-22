@@ -74,7 +74,6 @@ namespace testpayment6._0.Controllers
 
             return View();
         }
-
         // kiểm tra bàn xem là có ai đặt trong vòng 2 tiếng hay chưa
         private async Task<List<int>> CheckTableAvailabilityAsync(List<int> tableIds, DateTime startingTime)
         {
@@ -83,7 +82,7 @@ namespace testpayment6._0.Controllers
             try
             {
                 // Lấy tất cả đơn đặt bàn
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime3HoursAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -402,6 +401,7 @@ namespace testpayment6._0.Controllers
             return Json(new { success = false, message = "Không thể tải danh sách bàn" });
         }
 
+
         [HttpGet]
         public async Task<IActionResult> GetMenuByRegion(int regionId)
         {
@@ -426,6 +426,48 @@ namespace testpayment6._0.Controllers
             }
 
             return Json(new { success = false, message = "Không thể tải danh sách món ăn" });
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetBookedTables()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var orders = JsonSerializer.Deserialize<List<OrderTableResponse>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    var bookedTables = new List<int>();
+                    if (orders != null && orders.Any())
+                    {
+                        foreach(var order in orders.Where(o => !o.IsCancel))
+                        {
+                            var detailResponse = await _httpClient.GetAsync($"{BASE_API_URL}/OrderTablesDetail/list/{order.OrderTableId}");
+                            if (detailResponse.IsSuccessStatusCode)
+                            {
+                                var detailJson = await detailResponse.Content.ReadAsStringAsync();
+                                var orderDetails = JsonSerializer.Deserialize<List<OrderTableDetailViewModel>>(detailJson, new JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true
+                                });
+                                if (orderDetails != null && orderDetails.Any())
+                                {
+                                    bookedTables.AddRange(orderDetails.Select(d => d.TableId));
+                                }
+                            }
+                        }
+                    }
+                    return Json (new { success = true, data = bookedTables.Distinct().ToList() }); 
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading booked tables");
+            }
+            return Json (new {success = false , message = "Không thể tải danh sách bàn đã đặt" });
         }
 
 
@@ -683,6 +725,5 @@ namespace testpayment6._0.Controllers
                 return Json(new { success = false, message = "Lỗi hệ thống" });
             }
         }
-
     }
 }

@@ -13,7 +13,7 @@
 		</div>
 	}
 
-	@* danh sách bàn đã chọn  *@
+	@* phần hiển thị danh sách bàn đã chọn  *@
 	<div class="selected-tables-section mb-4" id="selectedTablesSection" style="display: none;">
 		<div class="card border-primary">
 			<div class="card-header bg-primary text-white">
@@ -360,6 +360,33 @@
 			color: #007bff;
 			font-weight: bold;
 		}
+
+	.table-card.booked {
+		opacity: 0.6;
+		border: 2px solid #dc3545 !important;
+	}
+
+		.table-card.booked .card-body {
+			background-color: #f8d7da;
+		}
+
+		.table-card.booked .btn-chon-ban {
+			background-color: #dc3545;
+			color: white;
+			cursor: not-allowed;
+		}
+
+	.booked-indicator {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		background: #dc3545;
+		color: white;
+		padding: 2px 8px;
+		border-radius: 12px;
+		font-size: 12px;
+		font-weight: bold;
+	}
 </style>
 
 <script>
@@ -371,10 +398,11 @@
 		this.elements = this.getElements();
 		this.init();
 	  }
-	  init() {
-		this.setupEventListeners();
-		this.setDefaultTime();
-	  }
+	init() {
+	  this.setupEventListeners();
+	  this.setDefaultTime();
+	  this.startBookedTablesCheck();
+	}
 	  getElements() {
 		return {
 		  selectedSection: document.getElementById("selectedTablesSection"),
@@ -1033,6 +1061,72 @@
 	  formatCurrency(amount) {
 		return amount.toLocaleString("vi-VN") + " VNĐ";
 	  }
+
+
+		async checkBookedTables(){
+			if(document.querySelectorAll('.table-card').length === 0){
+				return;
+			}
+			try{
+				const response = await fetch('/DatBan/GetBookedTables');
+				const result = await response.json();
+				if(result.success && result.data){
+					this.bookedTables = new Set(result.data.map(id => String(id)));
+					this.updateBookedTablesUI();
+				}
+			}
+			catch(error){
+				console.error('Lỗi kiểm tra bàn đã được đặt' , error);
+			}
+		}
+
+		updateBookedTablesUI() 
+		{
+		  document.querySelectorAll('.table-card').forEach(card => {
+			const tableId = card.dataset.tableId;
+			const button = card.querySelector('.btn-chon-ban');
+			const isBooked = this.bookedTables.has(tableId);
+
+			if (isBooked) {
+			  card.classList.add('booked');
+			  button.innerHTML = '<i class="fas fa-ban"></i> Đã đặt';
+			  button.disabled = true;
+
+			  if (!card.querySelector('.booked-indicator')) {
+				const indicator = document.createElement('div');
+				indicator.className = 'booked-indicator';
+				indicator.innerHTML = 'ĐÃ ĐẶT';
+				card.style.position = 'relative';
+				card.appendChild(indicator);
+			  }
+			} else {
+			  card.classList.remove('booked');
+			  button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
+			  button.disabled = false;
+
+			  const indicator = card.querySelector('.booked-indicator');
+			  if (indicator) {
+				indicator.remove();
+			  }
+			}
+		  });
+		}
+
+		startBookedTablesCheck() {
+		  this.checkBookedTables();
+
+		  this.checkBookedTablesInterval = setInterval(() => {
+			this.checkBookedTables();
+		  }, 30000);
+		}
+
+		stopBookedTablesCheck() {
+		  if (this.checkBookedTablesInterval) {
+			clearInterval(this.checkBookedTablesInterval);
+			this.checkBookedTablesInterval = null;
+		  }
+		}
+
 	}
 
 	// Global functions for backward compatibility
