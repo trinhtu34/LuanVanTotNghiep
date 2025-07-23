@@ -118,12 +118,25 @@
                                     <span class="ms-3">@string.Format("{0:N0}", order.totalPrice) VNĐ</span>
                                 </p>
 
+                                @* trạng thái thanh toán tiền món ăn  *@
+                                @if (!order.IsPaid)
+                                {
+                                    <div class="payment-button-container">
+                                        <button type="button" class="btn btn-success btn-sm w-100 payment-total-btn"
+                                                data-order-id="@order.orderTableId"
+                                                data-total-price="@order.totalPrice">
+                                            <i class="fas fa-credit-card"></i> Thanh Toán Trước Tiền Món Ăn
+                                        </button>
+                                    </div>
+                                }
+
                                 <p class="info-item">
                                     <i class="fas fa-coins text-warning"></i>
                                     <strong>Tiền cọc:</strong><br>
                                     <span class="ms-3">@string.Format("{0:N0}", order.totalDeposit) VNĐ</span>
                                 </p>
-                                <!-- Trạng thái thanh toán tiền cọc -->
+
+                                @* trạng thái thanh toán cọc *@
                                 <p class="info-item">
                                     <i class="fas fa-credit-card text-info"></i>
                                     <strong>Trạng thái thanh toán:</strong><br>
@@ -596,6 +609,16 @@
                 handlePaymentClick(orderTableId, depositAmount);
             }
         });
+        // Xử lý click button thanh toán tổng tiền món ăn
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('payment-total-btn') || e.target.closest('.payment-total-btn')) {
+                const button = e.target.classList.contains('payment-total-btn') ? e.target : e.target.closest('.payment-total-btn');
+                const orderTableId = button.getAttribute('data-order-id');
+                const totalPrice = button.getAttribute('data-total-price');
+
+                handleTotalPaymentClick(orderTableId, totalPrice);
+            }
+        });
         // xử lý hủy đơn đặt bàn 
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('cancel-order-btn') || e.target.closest('.cancel-order-btn')) {
@@ -724,7 +747,46 @@
             }
         });
     }
-    // Hàm xử lý khi click button thanh toán
+        // Hàm xử lý khi click button thanh toán tổng tiền món ăn
+    function handleTotalPaymentClick(orderTableId, totalPrice) {
+        // Tạo form ẩn để gửi dữ liệu đến trang thanh toán
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/Payment/Index";
+
+        // Thêm các trường dữ liệu
+        const amountInput = document.createElement("input");
+        amountInput.type = "hidden";
+        amountInput.name = "Amount";
+        amountInput.value = totalPrice;
+        form.appendChild(amountInput);
+
+        const descriptionInput = document.createElement("input");
+        descriptionInput.type = "hidden";
+        descriptionInput.name = "Description";
+        descriptionInput.value = `Thanh toán trước tiền món ăn - Mã đơn #${orderTableId}`;
+        form.appendChild(descriptionInput);
+
+        const orderIdInput = document.createElement("input");
+        orderIdInput.type = "hidden";
+        orderIdInput.name = "OrderTableId";
+        orderIdInput.value = orderTableId;
+        form.appendChild(orderIdInput);
+
+        // Thêm anti-forgery token nếu có
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        if (token) {
+            const tokenInput = document.createElement("input");
+            tokenInput.type = "hidden";
+            tokenInput.name = "__RequestVerificationToken";
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+    // Hàm xử lý khi click button thanh toán cọc
     function handlePaymentClick(orderTableId, depositAmount) {
         // Tạo form ẩn để gửi dữ liệu đến trang thanh toán
         const form = document.createElement("form");
