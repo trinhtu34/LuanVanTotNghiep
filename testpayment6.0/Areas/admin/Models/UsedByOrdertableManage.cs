@@ -11,8 +11,10 @@ namespace testpayment6._0.Areas.admin.Models
         public decimal TotalPrice { get; set; }
         public decimal TotalDeposit { get; set; }
         public DateTime OrderDate { get; set; }
-        public bool IsPaid { get; set; }
-
+        //public bool IsPaid { get; set; }
+        public bool isPaidDeposit { get; set; }
+        public bool isPaidTotalPrice { get; set; }
+            
         // Navigation properties
         public List<OrderTableDetail_manage> OrderTableDetails { get; set; } = new List<OrderTableDetail_manage>();
         public List<OrderFoodDetail_manage> OrderFoodDetails { get; set; } = new List<OrderFoodDetail_manage>();

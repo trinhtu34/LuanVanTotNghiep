@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Amazon.S3.Model;
+using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.X509;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using testpayment6._0.Models;
@@ -82,7 +84,8 @@ namespace testpayment6._0.Controllers
             try
             {
                 // Lấy tất cả đơn đặt bàn
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
+                //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime3HoursAgo");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -102,7 +105,7 @@ namespace testpayment6._0.Controllers
 
                 // Lọc các đơn chưa hủy và trong khung thời gian xung đột ( khoảng 2 giờ)
                 var conflictingOrders = allOrders.Where(order =>
-                    !order.IsCancel && // Đơn chưa bị hủy
+                    !order.IsCancel &&
                     DateTime.TryParse(order.StartingTime, out DateTime orderStartTime) &&
                     Math.Abs((orderStartTime - startingTime).TotalHours) <= 2
                 ).ToList();
@@ -432,7 +435,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
@@ -484,6 +487,7 @@ namespace testpayment6._0.Controllers
             try
             {
                 var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/includepaymentstatus/{userId}");
+                //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/includepaymentstatusnewvers/{userId}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -679,49 +683,128 @@ namespace testpayment6._0.Controllers
         public async Task<IActionResult> GetOrderStatistics()
         {
             var userId = HttpContext.Session.GetString("UserId");
+            _logger.LogInformation("UserId from session: {UserId}", userId);
+
             if (string.IsNullOrEmpty(userId))
             {
+                _logger.LogWarning("UserId is null or empty - user not logged in");
                 return Json(new { success = false, message = "Chưa đăng nhập" });
             }
 
             try
             {
+                _logger.LogInformation("Starting API calls for userId: {UserId}", userId);
+                _logger.LogDebug("BASE_API_URL: {BaseApiUrl}", BASE_API_URL);
 
-                var totalTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/count/{userId}");
-                var paidTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/paid/count/{userId}");
-                var unpaidTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/user/unpaid/count/{userId}");
-                var canceledTask = _httpClient.GetAsync($"{BASE_API_URL}/ordertable/canceled/{userId}");
+                // Log các URL được gọi
+                var totalUrl = $"{BASE_API_URL}/ordertable/user/count/{userId}";
+                var paidUrl = $"{BASE_API_URL}/ordertable/user/paid/count/{userId}";
+                var unpaidUrl = $"{BASE_API_URL}/ordertable/user/unpaid/count/{userId}";
+                var canceledUrl = $"{BASE_API_URL}/ordertable/canceled/{userId}";
 
+                _logger.LogDebug("API URLs - Total: {TotalUrl}, Paid: {PaidUrl}, Unpaid: {UnpaidUrl}, Canceled: {CanceledUrl}",
+                    totalUrl, paidUrl, unpaidUrl, canceledUrl);
+
+                var totalTask = _httpClient.GetAsync(totalUrl);
+                var paidTask = _httpClient.GetAsync(paidUrl);
+                var unpaidTask = _httpClient.GetAsync(unpaidUrl);
+                var canceledTask = _httpClient.GetAsync(canceledUrl);
+
+                _logger.LogInformation("Starting parallel API calls for order statistics");
                 await Task.WhenAll(totalTask, paidTask, unpaidTask, canceledTask);
+                _logger.LogInformation("All API calls completed for user {UserId}", userId);
 
                 var totalResponse = await totalTask;
                 var paidResponse = await paidTask;
                 var unpaidResponse = await unpaidTask;
                 var canceledResponse = await canceledTask;
 
-                if (totalResponse.IsSuccessStatusCode && paidResponse.IsSuccessStatusCode && unpaidResponse.IsSuccessStatusCode && canceledResponse.IsSuccessStatusCode)
-                {
-                    var totalCount = int.Parse(await totalResponse.Content.ReadAsStringAsync());
-                    var paidCount = int.Parse(await paidResponse.Content.ReadAsStringAsync());
-                    var unpaidCount = int.Parse(await unpaidResponse.Content.ReadAsStringAsync());
-                    var canceledCount = int.Parse(await canceledResponse.Content.ReadAsStringAsync());
+                // Log status codes
+                _logger.LogDebug("API Response Status - Total: {TotalStatus}, Paid: {PaidStatus}, Unpaid: {UnpaidStatus}, Canceled: {CanceledStatus}",
+                    totalResponse.StatusCode, paidResponse.StatusCode, unpaidResponse.StatusCode, canceledResponse.StatusCode);
 
-                    return Json(new
+                if (totalResponse.IsSuccessStatusCode && paidResponse.IsSuccessStatusCode &&
+                    unpaidResponse.IsSuccessStatusCode && canceledResponse.IsSuccessStatusCode)
+                {
+                    var totalContentRaw = await totalResponse.Content.ReadAsStringAsync();
+                    var paidContentRaw = await paidResponse.Content.ReadAsStringAsync();
+                    var unpaidContentRaw = await unpaidResponse.Content.ReadAsStringAsync();
+                    var canceledContentRaw = await canceledResponse.Content.ReadAsStringAsync();
+
+                    // Log raw responses
+                    _logger.LogDebug("Raw API responses - Total: '{TotalContent}', Paid: '{PaidContent}', Unpaid: '{UnpaidContent}', Canceled: '{CanceledContent}'",
+                        totalContentRaw, paidContentRaw, unpaidContentRaw, canceledContentRaw);
+
+                    try
                     {
-                        success = true,
-                        data = new
+                        var totalCount = int.Parse(totalContentRaw);
+                        var paidCount = int.Parse(paidContentRaw);
+                        var unpaidCount = int.Parse(unpaidContentRaw);
+                        var canceledCount = int.Parse(canceledContentRaw);
+
+                        _logger.LogInformation("Successfully parsed order statistics for user {UserId} - Total: {Total}, Paid: {Paid}, Unpaid: {Unpaid}, Canceled: {Canceled}",
+                            userId, totalCount, paidCount, unpaidCount, canceledCount);
+
+                        var result = new
                         {
-                            total = totalCount,
-                            paid = paidCount,
-                            unpaid = unpaidCount,
-                            canceled = canceledCount
-                        }
-                    });
+                            success = true,
+                            data = new
+                            {
+                                total = totalCount,
+                                paid = paidCount,
+                                unpaid = unpaidCount,
+                                canceled = canceledCount
+                            }
+                        };
+
+                        return Json(result);
+                    }
+                    catch (FormatException parseEx)
+                    {
+                        _logger.LogError(parseEx, "Failed to parse API responses to integers for user {UserId}. Raw responses - Total: '{TotalContent}', Paid: '{PaidContent}', Unpaid: '{UnpaidContent}', Canceled: '{CanceledContent}'",
+                            userId, totalContentRaw, paidContentRaw, unpaidContentRaw, canceledContentRaw);
+                        return Json(new { success = false, message = "Dữ liệu không đúng định dạng" });
+                    }
                 }
+                else
+                {
+                    _logger.LogWarning("One or more API calls failed for user {UserId}", userId);
+
+                    // Log error details for failed responses
+                    if (!totalResponse.IsSuccessStatusCode)
+                    {
+                        var errorContent = await totalResponse.Content.ReadAsStringAsync();
+                        _logger.LogError("Total orders API failed for user {UserId}: {StatusCode} - {ErrorContent}",
+                            userId, totalResponse.StatusCode, errorContent);
+                    }
+
+                    if (!paidResponse.IsSuccessStatusCode)
+                    {
+                        var errorContent = await paidResponse.Content.ReadAsStringAsync();
+                        _logger.LogError("Paid orders API failed for user {UserId}: {StatusCode} - {ErrorContent}",
+                            userId, paidResponse.StatusCode, errorContent);
+                    }
+
+                    if (!unpaidResponse.IsSuccessStatusCode)
+                    {
+                        var errorContent = await unpaidResponse.Content.ReadAsStringAsync();
+                        _logger.LogError("Unpaid orders API failed for user {UserId}: {StatusCode} - {ErrorContent}",
+                            userId, unpaidResponse.StatusCode, errorContent);
+                    }
+
+                    if (!canceledResponse.IsSuccessStatusCode)
+                    {
+                        var errorContent = await canceledResponse.Content.ReadAsStringAsync();
+                        _logger.LogError("Canceled orders API failed for user {UserId}: {StatusCode} - {ErrorContent}",
+                            userId, canceledResponse.StatusCode, errorContent);
+                    }
+                }
+
                 return Json(new { success = false, message = "Không thể lấy dữ liệu" });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting order statistics for user {UserId}", userId);
                 return Json(new { success = false, message = "Lỗi hệ thống" });
             }
         }

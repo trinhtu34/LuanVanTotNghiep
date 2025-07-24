@@ -32,6 +32,7 @@
         public int CartDetailsId { get; set; }
         public int CartId { get; set; }
         public string DishId { get; set; }
+        public string dishName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal Price { get; set; }
 

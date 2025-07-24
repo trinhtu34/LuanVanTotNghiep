@@ -20,7 +20,9 @@
                 <div class="card-body">
                     <form method="get" action="@Url.Action("Index", "ShowCartPaymentHistory")">
                         <div class="row align-items-end">
-                            <!-- Date Range Filter -->
+
+                            @* chọn ngày nhanh  *@
+
                             <div class="col-md-2">
                                 <label class="form-label">Từ ngày</label>
                                 <input type="date" name="fromDate" class="form-control"
@@ -32,7 +34,6 @@
                                        value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
                             </div>
 
-                            <!-- Success Filter -->
                             <div class="col-md-2">
                                 <label class="form-label">Trạng thái</label>
                                 <select name="filterBySuccess" class="form-select">
@@ -42,7 +43,6 @@
                                 </select>
                             </div>
 
-                            <!-- Quick Date Filters -->
                             <div class="col-md-2">
                                 <label class="form-label">Lọc nhanh</label>
                                 <select id="quickDateFilter" class="form-select">
@@ -58,7 +58,6 @@
                                 </select>
                             </div>
 
-                            <!-- Buttons -->
                             <div class="col-md-4">
                                 <button type="submit" class="btn btn-primary me-2">
                                     <i class="fas fa-filter me-1"></i>

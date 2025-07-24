@@ -92,7 +92,6 @@
 					</li>
 				</ul>
 
-				<!-- Tab Content -->
 				<div class="tab-content" id="region@(regionGroup.Key)TabContent">
 					
 					@* thông tin bàn  *@
@@ -497,6 +496,10 @@
 		const tableCard = button.closest(".table-card");
 		const indicator = tableCard.querySelector(".selected-indicator");
 
+		@* if (tableCard.classList.contains('booked')) {
+		  alert('Khung giờ này đã có khách đặt bàn này');
+		  return;
+		} *@
 		if (this.selectedTables.has(tableId)) {
 		  this.deselectTable(tableId, tableCard, button, indicator);
 		} else {
@@ -831,7 +834,6 @@
 		}
 	  }
 
-	  // Booking methods
 	  showBookingModal() {
 		if (this.selectedTables.size === 0) {
 		  alert("Vui lòng chọn ít nhất một bàn");
@@ -975,7 +977,7 @@
 		if (data.success) {
 		  bootstrap.Modal.getInstance(this.elements.datBanModal).hide();
 
-		  // Tính tổng tiền cọc từ các bàn đã chọn
+		  // tính tổng tiền cọc từ các bàn đã chọn ở đây
 		  const totalDeposit = Array.from(this.selectedTables.values()).reduce(
 			(sum, table) => sum + parseInt(table.deposit),
 			0
@@ -1005,7 +1007,6 @@
 		  orderIdInput.value = data.orderTableId;
 		  form.appendChild(orderIdInput);
 
-		  // anti-forgery token
 		  const token = document.querySelector(
 			'input[name="__RequestVerificationToken"]'
 		  )?.value;
@@ -1037,7 +1038,7 @@
 	  }
 
 	  resetBooking() {
-		// Reset tables
+
 		this.selectedTables.clear();
 		document.querySelectorAll(".table-card").forEach((card) => {
 		  const button = card.querySelector(".btn-chon-ban");
@@ -1045,7 +1046,6 @@
 		  this.updateTableVisual(card, button, indicator, false);
 		});
 
-		// Reset foods
 		this.selectedFoods.clear();
 		document.querySelectorAll(".food-card").forEach((card) => {
 		  const button = card.querySelector(".btn-chon-mon");
@@ -1089,20 +1089,20 @@
 
 			if (isBooked) {
 			  card.classList.add('booked');
-			  button.innerHTML = '<i class="fas fa-ban"></i> Đã đặt';
-			  button.disabled = true;
+			  button.innerHTML = '<i class="fas fa-ban"></i> Vui lòng chọn giờ khác cho bàn này';
+			  @* button.disabled = true; *@
 
 			  if (!card.querySelector('.booked-indicator')) {
 				const indicator = document.createElement('div');
-				indicator.className = 'booked-indicator';
-				indicator.innerHTML = 'ĐÃ ĐẶT';
+				indicator.className = 'booked-indicator'; 
+				indicator.innerHTML = 'Đã đặt';
 				card.style.position = 'relative';
 				card.appendChild(indicator);
 			  }
 			} else {
 			  card.classList.remove('booked');
 			  button.innerHTML = '<i class="fas fa-plus"></i> Chọn bàn';
-			  button.disabled = false;
+			  @* button.disabled = false; *@
 
 			  const indicator = card.querySelector('.booked-indicator');
 			  if (indicator) {
@@ -1112,7 +1112,8 @@
 		  });
 		}
 
-		startBookedTablesCheck() {
+		startBookedTablesCheck() 
+		{
 		  this.checkBookedTables();
 
 		  this.checkBookedTablesInterval = setInterval(() => {
@@ -1146,4 +1147,7 @@
 	document.addEventListener("DOMContentLoaded", () => {
 	  window.bookingManager = new RestaurantBookingManager();
 	});
+	setInterval(() => {
+	  location.reload();
+	}, 30000);
 </script>
