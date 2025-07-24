@@ -85,7 +85,7 @@ namespace testpayment6._0.Controllers
             {
                 // Lấy tất cả đơn đặt bàn
                 //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime3HoursAgo");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -435,7 +435,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();

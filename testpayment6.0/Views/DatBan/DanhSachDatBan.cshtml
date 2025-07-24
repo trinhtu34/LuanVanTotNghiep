@@ -117,7 +117,25 @@
                                     <strong>Tổng tiền:</strong><br>
                                     <span class="ms-3">@string.Format("{0:N0}", order.totalPrice) VNĐ</span>
                                 </p>
-
+                                @* trạng thái thanh toán tiền đặt món ăn cho đơn đặt bàn  *@
+                                <p class="info-item">
+                                    <i class="fas fa-credit-card text-info"></i>
+                                    <strong>Trạng thái thanh toán:</strong><br>
+                                    <span class="ms-3">
+                                        @if (order.IsPaid)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Đã thanh toán
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock"></i> Chưa thanh toán
+                                            </span>
+                                        }
+                                    </span>
+                                </p>
                                 @* trạng thái thanh toán tiền món ăn  *@
                                 @if (!order.IsPaid && order.totalPrice > 0)
                                 {
