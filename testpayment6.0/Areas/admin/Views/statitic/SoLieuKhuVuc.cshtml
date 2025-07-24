@@ -15,7 +15,6 @@
                 </h2>
             </div>
 
-            <!-- Filter Section -->
             <div class="card mb-4">
                 <div class="card-body">
                     <form method="get" action="@Url.Action("SoLieuLoaiMonAn", "statitic")">
@@ -66,16 +65,15 @@
                 </div>
             </div>
 
-            @if (ViewBag.ErrorMessage != null)
+            @if (ViewBag.ErrorMessageSLKV != null)
             {
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    @ViewBag.ErrorMessage
+                    @ViewBag.ErrorMessageSLKV
                 </div>
             }
 
-            <!-- Results Summary -->
-            <div class="mb-3 d-flex justify-content-between align-items-center">
+            @* <div class="mb-3 d-flex justify-content-between align-items-center">
                 <div>
                     <small class="text-muted">
                         Tìm thấy <strong>@Model.RegionRevenue.Count</strong> danh mục
@@ -106,9 +104,8 @@
                 </div>
             </div>
 
-            <!-- Category Revenue Cards -->
             <div class="row mb-4">
-                @foreach (var region in Model.RegionRevenue.Take(4))
+                @foreach (var region in Model.RegionRevenue.Take(10))
                 {
                     <div class="col-md-3 mb-3">
                         <div class="card text-white bg-primary">
@@ -127,9 +124,8 @@
                         </div>
                     </div>
                 }
-            </div>
+            </div> *@
 
-            <!-- Category Revenue Table -->
             <div class="card">
                 <div class="card-body">
                     @if (Model.RegionRevenue.Any())

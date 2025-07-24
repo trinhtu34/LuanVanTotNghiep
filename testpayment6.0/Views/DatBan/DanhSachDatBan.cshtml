@@ -119,7 +119,7 @@
                                 </p>
 
                                 @* trạng thái thanh toán tiền món ăn  *@
-                                @if (!order.IsPaid)
+                                @if (!order.IsPaid && order.totalPrice > 0)
                                 {
                                     <div class="payment-button-container">
                                         <button type="button" class="btn btn-success btn-sm w-100 payment-total-btn"

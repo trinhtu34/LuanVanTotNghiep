@@ -71,18 +71,32 @@
                                 <th>Tiền cọc:</th>
                                 <td><span class="text-warning">@Model.TotalDeposit.ToString("N0") VNĐ</span></td>
                             </tr>
-                            @if(Model.IsPaid == true)
+                            @if (Model.isPaidDeposit == true)
                             {
                                 <tr>
-                                    <th>Trạng thái thanh toán :</th>
-                                    <td><span class="badge bg-success">Đã thanh toán</span></td>
+                                    <th>Trạng thái thanh toán cọc :</th>
+                                    <td><span class="badge bg-success">Đã thanh toán tiền cọc</span></td>
                                 </tr>
                             }
                             else
                             {
                                 <tr>
-                                    <th>Trạng thái thanh toán :</th>
-                                    <td><span class="badge bg-danger">Chưa thanh toán</span></td>
+                                    <th>Trạng thái thanh toán cọc :</th>
+                                    <td><span class="badge bg-danger">Chưa thanh toán tiền cọc</span></td>
+                                </tr>
+                            }
+                            @if (Model.isPaidTotalPrice == true)
+                            {
+                                <tr>
+                                    <th>Trạng thái thanh toán món ăn :</th>
+                                    <td><span class="badge bg-success">Đã thanh toán tiền</span></td>
+                                </tr>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <th>Trạng thái thanh toán món ăn :</th>
+                                    <td><span class="badge bg-danger">Chưa thanh toán tiền </span></td>
                                 </tr>
                             }
 

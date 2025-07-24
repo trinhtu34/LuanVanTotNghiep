@@ -8,11 +8,12 @@
                 <tr>
                     <th>ID Đơn</th>
                     <th>Người đặt</th>
-                    <th>Thời gian bắt đầu</th>
+                    <th>Thời gian đến</th>
                     <th>Ngày đặt</th>
                     <th>Tổng tiền</th>
                     <th>Tiền cọc</th>
-                    <th>Trạng thái thanh toán</th>
+                    <th>Trạng thái thanh toán cọc</th>
+                    <th>Trạng thái thanh toán món ăn</th>
                     <th>Trạng thái đơn</th>
                     <th>Hành động</th>
                     <th>Chi tiết</th>
@@ -58,7 +59,23 @@
                             </span>
                         </td>
                         <td>
-                            @if (order.IsPaid == true)
+                            @if (order.isPaidDeposit == true)
+                            {
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Đã thanh toán
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger fs-6 px-3 py-2">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    Chưa thanh toán
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (order.isPaidTotalPrice == true)
                             {
                                 <span class="badge bg-success fs-6 px-3 py-2">
                                     <i class="fas fa-check-circle me-1"></i>

@@ -84,8 +84,8 @@ namespace testpayment6._0.Controllers
             try
             {
                 // Lấy tất cả đơn đặt bàn
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
-                //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
+                //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2MinutesAgo");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterStartingTime2HoursAgo");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -487,6 +487,7 @@ namespace testpayment6._0.Controllers
             try
             {
                 var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/includepaymentstatus/{userId}");
+                //var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/includepaymentstatusnewvers/{userId}");
 
                 if (response.IsSuccessStatusCode)
                 {

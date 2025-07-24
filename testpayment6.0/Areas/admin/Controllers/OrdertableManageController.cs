@@ -43,12 +43,12 @@ namespace RestaurantAdmin.Controllers
 
                 // Tính tổng doanh thu chưa thanh toán và chưa hủy 
                 viewModel.TotalRevenueUnpaid = viewModel.OrderTables
-                    .Where(c => !c.IsPaid && !c.IsCancel)
+                    .Where(c => !c.isPaidTotalPrice && !c.IsCancel)
                     .Sum(o => o.TotalPrice + o.TotalDeposit);
 
                 // Tính tổng đơn chưa thanh toán và chưa hủy 
                 viewModel.TotalOrderUnpaid = viewModel.OrderTables
-                    .Where(c => !c.IsPaid && !c.IsCancel)
+                    .Where(c => !c.isPaidTotalPrice && !c.IsCancel)
                     .Count();
 
                 return View(viewModel);
@@ -108,7 +108,7 @@ namespace RestaurantAdmin.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTimeNewerVer");
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();

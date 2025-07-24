@@ -10,16 +10,25 @@
         public decimal totalRevenue { get; set; }
         public int orderCount { get; set; }
     }
+    //public class DishRevenueViewModel
+    //{
+    //    public DateTime? StartDate { get; set; }
+    //    public DateTime? EndDate { get; set; }
+    //    public int? CategoryId { get; set; }
+    //    public List<DishRevenueModel>? DishRevenue { get; set; } = new List<DishRevenueModel>();
+    //    public List<CategoryModel>? Categories { get; set; } = new List<CategoryModel>();
+    //}
+    //public class DishRevenueModel
+    //{
+    //    public string dishId { get; set; }
+    //    public string dishName { get; set; }
+    //    public string categoryName { get; set; }
+    //    public decimal unitPrice { get; set; }
+    //    public int totalQuantitySold { get; set; }
+    //    public decimal totalRevenue { get; set; }
+    //    public int orderCount { get; set; }
+    //}
     public class DishRevenueViewModel
-    {
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public int? CategoryId { get; set; }
-        public List<DishRevenueModel>? DishRevenue { get; set; } = new List<DishRevenueModel>();
-        public List<CategoryModel>? Categories { get; set; } = new List<CategoryModel>();
-    }
-
-    public class DishRevenueModel
     {
         public string dishId { get; set; }
         public string dishName { get; set; }
@@ -29,6 +38,8 @@
         public decimal totalRevenue { get; set; }
         public int orderCount { get; set; }
     }
+
+
 
     public class CategoryModel
     {
