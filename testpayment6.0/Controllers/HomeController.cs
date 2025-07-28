@@ -67,7 +67,7 @@ namespace testpayment6._0.Controllers
             }
             catch
             {
-                ViewBag.MenuCount = 50
+                ViewBag.MenuCount = 50;
                 ViewBag.FeaturedMenu = new List<dynamic>();
             }
 
