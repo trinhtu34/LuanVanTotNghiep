@@ -29,7 +29,6 @@ namespace testpayment6._0.Controllers
                     SearchText = search ?? ""
                 };
 
-                // Lấy dữ liệu từ các API
                 var dishesTask = GetDishesAsync();
                 var categoriesTask = GetCategoriesAsync();
                 var regionsTask = GetRegionsAsync();
@@ -57,7 +56,6 @@ namespace testpayment6._0.Controllers
                         d.DishName.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
-                // Kiểm tra trạng thái đăng nhập
                 ViewBag.IsLoggedIn = !string.IsNullOrEmpty(HttpContext.Session.GetString("UserId"));
                 ViewBag.UserId = HttpContext.Session.GetString("UserId");
 
@@ -72,7 +70,6 @@ namespace testpayment6._0.Controllers
             }
         }    
 
-        // API helper methods
         private async Task<List<DishModels_Menu>> GetDishesAsync()
         {
             try

@@ -1,8 +1,8 @@
-import json
 import boto3
-import os
 import zipfile
 import tempfile
+import json
+import os
 
 s3 = boto3.client('s3')
 sfn = boto3.client('stepfunctions')
@@ -11,16 +11,17 @@ sfn = boto3.client('stepfunctions')
 def lambda_handler(event, context):
     print("Event from CodePipeline:", json.dumps(event))
 
+    # Lấy thông tin artifact từ event
     job_data = event['CodePipeline.job']['data']
     artifact = job_data['inputArtifacts'][0]
     bucket = artifact['location']['s3Location']['bucketName']
     key = artifact['location']['s3Location']['objectKey']
 
-    # Tải artifact về /tmp
+    # Download artifact zip về /tmp
     with tempfile.NamedTemporaryFile() as tmp_file:
         s3.download_file(bucket, key, tmp_file.name)
 
-        # Giải nén artifact
+        # Giải nén
         with zipfile.ZipFile(tmp_file.name, 'r') as zip_ref:
             zip_ref.extractall('/tmp/artifact')
 
@@ -28,7 +29,7 @@ def lambda_handler(event, context):
     with open('/tmp/artifact/imageDetail.json', 'r') as f:
         image_data = json.load(f)
 
-    image_uri = image_data.get('imageUri') or image_data.get('ImageURI')
+    image_uri = image_data['imageUri']
     print("Image URI:", image_uri)
 
     # Invoke Step Function

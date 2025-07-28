@@ -76,7 +76,6 @@ namespace testpayment6._0.Controllers
             }
         }
 
-        // cập nhật số lượng , nhập số cũng đc , hoặc ấn nút tăng giảm cũng đc , tùy
         [HttpPost]
         public IActionResult UpdateQuantity(string dishId, int quantity)
         {
@@ -113,7 +112,6 @@ namespace testpayment6._0.Controllers
             }
         }
 
-        // Xóa món khỏi giỏ hàng
         [HttpPost]
         public IActionResult RemoveFromCart(string dishId)
         {
@@ -142,7 +140,6 @@ namespace testpayment6._0.Controllers
             }
         }
 
-        // Đặt hàng - Lưu vào database
         [HttpPost]
         public async Task<IActionResult> PlaceOrder()
         {
@@ -160,17 +157,14 @@ namespace testpayment6._0.Controllers
                     return Json(new { success = false, message = "Giỏ hàng trống" });
                 }
 
-                // Tính tổng tiền của giỏ hàng
                 var totalPrice = cart.Sum(x => x.Total ?? 0);
 
-                // Tạo cart trong database với totalPrice
                 var cartResponse = await CreateCartAsync(userId, totalPrice);
                 if (cartResponse == null)
                 {
                     return Json(new { success = false, message = "Không thể tạo đơn hàng" });
                 }
 
-                // Thêm từng món vào cart detail
                 bool allItemsAdded = true;
                 foreach (var item in cart)
                 {
@@ -185,11 +179,9 @@ namespace testpayment6._0.Controllers
 
                 if (allItemsAdded)
                 {
-                    // Lưu CartId vào session để sử dụng cho thanh toán
                     HttpContext.Session.SetString("CartId", cartResponse.CartId.ToString());
                     HttpContext.Session.SetString("CartTotalPrice", totalPrice.ToString());
 
-                    // Trả về thông tin để redirect đến trang thanh toán
                     return Json(new
                     {
                         success = true,
@@ -211,7 +203,6 @@ namespace testpayment6._0.Controllers
             }
         }
 
-        // Lấy số lượng items trong giỏ hàng (để hiển thị badge)
         [HttpGet]
         public IActionResult GetCartCount()
         {
@@ -219,7 +210,6 @@ namespace testpayment6._0.Controllers
             return Json(cart.Sum(x => x.Quantity));
         }
 
-        // Helper methods
         private List<CartItem> GetCartFromSession()
         {
             var cartJson = HttpContext.Session.GetString("Cart");

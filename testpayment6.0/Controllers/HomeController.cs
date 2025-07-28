@@ -22,16 +22,13 @@ namespace testpayment6._0.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            // Kiểm tra trạng thái đăng nhập
             ViewBag.IsLoggedIn = !string.IsNullOrEmpty(HttpContext.Session.GetString("UserId"));
             ViewBag.UserId = HttpContext.Session.GetString("UserId");
 
-            // Gọi API để lấy số lượng món ăn
             try
             {
                 using (var httpClient = new HttpClient())
                 {
-                    // Gọi API count
                     var countResponse = await httpClient.GetAsync("https://p7igzosmei.execute-api.ap-southeast-1.amazonaws.com/Prod/api/menu/quantity/count");
                     if (countResponse.IsSuccessStatusCode)
                     {
@@ -42,15 +39,14 @@ namespace testpayment6._0.Controllers
                         }
                         else
                         {
-                            ViewBag.MenuCount = 50; // Fallback value
+                            ViewBag.MenuCount = 50;
                         }
                     }
                     else
                     {
-                        ViewBag.MenuCount = 50; // Fallback value
+                        ViewBag.MenuCount = 50;
                     }
 
-                    // Gọi API featured menu
                     var menuResponse = await httpClient.GetAsync("https://p7igzosmei.execute-api.ap-southeast-1.amazonaws.com/Prod/api/menu/quantity");
                     if (menuResponse.IsSuccessStatusCode)
                     {
@@ -60,7 +56,6 @@ namespace testpayment6._0.Controllers
                             PropertyNameCaseInsensitive = true
                         });
 
-                        // Sắp xếp theo count giảm dần, lấy 3-6 món
                         var featuredMenu = menuItems
                             .OrderByDescending(x => ((JsonElement)x).GetProperty("count").GetInt32())
                             .Take(3)
@@ -72,8 +67,8 @@ namespace testpayment6._0.Controllers
             }
             catch
             {
-                ViewBag.MenuCount = 50; // Fallback value nếu có lỗi
-                ViewBag.FeaturedMenu = new List<dynamic>(); // Empty list
+                ViewBag.MenuCount = 50
+                ViewBag.FeaturedMenu = new List<dynamic>();
             }
 
             return View();
@@ -87,19 +82,16 @@ namespace testpayment6._0.Controllers
         [HttpGet]
         public IActionResult MyOrders()
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("login");
             }
 
-            // Chuyển hướng đến trang đơn hàng
             return RedirectToAction("Index", "Order");
         }
         [HttpGet]
         public IActionResult Login()
         {
-            // Nếu đã đăng nhập thì về trang chủ
             if (IsUserLoggedIn())
             {
                 _logger.LogInformation($"User {HttpContext.Session.GetString("UserId")} already logged in, redirecting to Index");
@@ -110,7 +102,7 @@ namespace testpayment6._0.Controllers
 
         [Route("Home/Login")]
         [HttpPost]
-        [ValidateAntiForgeryToken] // Thêm bảo mật CSRF
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -118,7 +110,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Gọi API đăng nhập
                 var request = new { UserId = model.UserId, UPassword = model.UPassword };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -128,13 +119,10 @@ namespace testpayment6._0.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-
-                    // Lưu vào Session với nhiều thông tin hơn
                     HttpContext.Session.SetString("UserId", model.UserId);
                     HttpContext.Session.SetString("IsAuthenticated", "true");
                     HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    // Commit session ngay lập tức
                     await HttpContext.Session.CommitAsync();
 
                     TempData["Message"] = "Đăng nhập thành công!";
@@ -161,24 +149,21 @@ namespace testpayment6._0.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken] // Thêm bảo mật CSRF
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             var userId = HttpContext.Session.GetString("UserId");
 
             _logger.LogInformation($"User {userId} logging out. Session ID: {HttpContext.Session.Id}");
 
-            // Clear session
             HttpContext.Session.Clear();
 
-            // Commit session changes
             await HttpContext.Session.CommitAsync();
 
             TempData["Message"] = "Đăng xuất thành công!";
             return RedirectToAction("Index");
         }
 
-        // Helper method để kiểm tra trạng thái đăng nhập
         private bool IsUserLoggedIn()
         {
             var userId = HttpContext.Session.GetString("UserId");
@@ -187,7 +172,6 @@ namespace testpayment6._0.Controllers
             return !string.IsNullOrEmpty(userId) && isAuthenticated == "true";
         }
 
-        // Action để kiểm tra trạng thái session (dùng cho debugging)
         [HttpGet]
         public IActionResult CheckSession()
         {
@@ -208,12 +192,10 @@ namespace testpayment6._0.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-        // Thêm các method này vào HomeController.cs của bạn
 
         [HttpGet]
         public IActionResult Register()
         {
-            // Nếu đã đăng nhập thì về trang chủ
             if (IsUserLoggedIn())
             {
                 _logger.LogInformation($"User {HttpContext.Session.GetString("UserId")} already logged in, redirecting to Index");
@@ -232,7 +214,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Gọi API đăng ký
                 var request = new
                 {
                     UserId = model.UserId,
@@ -262,7 +243,6 @@ namespace testpayment6._0.Controllers
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogWarning($"Register failed for user {model.UserId}: {response.StatusCode} - {errorContent}");
 
-                    // Xử lý các lỗi cụ thể từ API
                     if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
                     {
                         ViewBag.Error = "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.";
@@ -286,12 +266,10 @@ namespace testpayment6._0.Controllers
 
             return View(model);
         }
-        // Thêm các method này vào HomeController.cs của bạn
 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("Login");
@@ -301,7 +279,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Gọi API để lấy thông tin profile hiện tại
                 var response = await _httpClient.GetAsync($"{BASE_API_URL}/user/{userId}");
 
                 if (response.IsSuccessStatusCode)
@@ -326,7 +303,6 @@ namespace testpayment6._0.Controllers
                 else
                 {
                     _logger.LogWarning($"Failed to get profile for user {userId}: {response.StatusCode}");
-                    // Nếu không lấy được thông tin, tạo model rỗng
                     var model = new ProfileViewModel
                     {
                         UserId = userId,
@@ -375,14 +351,13 @@ namespace testpayment6._0.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(ProfileViewModel model)
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("Login");
             }
 
             var userId = HttpContext.Session.GetString("UserId");
-            model.UserId = userId; // Đảm bảo UserId không bị thay đổi
+            model.UserId = userId;
 
             if (!ModelState.IsValid)
             {
@@ -391,7 +366,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Chuẩn bị dữ liệu để gửi API
                 var request = new
                 {
                     UPassword = model.UPassword,
@@ -436,12 +410,10 @@ namespace testpayment6._0.Controllers
 
             return View(model);
         }
-        // Thêm các methods này vào HomeController.cs
 
         [HttpGet]
         public IActionResult ChangePassword()
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("Login");
@@ -454,7 +426,6 @@ namespace testpayment6._0.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("Login");
@@ -469,7 +440,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Bước 1: Xác thực mật khẩu hiện tại bằng cách gọi API login
                 var loginRequest = new { UserId = userId, UPassword = model.CurrentPassword };
                 var loginJson = JsonSerializer.Serialize(loginRequest);
                 var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
@@ -482,7 +452,6 @@ namespace testpayment6._0.Controllers
                     return View(model);
                 }
 
-                // Bước 2: Lấy thông tin user hiện tại
                 var userResponse = await _httpClient.GetAsync($"{BASE_API_URL}/user/{userId}");
                 if (!userResponse.IsSuccessStatusCode)
                 {
@@ -496,7 +465,6 @@ namespace testpayment6._0.Controllers
                     PropertyNameCaseInsensitive = true
                 });
 
-                // Bước 3: Cập nhật mật khẩu mới
                 var updateRequest = new
                 {
                     UPassword = model.NewPassword,
