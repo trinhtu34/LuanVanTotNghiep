@@ -86,6 +86,7 @@
         <div class="row">
             @foreach (var order in Model.OrderByDescending(o => o.orderDate))
             {
+                var timeUntilStart = order.startingTime - DateTime.Now;
                 @* var timeUntilStart = order.startingTime - DateTime.Now; *@
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card order-card @(order.isCancel ? "cancelled" : "")">
@@ -137,7 +138,7 @@
                                     </span>
                                 </p>
                                 @* trạng thái thanh toán tiền món ăn  *@
-                                @if (!order.IsPaid && order.totalPrice > 0)
+                                @* @if (!order.IsPaid && order.totalPrice > 0)
                                 {
                                     <div class="payment-button-container">
                                         <button type="button" class="btn btn-success btn-sm w-100 payment-total-btn"
@@ -146,7 +147,7 @@
                                             <i class="fas fa-credit-card"></i> Thanh Toán Trước Tiền Món Ăn
                                         </button>
                                     </div>
-                                }
+                                } *@
 
                                 <p class="info-item">
                                     <i class="fas fa-coins text-warning"></i>
@@ -205,7 +206,7 @@
                                     </span>
                                 </p>
                                 <!-- Hủy đơn đặt bàn -->
-                                <div class="info-item">
+                                @* <div class="info-item">
                                     @{
                                         var timeUntilStart = order.startingTime - DateTime.Now;
                                         bool canCancel = !order.isCancel && timeUntilStart.TotalHours > 0;
@@ -223,7 +224,7 @@
                                             <i class="fas fa-ban"></i> Không thể hủy (Đã qua giờ)
                                         </button>
                                     }
-                                </div>
+                                </div> *@
                             </div>
                         </div>
                         <div class="card-footer text-muted text-center">

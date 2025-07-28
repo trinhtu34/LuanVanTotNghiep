@@ -1,0 +1,49 @@
+version: 0.2
+# env:
+#   secrets-manager:
+#     DOCKERHUB_USERNAME: dockerhub-username-secret
+#     DOCKERHUB_PASSWORD: dockerhub-password-secret
+env:
+  variables:
+    DOCKERHUB_USERNAME: tuhoami2003
+    DOCKERHUB_PASSWORD: legendofthedamn12
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Docker Hub...
+      - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 730335485777.dkr.ecr.ap-southeast-1.amazonaws.com
+      - REPOSITORY_URI=730335485777.dkr.ecr.ap-southeast-1.amazonaws.com/test-codepipline-and-step-functions
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t test-codepipline-and-step-functions .
+      - docker tag test-codepipline-and-step-functions:latest $REPOSITORY_URI:latest
+      - docker tag test-codepipline-and-step-functions:latest $REPOSITORY_URI:$COMMIT_HASH
+
+  post_build:
+    commands:
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$COMMIT_HASH
+      - echo Build completed on `date`
+
+      - echo Writing imagedefinitions.json file...
+      - printf '[{"name":"imgfrontend","imageUri":"%s"}]' $REPOSITORY_URI:$COMMIT_HASH > imagedefinitions.json
+      - cat imagedefinitions.json
+
+      - echo Writing imageDetail.json file...
+      # - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$COMMIT_HASH > imageDetail.json
+      - printf '{"imageUri":"%s"}' $REPOSITORY_URI:$COMMIT_HASH > imageDetail.json
+      - cat imageDetail.json
+artifacts:
+  files:
+    - imagedefinitions.json
+    - buildspec.yaml
+    - imageDetail.json
+    - taskdef.json

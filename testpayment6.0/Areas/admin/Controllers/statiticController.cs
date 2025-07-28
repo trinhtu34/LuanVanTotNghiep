@@ -55,91 +55,32 @@ namespace testpayment6._0.Areas.admin.Controllers
         }
 
         //- Doanh thu món ăn ---------------------------------------------------------------------------------------------------------
-        public async Task<IActionResult> SoLieuMonAn()
-        {
-            try
-            {
-                var viewModel = await GetDishRevenueAsync();
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                return View(new List<DishRevenueViewModel>());
-            }
-        }
-        public async Task<List<DishRevenueViewModel>> GetDishRevenueAsync()
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/cart/dish-revenue");
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    };
-                    return JsonSerializer.Deserialize<List<DishRevenueViewModel>>(jsonContent, options)
-                           ?? new List<DishRevenueViewModel>();
-                }
-                else
-                {
-                    throw new Exception("Không thể tải dữ liệu doanh thu món ăn");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Có lỗi xảy ra: {ex.Message}");
-            }
-        }
-        //public async Task<IActionResult> SoLieuMonAn(DateTime? startDate = null, DateTime? endDate = null, int? categoryId = null)
+        //public async Task<IActionResult> SoLieuMonAn()
         //{
-        //    var viewModel = new DishRevenueViewModel
-        //    {
-        //        StartDate = startDate,
-        //        EndDate = endDate,
-        //        CategoryId = categoryId
-        //    };
-
         //    try
         //    {
-        //        var dishRevenue = await GetDishRevenueAsync(startDate, endDate, categoryId);
-        //        viewModel.DishRevenue = dishRevenue;
-
-        //        var categories = await GetCategoriesAsync();
-        //        viewModel.Categories = categories;
+        //        var viewModel = await GetDishRevenueAsync();
+        //        return View(viewModel);
         //    }
         //    catch (Exception ex)
         //    {
-        //        ViewBag.ErrorMessage = $"Có lỗi xảy ra: {ex.Message}";
+        //        return View(new List<DishRevenueViewModel>());
         //    }
-
-        //    return View(viewModel);
         //}
-
-        //public async Task<List<DishRevenueModel>> GetDishRevenueAsync(
-        //    DateTime? startDate = null,
-        //    DateTime? endDate = null,
-        //    int? categoryId = null)
+        //public async Task<List<DishRevenueViewModel>> GetDishRevenueAsync()
         //{
         //    try
         //    {
-        //        var queryParams = new List<string>();
-
-        //        if (startDate.HasValue)
-        //            queryParams.Add($"startDate={startDate.Value:yyyy-MM-dd}");
-        //        if (endDate.HasValue)
-        //            queryParams.Add($"endDate={endDate.Value:yyyy-MM-dd}");
-        //        if (categoryId.HasValue)
-        //            queryParams.Add($"categoryId={categoryId.Value}");
-
-        //        var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
-        //        var response = await _httpClient.GetAsync($"{BASE_API_URL}/cart/dish-revenue{queryString}");
-
+        //        var response = await _httpClient.GetAsync($"{BASE_API_URL}/cart/dish-revenue");
         //        if (response.IsSuccessStatusCode)
         //        {
         //            var jsonContent = await response.Content.ReadAsStringAsync();
-        //            return JsonSerializer.Deserialize<List<DishRevenueModel>>(jsonContent) ?? new List<DishRevenueModel>();
+        //            var options = new JsonSerializerOptions
+        //            {
+        //                PropertyNameCaseInsensitive = true
+        //            };
+        //            return JsonSerializer.Deserialize<List<DishRevenueViewModel>>(jsonContent, options)
+        //                   ?? new List<DishRevenueViewModel>();
         //        }
         //        else
         //        {
@@ -151,6 +92,65 @@ namespace testpayment6._0.Areas.admin.Controllers
         //        throw new Exception($"Có lỗi xảy ra: {ex.Message}");
         //    }
         //}
+        public async Task<IActionResult> SoLieuMonAn(DateTime? startDate = null, DateTime? endDate = null, int? categoryId = null)
+        {
+            var viewModel = new DishRevenueViewModel
+            {
+                StartDate = startDate,
+                EndDate = endDate,
+                CategoryId = categoryId
+            };
+
+            try
+            {
+                var dishRevenue = await GetDishRevenueAsync(startDate, endDate, categoryId);
+                viewModel.DishRevenue = dishRevenue;
+
+                var categories = await GetCategoriesAsync();
+                viewModel.Categories = categories;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = $"Có lỗi xảy ra: {ex.Message}";
+            }
+
+            return View(viewModel);
+        }
+
+        public async Task<List<DishRevenueModel>> GetDishRevenueAsync(
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            int? categoryId = null)
+        {
+            try
+            {
+                var queryParams = new List<string>();
+
+                if (startDate.HasValue)
+                    queryParams.Add($"startDate={startDate.Value:yyyy-MM-dd}");
+                if (endDate.HasValue)
+                    queryParams.Add($"endDate={endDate.Value:yyyy-MM-dd}");
+                if (categoryId.HasValue)
+                    queryParams.Add($"categoryId={categoryId.Value}");
+
+                var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/cart/dish-revenue{queryString}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<List<DishRevenueModel>>(jsonContent) ?? new List<DishRevenueModel>();
+                }
+                else
+                {
+                    throw new Exception("Không thể tải dữ liệu doanh thu món ăn");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Có lỗi xảy ra: {ex.Message}");
+            }
+        }
 
         public async Task<List<CategoryModel>> GetCategoriesAsync()
         {
