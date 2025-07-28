@@ -47,4 +47,4 @@ artifacts:
     - imagedefinitions.json
     - buildspec.yaml
     - imageDetail.json
-    - luanvantotnghiep-definition.json
+    - taskdef.json
