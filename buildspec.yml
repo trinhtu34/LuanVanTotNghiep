@@ -22,7 +22,8 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t test-codepipline-and-step-functions .
+      # - docker build -t test-codepipline-and-step-functions .
+      - docker build -t test-codepipline-and-step-functions -f ./testpayment6.0/Dockerfile ./testpayment6.0
       - docker tag test-codepipline-and-step-functions:latest $REPOSITORY_URI:latest
       - docker tag test-codepipline-and-step-functions:latest $REPOSITORY_URI:$COMMIT_HASH
 
