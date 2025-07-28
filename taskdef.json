@@ -15,7 +15,7 @@
       "essential": true
     }
   ],
-  "executionRoleArn": "arn:aws:iam::183829413334:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::730335485777:role/ecsTaskExecutionRole",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",

@@ -19,11 +19,9 @@ namespace testpayment6._0.Controllers
             BASE_API_URL = configuration["BaseAPI"];
         }
 
-        // GET: Contact
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("Login", "Home");
@@ -34,7 +32,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Gọi API để lấy danh sách liên hệ
                 var response = await _httpClient.GetAsync($"{BASE_API_URL}/contactform/{userId}");
 
                 if (response.IsSuccessStatusCode)
@@ -75,12 +72,10 @@ namespace testpayment6._0.Controllers
             return View(model);
         }
 
-        // POST: Contact/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ContactListViewModel model)
         {
-            // Kiểm tra đăng nhập
             if (!IsUserLoggedIn())
             {
                 return RedirectToAction("Login", "Home");
@@ -88,17 +83,14 @@ namespace testpayment6._0.Controllers
 
             var userId = HttpContext.Session.GetString("UserId");
 
-            // Validate only the NewContact part
             if (!ModelState.IsValid)
             {
-                // Reload contacts if validation fails
                 await LoadContactsForModel(model, userId);
                 return View("Index", model);
             }
 
             try
             {
-                // Chuẩn bị dữ liệu để gửi API
                 var request = new
                 {
                     UserId = userId,
@@ -138,12 +130,10 @@ namespace testpayment6._0.Controllers
                 ViewBag.ErrorContact = "Đã xảy ra lỗi. Vui lòng thử lại.";
             }
 
-            // Reload contacts if there was an error
             await LoadContactsForModel(model, userId);
             return View("Index", model);
         }
 
-        // Helper method để load contacts cho model
         private async Task LoadContactsForModel(ContactListViewModel model, string userId)
         {
             try
@@ -174,7 +164,6 @@ namespace testpayment6._0.Controllers
             }
         }
 
-        // Helper method để kiểm tra trạng thái đăng nhập
         private bool IsUserLoggedIn()
         {
             var userId = HttpContext.Session.GetString("UserId");
