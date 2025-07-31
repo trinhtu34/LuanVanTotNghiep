@@ -4,7 +4,6 @@ elbv2 = boto3.client('elbv2')
 
 
 def get_current_and_next_target_group(listener_arn):
-    # response = elbv2.describe_listener(listener_arn=listener_arn)
     response = elbv2.describe_listeners(ListenerArns=[listener_arn])
 
     actions = response['Listeners'][0]['DefaultActions']
