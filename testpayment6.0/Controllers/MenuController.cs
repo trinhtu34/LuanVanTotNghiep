@@ -56,8 +56,8 @@ namespace testpayment6._0.Controllers
                         d.DishName.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
-                ViewBag.IsLoggedIn = !string.IsNullOrEmpty(HttpContext.Session.GetString("UserId"));
-                ViewBag.UserId = HttpContext.Session.GetString("UserId");
+                //ViewBag.IsLoggedIn = !string.IsNullOrEmpty(HttpContext.Session.GetString("UserId"));
+                //ViewBag.UserId = HttpContext.Session.GetString("UserId");
 
 
                 return View(viewModel);

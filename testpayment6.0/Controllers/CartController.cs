@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
+using testpayment6._0.Areas.admin.Models;
+using testpayment6._0.Models;
 using testpayment6._0.ResponseModels;
 
 namespace testpayment6._0.Controllers
@@ -30,11 +32,8 @@ namespace testpayment6._0.Controllers
         [HttpPost]
         public IActionResult AddToCart(string dishId, string dishName, decimal price, string image = "")
         {
-            _logger.LogInformation("AddToCart called with: dishId={DishId}, dishName={DishName}, price={Price}",
-                                  dishId, dishName, price);
 
             var sessionId = HttpContext.Session.Id;
-            _logger.LogInformation("Session ID: {SessionId}", sessionId);
 
             try
             {
@@ -46,7 +45,6 @@ namespace testpayment6._0.Controllers
                 if (existingItem != null)
                 {
                     existingItem.Quantity++;
-                    _logger.LogInformation("Updated existing item quantity to {Quantity}", existingItem.Quantity);
                 }
                 else
                 {
@@ -59,19 +57,16 @@ namespace testpayment6._0.Controllers
                         Image = image
                     };
                     cart.Add(newItem);
-                    _logger.LogInformation("Added new item to cart: {DishName}", dishName);
                 }
 
                 SaveCartToSession(cart);
 
                 var totalCount = cart.Sum(x => x.Quantity);
-                _logger.LogInformation("Cart saved. Total count: {TotalCount}", totalCount);
 
                 return Json(new { success = true, cartCount = totalCount });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding item to cart");
                 return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
             }
         }
@@ -107,7 +102,6 @@ namespace testpayment6._0.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating cart quantity");
                 return Json(new { success = false, message = "Có lỗi xảy ra" });
             }
         }
@@ -135,7 +129,6 @@ namespace testpayment6._0.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error removing item from cart");
                 return Json(new { success = false, message = "Có lỗi xảy ra" });
             }
         }
@@ -148,7 +141,7 @@ namespace testpayment6._0.Controllers
                 var userId = HttpContext.Session.GetString("UserId");
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                    return Json(new { success = false, message = "Vui lòng đăng nhập hoặc nhập thông tin cá nhân" });
                 }
 
                 var cart = GetCartFromSession();
@@ -179,6 +172,9 @@ namespace testpayment6._0.Controllers
 
                 if (allItemsAdded)
                 {
+                    // Clear cart sau khi đặt hàng thành công
+                    HttpContext.Session.Remove("Cart");
+
                     HttpContext.Session.SetString("CartId", cartResponse.CartId.ToString());
                     HttpContext.Session.SetString("CartTotalPrice", totalPrice.ToString());
 
@@ -198,11 +194,87 @@ namespace testpayment6._0.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error placing order");
+                _logger.LogError(ex, "Error in PlaceOrder");
                 return Json(new { success = false, message = "Có lỗi xảy ra khi đặt hàng" });
             }
         }
+        [HttpPost]
+        public async Task<IActionResult> PlaceGuestOrder(string customerName, string phoneNumber, string email, string address)
+        {
+            try
+            {
+                // Validate input
+                if (string.IsNullOrWhiteSpace(customerName) ||
+                    string.IsNullOrWhiteSpace(phoneNumber) ||
+                    string.IsNullOrWhiteSpace(email) ||
+                    string.IsNullOrWhiteSpace(address))
+                {
+                    return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin" });
+                }
 
+                var cart = GetCartFromSession();
+                if (!cart.Any())
+                {
+                    return Json(new { success = false, message = "Giỏ hàng trống" });
+                }
+
+                var totalPrice = cart.Sum(x => x.Total ?? 0);
+
+                // Tạo guest user
+                var userResponse = await createGuestUser(customerName, phoneNumber, address, email);
+                if (userResponse == null)
+                {
+                    return Json(new { success = false, message = "Không thể tạo thông tin khách hàng" });
+                }
+
+                // Tạo cart
+                var cartResponse = await CreateCartAsync(userResponse.UserId, totalPrice);
+                if (cartResponse == null)
+                {
+                    return Json(new { success = false, message = "Không thể tạo đơn hàng" });
+                }
+
+                // Thêm chi tiết đơn hàng
+                bool allItemsAdded = true;
+                foreach (var item in cart)
+                {
+                    var success = await AddCartDetailAsync(cartResponse.CartId.ToString(), item.DishId,
+                        item.Quantity.ToString(), item.Price.ToString());
+                    if (!success)
+                    {
+                        allItemsAdded = false;
+                        break;
+                    }
+                }
+
+                if (allItemsAdded)
+                {
+                    // Clear cart sau khi đặt hàng thành công
+                    HttpContext.Session.Remove("Cart");
+
+                    HttpContext.Session.SetString("CartId", cartResponse.CartId.ToString());
+                    HttpContext.Session.SetString("CartTotalPrice", totalPrice.ToString());
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Đặt hàng thành công!",
+                        cartId = cartResponse.CartId,
+                        totalPrice = totalPrice,
+                        redirectToPayment = true
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Có lỗi khi thêm món vào đơn hàng" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in PlaceGuestOrder");
+                return Json(new { success = false, message = "Có lỗi xảy ra khi đặt hàng" });
+            }
+        }
         [HttpGet]
         public IActionResult GetCartCount()
         {
@@ -233,15 +305,43 @@ namespace testpayment6._0.Controllers
             var cartJson = JsonSerializer.Serialize(cart);
             HttpContext.Session.SetString("Cart", cartJson);
         }
+        private async Task<GuestUser_orderfood> createGuestUser(string customername, string phonenumber, string addressguest, string email)
+        {
+            var userid = DateTime.Now.Ticks.ToString();
 
+            var signupRequest = new GuestUser_orderfood
+            {
+                UserId = userid,
+                CustomerName = customername,
+                PhoneNumber = phonenumber,
+                address = addressguest,
+                email = email
+            };
+            var signupJson = JsonSerializer.Serialize(signupRequest);
+            var signupContent = new StringContent(signupJson, Encoding.UTF8, "application/json");
+            var signupResponse = await _httpClient.PostAsync($"{BASE_API_URL}/user/signup/guest", signupContent);
+            _logger.LogInformation("Signup Response - Status: {StatusCode}, IsSuccess: {IsSuccess}",
+                signupResponse.StatusCode, signupResponse.IsSuccessStatusCode);
+            if (signupResponse.IsSuccessStatusCode)
+            {
+                var responseJson = await signupResponse.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = JsonSerializer.Deserialize<GuestUser_orderfood>(responseJson, options);
+                return result;
+            }
+            else
+            {
+                var errorContent = await signupResponse.Content.ReadAsStringAsync();
+                _logger.LogError("Signup API Error - Status: {StatusCode}, Content: {ErrorContent}",
+                    signupResponse.StatusCode, errorContent);
+            }
+            return null;
+
+        }
         private async Task<CartResponseModel> CreateCartAsync(string userId, decimal totalPrice)
         {
             try
             {
-                _logger.LogInformation("CreateCartAsync called with userId: {UserId}, totalPrice: {TotalPrice}",
-                    userId, totalPrice);
-                _logger.LogInformation("BASE_API_URL: {BaseApiUrl}", BASE_API_URL ?? "NULL");
-
                 var request = new CreateCartRequest
                 {
                     UserId = userId,
@@ -249,14 +349,10 @@ namespace testpayment6._0.Controllers
                 };
 
                 var json = JsonSerializer.Serialize(request);
-                _logger.LogInformation("Request JSON: {Json}", json);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PostAsync($"{BASE_API_URL}/cart", content);
-
-                _logger.LogInformation("API Response - Status: {StatusCode}, IsSuccess: {IsSuccess}",
-                    response.StatusCode, response.IsSuccessStatusCode);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -282,7 +378,6 @@ namespace testpayment6._0.Controllers
             }
             return null;
         }
-
         private async Task<bool> AddCartDetailAsync(string cartId, string dishId, string quantity, string price)
         {
             try

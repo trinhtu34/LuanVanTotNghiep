@@ -11,7 +11,6 @@
                 <i class="fas fa-envelope"></i> Liên hệ với chúng tôi
             </h2>
 
-            <!-- hiển thị temp data khi hoàn thành 1 action từ controller -->
             @if (TempData["MessageContact"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -31,7 +30,6 @@
     </div>
 
     <div class="row">
-        <!-- Form tạo liên hệ mới -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -62,7 +60,6 @@
             </div>
         </div>
 
-        <!-- Danh sách liên hệ đã gửi -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-info text-white">
@@ -104,7 +101,6 @@
     </div>
 </div>
 
-<!-- Custom CSS -->
 <style>
     .contact-item {
         background-color: #f8f9fa;
@@ -166,20 +162,16 @@
 </style>
 
 <script>
-    // Auto-hide alerts after 5 seconds
     setTimeout(function() {
         $('.alert').fadeOut('slow');
     }, 5000);
 
-    // Character counter for textarea
     $(document).ready(function() {
         const textarea = $('#NewContact_Content');
         const maxLength = 1000;
 
-        // Create character counter
         textarea.after('<div class="mt-2"><small class="text-muted">Số ký tự: <span id="charCount">0</span>/' + maxLength + '</small></div>');
 
-        // Update character count
         textarea.on('input', function() {
             const currentLength = $(this).val().length;
             $('#charCount').text(currentLength);
