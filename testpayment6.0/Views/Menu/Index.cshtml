@@ -103,24 +103,14 @@
                                 <p class="card-text small">@dish.Descriptions</p>
                             }
                             <div class="mt-auto">
+                                <!-- Thay thế đoạn code từ dòng 86-100 -->
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="h5 text-danger mb-0">@dish.Price.ToString("N0") VNĐ</span>
-                                    @if (ViewBag.IsLoggedIn == true)
-                                    {
-                                        <button class="btn btn-primary btn-sm"
-                                                onclick="addToCart('@dish.DishId', '@Html.Raw(Html.Encode(dish.DishName))', @dish.Price, '@dish.Images')"
-                                                type="button">
-                                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-outline-secondary btn-sm"
-                                                onclick="alert('Vui lòng đăng nhập để đặt món')"
-                                                type="button">
-                                            <i class="fas fa-lock"></i> Đặt món
-                                        </button>
-                                    }
+                                    <button class="btn btn-primary btn-sm"
+                                            onclick="addToCart('@dish.DishId', '@Html.Raw(Html.Encode(dish.DishName))', @dish.Price, '@dish.Images')"
+                                            type="button">
+                                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                                    </button>
                                 </div>
                             </div>
                         </div>

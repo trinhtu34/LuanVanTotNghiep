@@ -5,12 +5,20 @@ namespace testpayment6._0.ResponseModels
 {
     public class CartItem
     {
-        public string DishId { get; set; } // Keep this definition
+        public string DishId { get; set; }
         public string DishName { get; set; }
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public string Image { get; set; }
         public decimal? Total => Quantity * Price;
+    }
+    public class GuestUser_orderfood
+    {
+        public string UserId { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? CustomerName { get; set; }
+        public string address { get; set; }
+        public string? email { get; set; }
     }
 
     // Model cho API response

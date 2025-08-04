@@ -129,7 +129,7 @@
                                         else
                                         {
                                             <span class="badge badge-success" style="color: green;">
-                                                <i class="fas fa-check-circle"></i> Đang hoạt động
+                                                <i class="fas fa-check-circle"></i> Chưa giao hàng
                                             </span>
                                         }
                                     </div>  
@@ -193,14 +193,14 @@
 @Html.AntiForgeryToken()
 
 <script>
-    // Hàm xử lý khi click button thanh toán
+
     function handlePaymentClick(cartId, totalPrice) {
-        // Tạo form ẩn để gửi dữ liệu đến trang thanh toán
+
         const form = document.createElement("form");
         form.method = "POST";
         form.action = "/Payment/Index";
 
-        // Thêm các trường dữ liệu
+
         const amountInput = document.createElement("input");
         amountInput.type = "hidden";
         amountInput.name = "Amount";
@@ -219,7 +219,7 @@
         cartIdInput.value = cartId;
         form.appendChild(cartIdInput);
 
-        // Thêm anti-forgery token
+
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
         if (token) {
             const tokenInput = document.createElement("input");
@@ -233,15 +233,10 @@
         form.submit();
     }
 
-    // Tự động refresh trang sau 5 phút để cập nhật trạng thái
-    setTimeout(function() {
-        location.reload();
-    }, 300000);
 </script>
 
 <style>
 
-    /* Styles cho thống kê */
     .statistics-card {
         border-radius: 15px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -323,7 +318,6 @@
             font-size: 1.1rem;
         }
 
-    /* Màu sắc cho từng loại thống kê */
     .stat-item.total .stat-value {
         color: #3498db;
     }
@@ -346,7 +340,6 @@
     .stat-item.unpaid-money .stat-value {
         color: #e74c3c;
     }
-    /* Responsive */
     @@media (max-width: 768px) {
         .stat-value {
             font-size: 2rem;
@@ -368,7 +361,6 @@
         }
     }
 
-    /* Animation khi load */
     .stat-item {
         animation: fadeInUp 0.6s ease forwards;
         opacity: 0;

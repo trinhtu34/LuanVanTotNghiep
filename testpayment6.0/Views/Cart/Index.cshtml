@@ -110,7 +110,6 @@
 
 <script>
     $(document).ready(function() {
-        // Kiểm tra jQuery và khởi tạo biến
         if (typeof $ === 'undefined') {
             alert('jQuery chưa được load. Vui lòng kiểm tra lại!');
             return;
@@ -136,8 +135,14 @@
         };
 
         // Đặt hàng
-        const placeOrder = () => {
+         const placeOrder = () => {
             const btn = $('#placeOrderBtn');
+
+            if (!isLoggedIn || userId === '') {
+                showGuestInfoModal();
+                return;
+            }
+
             toggleButton(btn, true, '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
 
             $.ajax({
@@ -148,7 +153,115 @@
                 success: (response) => {
                     if (response?.success) {
                         if (response.redirectToPayment && response.cartId && response.totalPrice) {
-                            // Tạo form để redirect đến trang thanh toán
+                            $('<form>', {
+                                method: 'POST',
+                                action: '@Url.Action("Index", "Payment")'
+                            }).append(
+                                $('<input>', { type: 'hidden', name: 'CartId', value: response.cartId }),
+                                $('<input>', { type: 'hidden', name: 'Amount', value: response.totalPrice }),
+                                $('<input>', { type: 'hidden', name: 'Description', value: `Thanh toán đơn hàng #${response.cartId}` })
+                            ).appendTo('body').submit();
+                        } else {
+                            showMessage(response.message || 'Đặt hàng thành công!');
+                            window.location.href = '@Url.Action("Index", "Menu")';
+                        }
+                    } else {
+                        showMessage(response.message || 'Có lỗi xảy ra khi đặt hàng');
+                        toggleButton(btn, false, '<i class="fas fa-check"></i> Đặt mua');
+                    }
+                },
+                error: (xhr, status) => {
+                    const errorMessages = {
+                        0: 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+                        404: 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.',
+                        500: 'Lỗi server. Vui lòng thử lại sau.',
+                        timeout: 'Yêu cầu hết thời gian chờ. Vui lòng thử lại.'
+                    };
+
+                    showMessage(errorMessages[xhr.status] || errorMessages[status] || 'Có lỗi xảy ra khi đặt hàng');
+                    toggleButton(btn, false, '<i class="fas fa-check"></i> Đặt mua');
+                }
+            });
+        };
+            const showGuestInfoModal = () => 
+            {
+                const modalHtml = `
+                    <div class="modal fade" id="guestInfoModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Thông tin đặt hàng</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="guestInfoForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Họ và tên *</label>
+                                            <input type="text" class="form-control" id="customerName" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Số điện thoại *</label>
+                                            <input type="tel" class="form-control" id="phoneNumber" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Email *</label>
+                                            <input type="email" class="form-control" id="email" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Địa chỉ *</label>
+                                            <textarea class="form-control" id="address" rows="3" required></textarea>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="button" class="btn btn-primary" id="confirmGuestOrder">Xác nhận đặt hàng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $('body').append(modalHtml);
+                $('#guestInfoModal').modal('show');
+
+                // Xử lý khi modal đóng
+                $('#guestInfoModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                });
+
+                // Xử lý xác nhận đặt hàng
+                $('#confirmGuestOrder').on('click', function() {
+                    const form = $('#guestInfoForm')[0];
+                    if (form.checkValidity()) {
+                        const guestInfo = {
+                            customerName: $('#customerName').val(),
+                            phoneNumber: $('#phoneNumber').val(),
+                            email: $('#email').val(),
+                            address: $('#address').val()
+                        };
+
+                        $('#guestInfoModal').modal('hide');
+                        placeGuestOrder(guestInfo);
+                    } else {
+                        form.reportValidity();
+                    }
+                });
+        };
+            // Thêm hàm đặt hàng cho guest
+        const placeGuestOrder = (guestInfo) => {
+            const btn = $('#placeOrderBtn');
+            toggleButton(btn, true, '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+
+            $.ajax({
+                url: '@Url.Action("PlaceGuestOrder", "Cart")',
+                type: 'POST',
+                data: guestInfo,
+                dataType: 'json',
+                timeout: 30000,
+                success: (response) => {
+                    if (response?.success) {
+                        if (response.redirectToPayment && response.cartId && response.totalPrice) {
                             $('<form>', {
                                 method: 'POST',
                                 action: '@Url.Action("Index", "Payment")'
@@ -210,13 +323,9 @@
             }, 'Có lỗi xảy ra khi xóa món');
         };
 
-        // Event handlers
+        // Xử lý event đặt hàng ở đây
         $('#placeOrderBtn').on('click', function(e) {
             e.preventDefault();
-            if (!isLoggedIn || userId === '') {
-                showMessage('Vui lòng đăng nhập trước khi đặt hàng');
-                return;
-            }
             confirm('Xác nhận đặt hàng và chuyển đến trang thanh toán?') && placeOrder();
         });
 
@@ -250,4 +359,5 @@
             const dishId = $(this).data('dish-id');
             confirm('Bạn có chắc muốn xóa món này khỏi giỏ hàng?') && removeFromCart(dishId);
         });
-    });</script>
+    });
+</script>

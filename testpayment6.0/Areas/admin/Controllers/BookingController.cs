@@ -44,13 +44,6 @@ namespace testpayment6._0.Areas.admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBooking(BookingViewModel model)
         {
-            _logger.LogInformation("POST CreateBooking called");
-            _logger.LogInformation("CustomerName: {CustomerName}", model.CustomerName);
-            _logger.LogInformation("PhoneNumber: {PhoneNumber}", model.PhoneNumber);
-            _logger.LogInformation("StartingTime: {StartingTime}", model.startingTime);
-            _logger.LogInformation("SelectedTableIds count: {Count}", model.SelectedTableIds?.Count ?? 0);
-            _logger.LogInformation("SelectedDishes count: {Count}", model.SelectedDishes?.Count ?? 0);
-
             // Log chi tiết các bàn được chọn
             if (model.SelectedTableIds != null && model.SelectedTableIds.Any())
             {

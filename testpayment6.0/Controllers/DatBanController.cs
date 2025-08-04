@@ -34,7 +34,6 @@ namespace testpayment6._0.Controllers
 
             try
             {
-                // Lấy danh sách tất cả bàn
                 var response = await _httpClient.GetAsync($"{BASE_API_URL}/table");
 
                 if (response.IsSuccessStatusCode)
@@ -224,7 +223,7 @@ namespace testpayment6._0.Controllers
                     totalFoodPrice = selectedFoods.Sum(food => food.Price * food.Quantity);
                 }
 
-                // Bước 1: Tạo OrderTable
+                // b2 tạo đơn đặt bàn cho userid lấy từ session 
                 var orderTableRequest = new
                 {
                     userId = userId,
@@ -253,7 +252,7 @@ namespace testpayment6._0.Controllers
 
                     if (orderTable != null && orderTable.OrderTableId > 0)
                     {
-                        // Bước 2: Thêm từng bàn vào OrderTable
+                        // thêm từng bàn vào 1 đơn đặt bàn 
                         var successfulTables = new List<int>();
                         var failedTables = new List<int>();
 
@@ -290,7 +289,7 @@ namespace testpayment6._0.Controllers
                             }
                         }
 
-                        // Bước 3: Thêm món ăn nếu có
+                        // thêm từng món ăn vào đơn đặt bàn , cái này là optional , vì người đặt có thể đặt món trước hoặc không 
                         var successfulFoods = new List<string>();
                         var failedFoods = new List<string>();
 
@@ -435,7 +434,7 @@ namespace testpayment6._0.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
+                var response = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/  ");
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();

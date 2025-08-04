@@ -498,18 +498,16 @@
                             <a class="nav-link @(currentController == "Menu" && currentAction == "Index" ? "active" : "")"
                                asp-controller="Menu" asp-action="Index">Menu</a>
                         </li>
-                        @if (isLoggedIn)
-                        {
-                            <!-- Icon giỏ hàng -->
-                            <li class="nav-item">
-                                <a class="nav-link position-relative" href="@Url.Action("Index", "Cart")" id="cartLink">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
-                                          id="cartBadge" style="display: none;">0</span>
-                                    Giỏ hàng
-                                </a>
-                            </li>
-                        }
+                        <!-- Icon giỏ hàng -->
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="@Url.Action("Index", "Cart")" id="cartLink">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                                      id="cartBadge" style="display: none;">0</span>
+                                Giỏ hàng
+                            </a>
+                        </li>
+
                         @if (isLoggedIn)
                         {
                             <li class="nav-item">
@@ -530,7 +528,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     Xin chào, @userId
                                 </a>
-                                <ul class="dropdown-menu">       
+                                <ul class="dropdown-menu">
                                     <li>
                                         <a class="dropdown-item" asp-action="Profile" asp-controller="Home">
                                             <i class="fas fa-user-edit"></i> Thông tin cá nhân
