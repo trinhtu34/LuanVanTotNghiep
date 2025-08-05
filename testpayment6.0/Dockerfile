@@ -59,5 +59,3 @@ ENTRYPOINT ["dotnet", "testpayment6.0.dll"]
 # dựa vào cái này để làm CI/CD cho frontend ha 
 #docker build -t testpayment60:manual .
 #docker run -d -p 32770:80 --name testpayment60-container testpayment60:manual
-
-

@@ -88,7 +88,6 @@ namespace testpayment6._0.Areas.admin.Controllers
             }
             catch (Exception ex)
             {
-                // Log error
                 ViewBag.ErrorMessage = "Có lỗi xảy ra khi tải chi tiết đơn đặt món ăn.";
                 return View();
             }
@@ -246,7 +245,6 @@ namespace testpayment6._0.Areas.admin.Controllers
                 {
                     PropertyNameCaseInsensitive = true
                 };
-
                 return JsonSerializer.Deserialize<List<CartDetail_manage>>(jsonString, options) ?? new List<CartDetail_manage>();
             }
             catch (Exception ex)
@@ -260,14 +258,12 @@ namespace testpayment6._0.Areas.admin.Controllers
         {
             try
             {
-                // Get basic cart info first
                 var allCarts = await GetAllCartsAsync();
                 var cart = allCarts.FirstOrDefault(c => c.CartId == cartId);
 
                 if (cart == null)
                     return null;
 
-                // Get cart details
                 cart.CartDetails = await GetCartDetailsAsync(cartId);
 
                 return cart;

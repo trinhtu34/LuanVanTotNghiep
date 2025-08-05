@@ -129,7 +129,7 @@ namespace testpayment6._0.Controllers
             try
             {
                 var cartResponse = await _httpClient.GetAsync($"{BASE_API_URL}/cart/user/{userId}");
-                CartViewModel order = null;
+                CartViewModel? order = null;
 
                 if (cartResponse.IsSuccessStatusCode)
                 {

@@ -50,7 +50,7 @@ namespace testpayment6._0.Areas.admin.Controllers
                 _logger.LogInformation("Selected tables: {Tables}", string.Join(", ", model.SelectedTableIds));
             }
 
-            // Log chi tiết các món ăn được chọn
+            // log để debug lỗi không đưa data về được ! Đã fix rồi , làm chú ý cái tên folder , models trong js 
             if (model.SelectedDishes != null && model.SelectedDishes.Any())
             {
                 foreach (var dish in model.SelectedDishes.Where(d => d != null && d.Quantity > 0))
@@ -71,7 +71,6 @@ namespace testpayment6._0.Areas.admin.Controllers
                 return View(reloadModel);
             }
 
-            // Filter selected dishes (only those with quantity > 0)
             var selectedDishes = model.SelectedDishes?.Where(d => d != null && d.Quantity > 0).ToList();
 
             try
@@ -319,7 +318,7 @@ namespace testpayment6._0.Areas.admin.Controllers
             try
             {
                 // Lấy danh sách tất cả đơn đặt bàn
-                var ordersResponse = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/afterCurrentStartingTime");
+                var ordersResponse = await _httpClient.GetAsync($"{BASE_API_URL}/ordertable/after15Minutes");
                 if (!ordersResponse.IsSuccessStatusCode)
                 {
                     return (false, "Không thể kiểm tra tình trạng bàn");
