@@ -1,0 +1,530 @@
+﻿@using testpayment6._0.Areas.admin.Models
+@model TableOrderViewModel0508
+@{
+    ViewData["Title"] = "Quản lý Đơn Đặt Bàn";
+    Layout = "~/Areas/admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2>Quản lý Đơn Đặt Bàn</h2>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.ErrorMessage
+        </div>
+    }
+
+    @if (ViewBag.SuccessMessage != null)
+    {
+        <div class="alert alert-success">
+            @ViewBag.SuccessMessage
+        </div>
+    }
+
+    <!-- Nhập mã đơn đặt bàn -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tìm đơn đặt bàn</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="orderIdInput" class="form-label">Nhập mã đơn đặt bàn</label>
+                                <div class="input-group">
+                                    <input type="number" id="orderIdInput" class="form-control" placeholder="Nhập mã đơn..." />
+                                    <button type="button" class="btn btn-primary" onclick="loadOrderDetails()">Tìm kiếm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hiển thị thông tin đơn đặt bàn -->
+    <div id="orderDetailsSection" style="display: none;">
+        <div class="row">
+            <!-- Bàn đã đặt -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Bàn đã đặt trong đơn <span id="currentOrderId"></span></h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="bookedTablesContainer">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tóm tắt thông tin -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Thông tin tóm tắt</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderSummary">
+                            <h6>Số bàn đã đặt:</h6>
+                            <div id="totalBookedTables">
+                                <strong class="text-info">0 bàn</strong>
+                            </div>
+                            <hr>
+                            <h6>Tổng tiền cọc hiện tại:</h6>
+                            <div id="currentTotalDeposit">
+                                <strong class="text-success">0 VNĐ</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thêm bàn mới -->
+    <div id="addTableSection" style="display: none;">
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Thêm bàn mới vào đơn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label for="regionSelect" class="form-label">Chọn khu vực</label>
+                            <select id="regionSelect" class="form-select">
+                                <option value="">-- Chọn khu vực --</option>
+                                @if (Model.Regions != null)
+                                {
+                                    @foreach (var region in Model.Regions)
+                                    {
+                                        <option value="@region.RegionId">@region.RegionName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div id="tablesSection" style="display: none;">
+                            <h6>Danh sách bàn có thể thêm</h6>
+                            <div id="tablesContainer" class="row">
+                                <!-- Bàn sẽ được load bằng AJAX -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bàn được chọn để thêm -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Bàn chọn thêm</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="selectedTablesForAdd">
+                            <h6>Bàn sẽ thêm:</h6>
+                            <div id="selectedTables">
+                                <p class="text-muted">Chưa chọn bàn nào</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div id="selectedRegionInfo">
+                            <h6>Khu vực:</h6>
+                            <div id="regionInfo">
+                                <p class="text-muted">Chưa chọn khu vực</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div id="addTotalInfo">
+                            <h6>Tiền cọc thêm:</h6>
+                            <div id="additionalDeposit">
+                                <strong class="text-warning">0 VNĐ</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <button type="button" class="btn btn-success btn-lg" onclick="addTablesToOrder()">Thêm bàn vào đơn</button>
+                <button type="button" class="btn btn-secondary btn-lg ms-2" onclick="clearTableSelections()">Xóa lựa chọn</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .table-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+
+        .table-item.selected {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+
+    .booked-table-item {
+        border: 1px solid #28a745;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        background-color: #f8fff9;
+    }
+
+    .selected-table-item {
+        display: inline-block;
+        background: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        margin: 2px;
+        font-size: 12px;
+    }
+
+    .loading {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .error-message {
+        color: #dc3545;
+        text-align: center;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var currentOrderId = null;
+    var currentTables = [];
+    var bookedTables = [];
+    var selectedTables = [];
+
+    $(document).ready(function() {
+        // Khi chọn khu vực để thêm bàn
+        $('#regionSelect').change(function() {
+            var regionId = $(this).val();
+            if (regionId) {
+                loadTablesByRegion(regionId);
+                updateRegionInfo();
+            } else {
+                hideTablesSection();
+                clearTableSelections();
+            }
+        });
+
+        // Xử lý thay đổi checkbox bàn
+        $(document).on('change', 'input[name="SelectedTableIds"]', function() {
+            updateSelectedTablesDisplay();
+            updateAdditionalDeposit();
+        });
+
+        // Enter key cho input mã đơn
+        $('#orderIdInput').keypress(function(e) {
+            if (e.which == 13) {
+                loadOrderDetails();
+            }
+        });
+    });
+
+    // Existing functions (unchanged)
+    function displayBookedTables() {
+        var tablesHtml = '';
+        if (bookedTables.length > 0) {
+            $.each(bookedTables, function(index, table) {
+                tablesHtml += `
+                    <div class="booked-table-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Bàn ${table.tableId}</strong>
+                                ${table.capacity ? `<div class="text-muted"><small>Sức chứa: ${table.capacity} người</small></div>` : ''}
+                                ${table.deposit ? `<div class="text-muted"><small>Tiền cọc: ${formatCurrency(table.deposit)}</small></div>` : ''}
+                            </div>
+                            <div>
+                                <span class="badge bg-success">Đã đặt</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            tablesHtml = '<div class="alert alert-info">Đơn này chưa có bàn nào được đặt.</div>';
+        }
+        $('#bookedTablesContainer').html(tablesHtml);
+    }
+
+    function updateOrderSummary() {
+        var totalTables = bookedTables.length;
+        var totalDeposit = bookedTables.reduce((sum, table) => sum + (table.deposit || 0), 0);
+        $('#totalBookedTables').html(`<strong class="text-info">${totalTables} bàn</strong>`);
+        $('#currentTotalDeposit').html(`<strong class="text-success">${formatCurrency(totalDeposit)}</strong>`);
+    }
+
+    function loadTablesByRegion(regionId) {
+        $('#tablesContainer').html('<div class="col-12"><p class="loading">Đang tải danh sách bàn...</p></div>');
+        $('#tablesSection').show();
+        $.ajax({
+            url: '@Url.Action("GetTablesByRegion", "AddTableOnOrderTable", new { area = "admin" })',
+            type: 'GET',
+            data: { regionId: regionId },
+            success: function(response) {
+                console.log('Tables response:', response);
+                if (response.success && response.data) {
+                    currentTables = response.data;
+                    var tablesHtml = '';
+                    if (response.data.length > 0) {
+                        $.each(response.data, function(index, table) {
+                            var isBooked = bookedTables.some(bt => bt.tableId == table.tableId);
+                            var disabledClass = isBooked ? 'disabled' : '';
+                            var disabledAttr = isBooked ? 'disabled' : '';
+                            tablesHtml += `
+                                <div class="col-md-6 col-lg-6">
+                                    <div class="table-item ${disabledClass}">
+                                        <input type="checkbox" name="SelectedTableIds" value="${table.tableId}"
+                                               id="table_${table.tableId}" ${disabledAttr} />
+                                        <label for="table_${table.tableId}" style="margin-left: 10px; font-weight: bold; cursor: pointer;">
+                                            Bàn ${table.tableId} ${isBooked ? '(Đã đặt)' : ''}
+                                        </label>
+                                        <div class="text-muted mt-1">
+                                            <small>Sức chứa: ${table.capacity} người</small>
+                                        </div>
+                                        <div class="text-muted">
+                                            <small>Tiền cọc: ${formatCurrency(table.deposit)}</small>
+                                        </div>
+                                        ${table.description ? `<div class="text-muted"><small>${table.description}</small></div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        tablesHtml = '<div class="col-12"><p class="text-muted text-center">Không có bàn nào trong khu vực này</p></div>';
+                    }
+                    $('#tablesContainer').html(tablesHtml);
+                } else {
+                    $('#tablesContainer').html('<div class="col-12"><p class="error-message">Lỗi khi tải danh sách bàn</p></div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error loading tables:', error);
+                $('#tablesContainer').html('<div class="col-12"><p class="error-message">Lỗi khi tải danh sách bàn</p></div>');
+            }
+        });
+    }
+
+    function updateSelectedTablesDisplay() {
+        selectedTables = $('input[name="SelectedTableIds"]:checked')
+            .map(function() { return parseInt($(this).val()); })
+            .get();
+        var tablesHtml = '';
+        if (selectedTables.length > 0) {
+            $.each(selectedTables, function(index, tableId) {
+                var table = currentTables.find(t => t.tableId == tableId);
+                if (table) {
+                    tablesHtml += `
+                        <div class="selected-table-item">
+                            Bàn ${tableId} (${table.capacity} người)
+                        </div>
+                    `;
+                }
+            });
+        } else {
+            tablesHtml = '<p class="text-muted">Chưa chọn bàn nào</p>';
+        }
+        $('#selectedTables').html(tablesHtml);
+    }
+
+    function updateRegionInfo() {
+        var regionSelect = $('#regionSelect');
+        var selectedOption = regionSelect.find('option:selected');
+        var regionHtml = regionSelect.val() ? `<p class="text-info"><strong>${selectedOption.text()}</strong></p>` : '<p class="text-muted">Chưa chọn khu vực</p>';
+        $('#regionInfo').html(regionHtml);
+    }
+
+    function updateAdditionalDeposit() {
+        var additionalDeposit = selectedTables.reduce((sum, tableId) => {
+            var table = currentTables.find(t => t.tableId == tableId);
+            return sum + (table ? table.deposit : 0);
+        }, 0);
+        $('#additionalDeposit').html(`<strong class="text-warning">${formatCurrency(additionalDeposit)}</strong>`);
+    }
+
+    function loadOrderDetails() {
+        var orderId = $('#orderIdInput').val().trim();
+        if (!orderId || isNaN(orderId) || parseInt(orderId) <= 0) {
+            alert('Vui lòng nhập mã đơn đặt bàn hợp lệ!');
+            $('#orderIdInput').focus();
+            return;
+        }
+
+        currentOrderId = parseInt(orderId);
+        $('#currentOrderId').text(orderId);
+        $('#bookedTablesContainer').html(`
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-2">Đang tải thông tin đơn đặt bàn...</p>
+            </div>
+        `);
+        $('#orderDetailsSection').show();
+        $('#addTableSection').show();
+
+        $.ajax({
+            url: '@Url.Action("GetOrderTableDetails", "AddTableOnOrderTable", new { area = "admin" })',
+            type: 'GET',
+            data: { orderTableId: currentOrderId },
+            success: function(response) {
+                console.log('Order details response:', response);
+                if (response.success && response.data) {
+                    bookedTables = response.data;
+                    displayBookedTables();
+                    updateOrderSummary();
+                } else {
+                    $('#bookedTablesContainer').html('<div class="alert alert-warning">Không tìm thấy thông tin đơn đặt bàn hoặc đơn chưa có bàn nào.</div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading order details:', error, xhr.responseJSON);
+                var errorMessage = xhr.responseJSON?.message || 'Lỗi khi tải thông tin đơn đặt bàn.';
+                $('#bookedTablesContainer').html(`<div class="alert alert-danger">${errorMessage}</div>`);
+            }
+        });
+    }
+
+    function addTablesToOrder() {
+        if (!currentOrderId || isNaN(currentOrderId) || currentOrderId <= 0) {
+            alert('Lỗi: Mã đơn đặt bàn không hợp lệ. Vui lòng nhập và tìm kiếm lại mã đơn.');
+            $('#orderIdInput').focus();
+            return;
+        }
+
+        if (selectedTables.length === 0) {
+            alert('Vui lòng chọn ít nhất một bàn để thêm!');
+            return;
+        }
+
+        console.log('Preparing to add tables:', {
+            orderTableId: currentOrderId,
+            tableIds: selectedTables
+        });
+
+        var confirmMessage = `Xác nhận thêm ${selectedTables.length} bàn (${selectedTables.join(', ')}) vào đơn ${currentOrderId}?`;
+        if (confirm(confirmMessage)) {
+            var $addButton = $('button[onclick="addTablesToOrder()"]');
+            $addButton.prop('disabled', true).text('Đang thêm...');
+            $('#bookedTablesContainer').html(`
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Đang xử lý...</span>
+                    </div>
+                    <p class="mt-2">Đang thêm bàn vào đơn...</p>
+                </div>
+            `);
+
+            addTablesSequentially(selectedTables, 0, function() {
+                $addButton.prop('disabled', false).text('Thêm bàn vào đơn');
+                loadOrderDetails();
+                clearTableSelections();
+            });
+        }
+    }
+
+    function addTablesSequentially(tableIds, index, callback) {
+        if (index >= tableIds.length) {
+            alert('Đã thêm tất cả bàn thành công!');
+            callback();
+            return;
+        }
+
+        var tableId = tableIds[index];
+        if (isNaN(tableId) || tableId <= 0) {
+            console.warn(`Invalid tableId: ${tableId}, skipping...`);
+            addTablesSequentially(tableIds, index + 1, callback);
+            return;
+        }
+
+        var payload = {
+            orderTableId: parseInt(currentOrderId),
+            tableId: parseInt(tableId)
+        };
+        console.log('Sending AJAX request:', payload);
+
+        $.ajax({
+            url: '@Url.Action("AddTableToOrder", "AddTableOnOrderTable", new { area = "admin" })',
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(payload),
+            dataType: 'json',
+            success: function(response) {
+                console.log(`Successfully added table ${tableId}:`, response);
+                if (response.success) {
+                    addTablesSequentially(tableIds, index + 1, callback);
+                } else {
+                    console.error(`Failed to add table ${tableId}:`, response.message);
+                    alert(`Lỗi khi thêm bàn ${tableId}: ${response.message}`);
+                    addTablesSequentially(tableIds, index + 1, callback); 
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(`Error adding table ${tableId}:`, {
+                    status: status,
+                    error: error,
+                    response: xhr.responseJSON || xhr.responseText,
+                    payload: payload
+                });
+                var errorMessage = xhr.responseJSON?.message || `Lỗi khi thêm bàn ${tableId}. Status: ${xhr.status}`;
+                alert(errorMessage);
+                addTablesSequentially(tableIds, index + 1, callback); 
+            }
+        });
+    }
+
+    function hideTablesSection() {
+        $('#tablesSection').hide();
+        $('#tablesContainer').empty();
+        currentTables = [];
+    }
+
+    function clearTableSelections() {
+        $('#regionSelect').val('');
+        $('input[name="SelectedTableIds"]:checked').prop('checked', false);
+        selectedTables = [];
+        hideTablesSection();
+        updateSelectedTablesDisplay();
+        updateRegionInfo();
+        updateAdditionalDeposit();
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(amount);
+    }
+</script>

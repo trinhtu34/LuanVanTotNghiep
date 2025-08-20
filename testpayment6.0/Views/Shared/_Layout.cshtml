@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <style>
+        @RenderSection("Styles", required: false)
         :root {
             --primary-color: #ce1212;
             --secondary-color: #37373f;
@@ -700,6 +701,7 @@
 
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @RenderSection("Scripts", required: false)
 
 </body>
 </html>
