@@ -1,6 +1,10 @@
-﻿using VNPAY.NET;
+﻿using DotNetEnv;
+using VNPAY.NET;
 
+
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -18,25 +22,22 @@ builder.Services.AddSession(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-// Cấu hình logging
+// Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-
-// Thêm Anti-forgery token
+// Anti-forgery
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "RequestVerificationToken";
     options.SuppressXFrameOptionsHeader = false;
 });
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-//    options.ListenAnyIP(80);
-//});
+
 var app = builder.Build();
 
+// Middlewares
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
