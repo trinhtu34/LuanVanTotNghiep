@@ -14,8 +14,8 @@ def lambda_handler(event, context):
         raise ValueError("Missing newTaskDefinitionArn in event input")
 
     # Lấy cluster và service base name (frontend hoặc backend)
-    cluster_name = event.get("ECS_CLUSTER") or os.environ.get("ECS_CLUSTER")
-    base_service = event.get("BASE_SERVICE") or os.environ.get("BASE_SERVICE")
+    cluster_name = event.get("ECS_CLUSTER")
+    base_service = event.get("BASE_SERVICE")
 
     if not cluster_name or not base_service:
         raise ValueError("Missing ECS_CLUSTER or BASE_SERVICE")
@@ -34,9 +34,13 @@ def lambda_handler(event, context):
     if blue_desc["desiredCount"] > 0:
         active_service = blue_service
         target_service = green_service
+        active_desc = blue_desc
+        target_desc = green_desc
     else:
         active_service = green_service
         target_service = blue_service
+        active_desc = green_desc
+        target_desc = blue_desc
 
     print(f"Active service: {active_service}, Deploying to: {target_service}")
 
@@ -45,15 +49,22 @@ def lambda_handler(event, context):
         cluster=cluster_name,
         service=target_service,
         taskDefinition=new_task_def_arn,
-        desiredCount=blue_desc["desiredCount"],  # scale giống service cũ
+        desiredCount=active_desc["desiredCount"],
         forceNewDeployment=True
     )
 
     print("ECS Service update response:", json.dumps(response, default=str))
 
+    # Lấy Target Group ARN của service vừa scale out (nếu có)
+    target_group_arn = None
+    if "loadBalancers" in target_desc and len(target_desc["loadBalancers"]) > 0:
+        target_group_arn = target_desc["loadBalancers"][0].get(
+            "targetGroupArn")
+
     return {
         "status": "SUCCESS",
         "activeService": active_service,
         "updatedService": target_service,
-        "taskDefinitionArn": new_task_def_arn
+        "taskDefinitionArn": new_task_def_arn,
+        "targetGroupArn": target_group_arn
     }
