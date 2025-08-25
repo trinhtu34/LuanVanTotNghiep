@@ -6,7 +6,7 @@ elbv2 = boto3.client('elbv2')
 
 
 def lambda_handler(event, context):
-    target_group_arn = os.environ['TARGET_GROUP_ARN']
+    target_group_arn = event.get('TargetGroupArn')
     max_retries = int(os.environ.get('MAX_RETRIES', 10))
     delay = int(os.environ.get('DELAY', 15))
 
@@ -24,3 +24,27 @@ def lambda_handler(event, context):
         time.sleep(delay)
 
     return {"isHealthy": False}
+
+# import boto3
+# import os
+# import time
+
+# elbv2 = boto3.client('elbv2')
+
+
+# # Chỉ kiểm tra 1 lần duy nhất
+# def lambda_handler(event, context):
+#     # target_group_arn = os.environ['TARGET_GROUP_ARN']
+#     target_group_arn = event.get('TargetGroupArn')
+    
+#     res = elbv2.describe_target_health(TargetGroupArn=target_group_arn) 
+#     healthy_count = sum(1 for t in res['TargetHealthDescriptions']
+#                         if t['TargetHealth']['State'] == 'healthy')
+#     total = len(res['TargetHealthDescriptions'])
+
+#     print(f"Health Check: Healthy {healthy_count}/{total}")
+
+#     if total > 0 and healthy_count == total:
+#         return {"isHealthy": True, "status": "SUCCESS"}
+#     else:
+#         return {"isHealthy": False, "status": "IN_PROGRESS"}
