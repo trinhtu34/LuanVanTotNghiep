@@ -29,7 +29,7 @@
 # Base image để chạy mà không cần phải bật visual studio 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 3000
+EXPOSE 5000
 
 # Build image
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -57,6 +57,9 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "testpayment6.0.dll"]
 
 # dựa vào cái này để làm CI/CD cho frontend ha 
+#docker build -t test-codepipline-and-step-functions .
+#docker run -d -p 32770:5000 --name test-codepipline-and-step-functions-contaner test-codepipline-and-step-functions:latest
+
 #docker build -t testpayment60:manual .
 #docker run -d -p 32770:80 --name testpayment60-container testpayment60:manual
 
