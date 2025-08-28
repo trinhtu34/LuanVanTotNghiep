@@ -34,6 +34,10 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "RequestVerificationToken";
     options.SuppressXFrameOptionsHeader = false;
 });
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5000);
+});
 
 var app = builder.Build();
 
