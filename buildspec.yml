@@ -34,7 +34,7 @@ phases:
       - echo Build completed on `date`
 
       - echo Writing imageDetail.json file...
-      - printf '{"imageUri":"%s", "BASE_SERVICE":"frontend-service"}' $REPOSITORY_URI:$COMMIT_HASH > imageDetail.json
+      - printf '{"imageUri":"%s", "BASE_SERVICE":"frontend-service", "rule_arn":""}' $REPOSITORY_URI:$COMMIT_HASH > imageDetail.json
       - cat imageDetail.json
 
 artifacts:
