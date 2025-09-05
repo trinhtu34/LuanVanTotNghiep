@@ -8,7 +8,7 @@ def lambda_handler(event, context):
 
     listener_arn = event.get("listener_arn")
     rule_arn = event.get("rule_arn")
-    current_prod_tg = event.get("current_prod")
+    current_prod_tg = event.get("cu rrent_prod")
     next_deploy_tg = event.get("next_deploy")
 
     WeightProd = int(event.get("WeightProd"))
@@ -20,7 +20,6 @@ def lambda_handler(event, context):
     if not listener_arn and not rule_arn:
         raise ValueError("Missing listener_arn or rule_arn in event")
 
-    # Nếu có rule_arn → modify_rule, ngược lại → modify_listener
     if rule_arn:
         response = elbv2.modify_rule(
             RuleArn=rule_arn,

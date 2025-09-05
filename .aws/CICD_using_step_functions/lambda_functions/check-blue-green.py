@@ -4,7 +4,7 @@ elbv2 = boto3.client('elbv2')
 
 def lambda_handler(event, context):
     listener_arn = event.get("listener_arn")
-    rule_arn = event.get("rule_arn")  # 👈 truyền thẳng rule arn
+    rule_arn = event.get("rule_arn")
 
     if not listener_arn:
         raise ValueError("Missing listener_arn in event")
@@ -17,7 +17,7 @@ def lambda_handler(event, context):
     actions = rule['Actions']
     tg_arns = actions[0]['ForwardConfig'].get('TargetGroups', [])
 
-    if len(tg_arns) != 2:
+    if len(tg_arns) != 2:  
         raise Exception("Expected exactly 2 target groups for blue/green strategy")
 
     if tg_arns[0]['Weight'] == 100:
