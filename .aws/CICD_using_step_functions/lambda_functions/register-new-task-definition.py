@@ -10,6 +10,7 @@ def lambda_handler(event, context):
     print(json.dumps(event))
 
     image_uri = event.get("imageUri")
+    
     container_name = event.get("CONTAINER_NAME")
     task_family = event.get("TASK_FAMILY")
     if not image_uri:
