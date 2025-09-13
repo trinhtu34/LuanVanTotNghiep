@@ -35,22 +35,22 @@ Hệ thống sử dụng cơ sở hạ tầng AWS với cách dịch vụ như :
 
 ## Kiến trúc hệ thống
 **Network Design**
-![NetworkDesign](/images/1-introduce/WS1_NetworkDesign.png)
+![NetworkDesign](/images/WS1_NetworkDesign.png)
 
 **Security Design**
-![SecurityDesign](/images/1-introduce/WS1-SecurityDesign.png)
+![SecurityDesign](/images/WS1-SecurityDesign.png)
 
 **Service and Resource**
-![ServiceAndResource](/images/1-introduce/WS1_Service_And_Resource.png)
+![ServiceAndResource](/images/WS1_Service_And_Resource.png)
 
 **Frontend CICD Design**
-![FrontendCICD](/images/1-introduce/WS1_CICD_Design.png)
+![FrontendCICD](/images/WS1_CICD_Design.png)
 
 **Backend CICD Design**
-![BackendCICD](/images/1-introduce/WS1_CICD_Backend.png)
+![BackendCICD](/images/WS1_CICD_Backend.png)
 
 **CI/CD Grap**
-![BackendCICD](/images/1-introduce/stepfunctions_graph.png)
+![BackendCICD](/images/stepfunctions_graph.png)
 
 ## Quy trình hoạt động của Pipline
 
