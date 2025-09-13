@@ -123,9 +123,6 @@ Secrets Manager :
 - 2 Secrets 
 
 
-## Chi phí khi duy trì lâu dài 
-
-
 ## Lợi ích đem lại 
 
 - Giảm downtime khi phát hành phiên bản mới .
