@@ -84,7 +84,9 @@ Hệ thống sử dụng cơ sở hạ tầng AWS với cách dịch vụ như :
 
 Quy trình đảm bảo việc triển khai an toàn , có khả năng tự động Rollback chính xác , và cho phép Manual Approval 
 
-## Tài nguyên sử dụng 
+## Phân tích chi phí của toàn bộ project
+
+#### Tài nguyên sử dụng 
 
 EC2 : 
 - Instance type : t3.micro
@@ -112,11 +114,10 @@ VPC :
 Step Functions : 
 - Khoảng 23 lần Deployment lên Production trong 1 tháng , mỗi lần deploy khoảng 40 state transition
 
-SNS :
-- 
+CloudWatch : 
+- 2 CloudWatch Alarm 
 
-S3 :
-- 4320 PUT API 1 tháng 
+- 4 CloudWatch logs : 
 
 Secrets Manager :
 - 2 Secrets 
@@ -128,3 +129,7 @@ Secrets Manager :
 - Tăng độ an toàn nhờ health check và rollback tự động .
 - Tối ưu chi phí và công sức bỏ ra khi vận hành nhờ quá trình tự động hóa .
 - Khả năng mở rộng linh hoạt cho Pipline khi sử dụng Lambda và Step Functions .
+
+## Thông tin bổ sung 
+
+- Backend Repository : https://github.com/trinhtu34/ws-backend-api.git
