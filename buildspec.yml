@@ -10,17 +10,17 @@ phases:
       - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
       - echo Logging in to Amazon ECR...
       - aws --version
-      - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 730335485777.dkr.ecr.ap-southeast-1.amazonaws.com
-      - REPOSITORY_URI=730335485777.dkr.ecr.ap-southeast-1.amazonaws.com/test-codepipline-and-step-functions
+      - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 183829413334.dkr.ecr.ap-southeast-1.amazonaws.com
+      - REPOSITORY_URI=183829413334.dkr.ecr.ap-southeast-1.amazonaws.com/ws-frontend
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
 
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t test-codepipline-and-step-functions -f ./testpayment6.0/Dockerfile ./testpayment6.0
-      - docker tag test-codepipline-and-step-functions:latest $REPOSITORY_URI:latest
-      - docker tag test-codepipline-and-step-functions:latest $REPOSITORY_URI:$COMMIT_HASH
+      - docker build -t ws-frontend -f ./testpayment6.0/Dockerfile ./testpayment6.0
+      - docker tag ws-frontend:latest $REPOSITORY_URI:latest
+      - docker tag ws-frontend:latest $REPOSITORY_URI:$COMMIT_HASH
 
   post_build:
     commands:
