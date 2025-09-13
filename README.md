@@ -128,3 +128,7 @@ Secrets Manager :
 - Tăng độ an toàn nhờ health check và rollback tự động .
 - Tối ưu chi phí và công sức bỏ ra khi vận hành nhờ quá trình tự động hóa .
 - Khả năng mở rộng linh hoạt cho Pipline khi sử dụng Lambda và Step Functions .
+
+## Thông tin bổ sung 
+
+- Backend Repository : https://github.com/trinhtu34/ws-backend-api.git
