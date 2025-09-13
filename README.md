@@ -84,19 +84,13 @@ Hệ thống sử dụng cơ sở hạ tầng AWS với cách dịch vụ như :
 
 Quy trình đảm bảo việc triển khai an toàn , có khả năng tự động Rollback chính xác , và cho phép Manual Approval 
 
-## Phân tích chi phí của toàn bộ project
-
-#### Tài nguyên sử dụng trong bài lab này
-
-**Vì lý do để demo cho bài lab nên các instance type tôi sẽ dùng ở mức nhỏ nhất để tối ưu chi phí .**
-
-**Còn đối với khi triển khai trên production thì nên dùng Instance type cho RDS là t4g.large ,t4g.xlarge , t4g.2xlarge . Storage type nên chọn GP3 và Allocated Storage là 30GB , Maximum storage threshold là 200GB**
+## Tài nguyên sử dụng 
 
 EC2 : 
 - Instance type : t3.micro
 
 RDS :
-- Instance type : db.t3.micro
+- Instance type : db.t3.medium
 - Storage type : gp2
 - Allocated storage : 30GB
 - Provisioned IOPS : 3000
@@ -104,10 +98,28 @@ RDS :
 - Maximum storage threshold : 100
 
 ECS : 
-- Frontend fargate : 0.5vCPU , 1GB Memory , min - 0 , desired - 2 , max - 4
+- Frontend fargate : 0.5vCPU , 1GB Memory , min - 0 , desired - 2 , max - 6
 - Backend fargate : 1vCPU , 2GB Memory , min - 0 , desired - 2 , max - 6
 
-## Chi phí khi duy trì lâu dài 
+ECR :
+- Backend Repository : giữ lại 15 images gần nhất -> 2.5GB / 1 tháng
+- Frontend Repository : giữ lại 15 images gần nhất -> 3.3GB / 1 tháng
+
+VPC : 
+- 3 VPC Endpoint 
+- Chi phí data transfer từ frontend tới Client : 
+
+Step Functions : 
+- Khoảng 23 lần Deployment lên Production trong 1 tháng , mỗi lần deploy khoảng 40 state transition
+
+SNS :
+- 
+
+S3 :
+- 4320 PUT API 1 tháng 
+
+Secrets Manager :
+- 2 Secrets 
 
 
 ## Lợi ích đem lại 
