@@ -1,3 +1,5 @@
+Đây là Frontend , backend nằm tại : https://github.com/trinhtu34/ws-backend-api.git
+
 ## Bối cảnh 
  
 Trong bối cảnh các hệ thống phần mềm cho hệ thống website đặt bàn và đặt đồ ăn online cho nhiều nhà hàng , lượng khách hàng truy cập trang web vào giờ cao điểm khoảng từ 80 - 150 khách truy cập đồng thời , lượng khách có thể tăng giảm theo thời gian . Hiện nay cần một khả năng triển khai nhanh chóng , ổn định , ít rủi ro . Thì chiến lược Blue / Green Deployment trở thành một trong những mô hình quan trọng nhằm đảm bảo : 
@@ -109,7 +111,7 @@ ECR :
 
 VPC : 
 - 3 VPC Endpoint 
-- Chi phí data transfer từ frontend tới Client : 
+- Chi phí data transfer từ frontend tới Client : dự tính vào khoảng 834GB/ tháng , dự tính dựa vào số đơn hàng , lượng khách theo mô hình kinh doanh của trang web hướng tới 
 
 Step Functions : 
 - Khoảng 23 lần Deployment lên Production trong 1 tháng , mỗi lần deploy khoảng 40 state transition
