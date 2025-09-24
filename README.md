@@ -1,4 +1,4 @@
-Đây là Frontend , backend nằm tại : https://github.com/trinhtu34/ws-backend-api.git
+Đây là Frontend , backend nằm tại : https://github.com/trinhtu34/LuanVanTotNghiep_API_Backend.git
 
 ## Bối cảnh 
  
