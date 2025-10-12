@@ -61,4 +61,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapGet("/", ctx => {
+    ctx.Response.Redirect("/Home/Index");
+    return Task.CompletedTask;
+});
+app.MapGet("/health", () => Results.Ok("Healthy"));
 app.Run();

@@ -125,3 +125,9 @@ resource "aws_route_table_association" "private_rt_assoc_2" {
   route_table_id = aws_route_table.private_rt.id
 }
 
+# Associate VPC endpoint with private route table
+resource "aws_vpc_endpoint_route_table_association" "s3_endpoint_assoc_1" {
+  vpc_endpoint_id = aws_vpc_endpoint.s3_endpoint.id
+  route_table_id  = aws_route_table.private_rt.id
+}
+ 

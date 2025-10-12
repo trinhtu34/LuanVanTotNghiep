@@ -56,11 +56,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "testpayment6.0.dll"]
 
-# dựa vào cái này để làm CI/CD cho frontend ha 
-#docker build -t test-codepipline-and-step-functions .
-#docker run -d -p 32770:5000 --name test-codepipline-and-step-functions-contaner test-codepipline-and-step-functions:latest
+# dựa vào cái này để làm CI/CD cho backend ha 
 
-#docker build -t testpayment60:manual .
-#docker run -d -p 32770:80 --name testpayment60-container testpayment60:manual
-
-#docker tag testpayment60:manual 730335485777.dkr.ecr.ap-southeast-1.amazonaws.com/test-codepipline-and-step-functions:latest
+#docker build -t ws-frontend .
+#docker run -dit -p 32790:5000 --name frontend-container ws-frontend:latest
