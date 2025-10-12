@@ -27,8 +27,3 @@ module "networking" {
   public_subnet_ips   = var.public_subnet_ips
   private_subnet_ips  = var.private_subnet_ips
 }
-module "security" {
-  source = "./modules/security"
-  region = var.region
-  vpc_id = module.networking.vpc_id
-}
